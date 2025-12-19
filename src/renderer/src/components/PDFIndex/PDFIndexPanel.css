@@ -1,0 +1,152 @@
+.pdf-index-panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  background-color: #1e1e1e;
+}
+
+/* Header */
+.pdf-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background-color: #252526;
+  border-bottom: 1px solid #3e3e42;
+  min-height: 50px;
+}
+
+.header-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.header-icon {
+  font-size: 20px;
+}
+
+.header-title h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #cccccc;
+}
+
+.add-btn {
+  background-color: #007acc;
+  color: #ffffff;
+  border: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 4px;
+  font-size: 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s;
+}
+
+.add-btn:hover {
+  background-color: #005a9e;
+}
+
+/* Stats */
+.pdf-stats {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 12px 16px;
+  background-color: #252526;
+  border-bottom: 1px solid #3e3e42;
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.stat-value {
+  font-size: 20px;
+  font-weight: 600;
+  color: #007acc;
+}
+
+.stat-label {
+  font-size: 11px;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.stat-divider {
+  color: #3e3e42;
+  font-size: 16px;
+}
+
+/* Content */
+.pdf-content {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  position: relative;
+}
+
+/* Empty State */
+.pdf-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  text-align: center;
+  color: #888;
+  padding: 24px;
+}
+
+.pdf-empty .empty-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+  opacity: 0.5;
+}
+
+.pdf-empty h4 {
+  margin: 0 0 8px 0;
+  font-size: 16px;
+  color: #cccccc;
+}
+
+.pdf-empty p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+/* Drag and Drop */
+.pdf-content.drag-over {
+  border: 2px dashed #007acc;
+  background-color: rgba(0, 122, 204, 0.05);
+}
+
+/* Scrollbar */
+.pdf-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.pdf-content::-webkit-scrollbar-track {
+  background: #1e1e1e;
+}
+
+.pdf-content::-webkit-scrollbar-thumb {
+  background: #424242;
+  border-radius: 4px;
+}
+
+.pdf-content::-webkit-scrollbar-thumb:hover {
+  background: #4e4e4e;
+}

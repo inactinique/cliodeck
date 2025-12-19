@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Test Simple</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #1e1e1e;
+      color: white;
+      padding: 40px;
+      margin: 0;
+    }
+    h1 {
+      color: #4CAF50;
+    }
+    .status {
+      background: #2d2d2d;
+      padding: 20px;
+      border-radius: 8px;
+      margin: 20px 0;
+    }
+  </style>
+</head>
+<body>
+  <h1>✓ Test HTML Simple</h1>
+  <div class="status">
+    <p><strong>Electron:</strong> Fonctionnel</p>
+    <p><strong>Preload:</strong> <span id="preload-status">Vérification...</span></p>
+  </div>
+
+  <script>
+    // Test si window.electron existe (preload fonctionne)
+    const preloadStatus = document.getElementById('preload-status');
+    if (window.electron) {
+      preloadStatus.textContent = '✓ Chargé avec succès';
+      preloadStatus.style.color = '#4CAF50';
+    } else {
+      preloadStatus.textContent = '✗ Non chargé';
+      preloadStatus.style.color = '#f44336';
+    }
+
+    console.log('Test HTML chargé');
+    console.log('window.electron:', window.electron);
+  </script>
+</body>
+</html>

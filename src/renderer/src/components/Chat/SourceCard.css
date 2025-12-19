@@ -1,0 +1,157 @@
+.source-card {
+  background-color: #2d2d2d;
+  border: 1px solid #3e3e42;
+  border-radius: 6px;
+  overflow: hidden;
+  transition: background-color 0.2s;
+}
+
+.source-card:hover {
+  background-color: #323233;
+}
+
+/* Source Header */
+.source-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.source-index {
+  font-size: 11px;
+  font-weight: 600;
+  color: #007acc;
+  background-color: rgba(0, 122, 204, 0.15);
+  padding: 2px 8px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+
+.source-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.source-title {
+  font-size: 13px;
+  font-weight: 500;
+  color: #cccccc;
+  margin-bottom: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.source-meta {
+  font-size: 11px;
+  color: #888;
+}
+
+.source-expand-btn {
+  background: none;
+  border: none;
+  color: #888;
+  font-size: 10px;
+  cursor: pointer;
+  padding: 4px;
+  transition: color 0.2s;
+}
+
+.source-expand-btn:hover {
+  color: #cccccc;
+}
+
+/* Source Content (Expanded) */
+.source-content {
+  padding: 0 12px 12px 12px;
+  border-top: 1px solid #3e3e42;
+  animation: expandDown 0.2s ease-out;
+}
+
+@keyframes expandDown {
+  from {
+    opacity: 0;
+    max-height: 0;
+  }
+  to {
+    opacity: 1;
+    max-height: 500px;
+  }
+}
+
+.source-excerpt {
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
+
+.excerpt-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #888;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.excerpt-text {
+  font-size: 12px;
+  line-height: 1.5;
+  color: #b0b0b0;
+  margin: 0;
+  padding: 8px;
+  background-color: #1e1e1e;
+  border-radius: 4px;
+  border-left: 3px solid #007acc;
+  max-height: 150px;
+  overflow-y: auto;
+}
+
+/* Source Actions */
+.source-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.source-action-btn {
+  background-color: #007acc;
+  color: #ffffff;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.source-action-btn:hover {
+  background-color: #005a9e;
+}
+
+.source-action-btn:active {
+  background-color: #004578;
+}
+
+/* Scrollbar for excerpt */
+.excerpt-text::-webkit-scrollbar {
+  width: 6px;
+}
+
+.excerpt-text::-webkit-scrollbar-track {
+  background: #1e1e1e;
+}
+
+.excerpt-text::-webkit-scrollbar-thumb {
+  background: #424242;
+  border-radius: 3px;
+}
+
+.excerpt-text::-webkit-scrollbar-thumb:hover {
+  background: #4e4e4e;
+}

@@ -1,0 +1,92 @@
+import React, { useRef, useEffect } from 'react';
+import Editor, { OnMount } from '@monaco-editor/react';
+import type { editor } from 'monaco-editor';
+import { useEditorStore } from '../../stores/editorStore';
+import './MarkdownEditor.css';
+
+export const MarkdownEditor: React.FC = () => {
+  const { content, setContent, settings } = useEditorStore();
+  const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null);
+
+  const handleEditorDidMount: OnMount = (editor, monaco) => {
+    editorRef.current = editor;
+
+    // Configure markdown language
+    monaco.languages.setLanguageConfiguration('markdown', {
+      wordPattern: /(-?\d*\.\d\w*)|([^\`\~\!\@\#\%\^\&\*\(\)\-\=\+\[\{\]\}\\\|\;\:\'\"\,\.\<\>\/\?\s]+)/g,
+    });
+
+    // Add custom citation autocomplete
+    monaco.languages.registerCompletionItemProvider('markdown', {
+      provideCompletionItems: (model, position) => {
+        const word = model.getWordUntilPosition(position);
+        const range = {
+          startLineNumber: position.lineNumber,
+          endLineNumber: position.lineNumber,
+          startColumn: word.startColumn,
+          endColumn: word.endColumn,
+        };
+
+        // Trigger on "[@"
+        const textUntilPosition = model.getValueInRange({
+          startLineNumber: position.lineNumber,
+          startColumn: 1,
+          endLineNumber: position.lineNumber,
+          endColumn: position.column,
+        });
+
+        if (textUntilPosition.endsWith('[@')) {
+          // TODO: Get citations from bibliography store
+          return {
+            suggestions: [
+              {
+                label: '@author2023',
+                kind: monaco.languages.CompletionItemKind.Reference,
+                insertText: 'author2023]',
+                range: range,
+                documentation: 'Author (2023) - Title',
+              },
+            ],
+          };
+        }
+
+        return { suggestions: [] };
+      },
+    });
+  };
+
+  const handleEditorChange = (value: string | undefined) => {
+    setContent(value || '');
+  };
+
+  return (
+    <div className="markdown-editor">
+      <Editor
+        height="100%"
+        defaultLanguage="markdown"
+        value={content}
+        onChange={handleEditorChange}
+        onMount={handleEditorDidMount}
+        theme={settings.theme === 'dark' ? 'vs-dark' : 'light'}
+        options={{
+          fontSize: settings.fontSize,
+          wordWrap: settings.wordWrap ? 'on' : 'off',
+          minimap: { enabled: true },
+          lineNumbers: 'on',
+          scrollBeyondLastLine: false,
+          automaticLayout: true,
+          tabSize: 2,
+          insertSpaces: true,
+          formatOnPaste: true,
+          formatOnType: true,
+          rulers: [80, 120],
+          renderWhitespace: 'selection',
+          cursorBlinking: 'smooth',
+          smoothScrolling: true,
+          fontFamily: "'Fira Code', 'Consolas', 'Courier New', monospace",
+          fontLigatures: true,
+        }}
+      />
+    </div>
+  );
+};
