@@ -205,12 +205,12 @@ export class TropyPlugin {
         .prepare('SELECT property, value FROM metadata WHERE id = ?')
         .all(itemId) as Array<{ property: string; value: string }>;
 
-      const metadata: Partial<TropyItem> = {};
+      const metadata: any = {};
 
       for (const row of metadataRows) {
         const propertyName = this.extractPropertyName(row.property);
         if (propertyName) {
-          metadata[propertyName as keyof TropyItem] = row.value as any;
+          metadata[propertyName] = row.value;
         }
       }
 

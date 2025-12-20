@@ -10,8 +10,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 16px;
-  border-bottom: 1px solid #333;
+  padding: var(--spacing-sm) var(--spacing-lg);
 }
 
 .config-header h2 {
@@ -73,7 +72,7 @@
 .config-content {
   flex: 1;
   overflow-y: auto;
-  padding: 16px;
+  padding: var(--spacing-md) var(--spacing-lg);
 }
 
 /* Section */
@@ -81,14 +80,14 @@
   background: #252526;
   border: 1px solid #333;
   border-radius: 6px;
-  margin-bottom: 16px;
+  margin-bottom: var(--section-gap);
 }
 
 .config-section-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 12px 16px;
+  padding: var(--item-padding-vertical) var(--spacing-lg);
   cursor: pointer;
   user-select: none;
 }
@@ -110,13 +109,13 @@
 }
 
 .config-section-content {
-  padding: 0 16px 16px 16px;
+  padding: var(--spacing-sm) var(--spacing-lg) var(--spacing-lg) var(--spacing-lg);
   border-top: 1px solid #333;
 }
 
 /* Field */
 .config-field {
-  margin-top: 16px;
+  margin-top: var(--spacing-lg);
 }
 
 .config-label {

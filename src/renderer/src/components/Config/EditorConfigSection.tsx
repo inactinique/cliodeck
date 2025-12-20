@@ -5,6 +5,7 @@ export interface EditorConfig {
   fontSize: number;
   wordWrap: boolean;
   showMinimap: boolean;
+  fontFamily: string;
 }
 
 interface EditorConfigSectionProps {
@@ -85,6 +86,32 @@ export const EditorConfigSection: React.FC<EditorConfigSectionProps> = ({ config
                 Barre de défilement avec aperçu miniature du document (comme dans VS Code)
               </span>
             </label>
+          </div>
+
+          {/* Font Family */}
+          <div className="config-field">
+            <label className="config-label">
+              Police de caractères
+              <span className="config-help">
+                Choisissez la police pour l'éditeur de code
+              </span>
+            </label>
+            <select
+              value={config.fontFamily}
+              onChange={(e) => handleFieldChange('fontFamily', e.target.value)}
+              className="config-select"
+            >
+              <option value="system">Polices système (SF Mono, Monaco, Consolas)</option>
+              <option value="jetbrains">JetBrains Mono</option>
+              <option value="fira">Fira Code</option>
+              <option value="source">Source Code Pro</option>
+              <option value="cascadia">Cascadia Code</option>
+            </select>
+            <div className="config-description">
+              <small>
+                Les polices système sont toujours disponibles. Les autres nécessitent d'être installées sur votre système.
+              </small>
+            </div>
           </div>
         </div>
       </div>

@@ -80,7 +80,7 @@ export class OllamaClient {
       throw new Error(`Ollama API error: ${response.status}`);
     }
 
-    const data: OllamaModelsResponse = await response.json();
+    const data = await response.json() as OllamaModelsResponse;
 
     // Convertir les modèles Ollama en LLMModel
     return data.models.map((model) => ({
@@ -112,7 +112,7 @@ export class OllamaClient {
       throw new Error(`Ollama embedding error: ${response.status}`);
     }
 
-    const data: OllamaEmbeddingResponse = await response.json();
+    const data = await response.json() as OllamaEmbeddingResponse;
     return new Float32Array(data.embedding);
   }
 
@@ -139,7 +139,7 @@ export class OllamaClient {
       throw new Error(`Ollama generate error: ${response.status}`);
     }
 
-    const data: OllamaGenerateResponse = await response.json();
+    const data = await response.json() as OllamaGenerateResponse;
     return data.response;
   }
 

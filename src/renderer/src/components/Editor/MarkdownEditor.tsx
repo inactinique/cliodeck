@@ -59,6 +59,24 @@ export const MarkdownEditor: React.FC = () => {
     setContent(value || '');
   };
 
+  // Font family mapping
+  const getFontFamily = () => {
+    switch (settings.fontFamily) {
+      case 'system':
+        return "'SF Mono', 'Monaco', 'Consolas', 'Ubuntu Mono', monospace";
+      case 'jetbrains':
+        return "'JetBrains Mono', 'Consolas', monospace";
+      case 'fira':
+        return "'Fira Code', 'Consolas', monospace";
+      case 'source':
+        return "'Source Code Pro', 'Consolas', monospace";
+      case 'cascadia':
+        return "'Cascadia Code', 'Consolas', monospace";
+      default:
+        return "'SF Mono', 'Monaco', 'Consolas', 'Ubuntu Mono', monospace";
+    }
+  };
+
   return (
     <div className="markdown-editor">
       <Editor
@@ -71,7 +89,7 @@ export const MarkdownEditor: React.FC = () => {
         options={{
           fontSize: settings.fontSize,
           wordWrap: settings.wordWrap ? 'on' : 'off',
-          minimap: { enabled: true },
+          minimap: { enabled: settings.showMinimap },
           lineNumbers: 'on',
           scrollBeyondLastLine: false,
           automaticLayout: true,
@@ -83,8 +101,8 @@ export const MarkdownEditor: React.FC = () => {
           renderWhitespace: 'selection',
           cursorBlinking: 'smooth',
           smoothScrolling: true,
-          fontFamily: "'Fira Code', 'Consolas', 'Courier New', monospace",
-          fontLigatures: true,
+          fontFamily: getFontFamily(),
+          fontLigatures: settings.fontFamily !== 'system',
         }}
       />
     </div>

@@ -9,6 +9,8 @@ export interface EditorSettings {
   wordWrap: boolean;
   showPreview: boolean;
   previewPosition: 'right' | 'bottom';
+  showMinimap: boolean;
+  fontFamily: string;
 }
 
 interface EditorState {
@@ -44,6 +46,8 @@ const DEFAULT_SETTINGS: EditorSettings = {
   wordWrap: true,
   showPreview: false,
   previewPosition: 'right',
+  showMinimap: true,
+  fontFamily: 'system',
 };
 
 // MARK: - Store

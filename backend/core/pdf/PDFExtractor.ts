@@ -206,7 +206,7 @@ export class PDFExtractor {
       const pdfDocument = await loadingTask.promise;
 
       const metadata = await pdfDocument.getMetadata();
-      const info = metadata.info || {};
+      const info = metadata.info as any || {};
 
       return info.Author?.trim() || undefined;
     } catch {
@@ -223,7 +223,7 @@ export class PDFExtractor {
       const pdfDocument = await loadingTask.promise;
 
       const metadata = await pdfDocument.getMetadata();
-      const info = metadata.info || {};
+      const info = metadata.info as any || {};
 
       if (info.CreationDate) {
         const date = this.parsePDFDate(info.CreationDate);

@@ -95,13 +95,13 @@ export class ZoteroSync {
             const pdfAttachments = children.filter(
               (child) =>
                 child.data.itemType === 'attachment' &&
-                child.data.contentType === 'application/pdf'
+                (child.data as any).contentType === 'application/pdf'
             );
 
             for (const attachment of pdfAttachments) {
               try {
                 const filename = this.sanitizeFilename(
-                  attachment.data.filename || `${item.data.title}.pdf`
+                  (attachment.data as any).filename || `${item.data.title}.pdf`
                 );
                 const savePath = path.join(pdfDir, filename);
 
@@ -160,7 +160,7 @@ export class ZoteroSync {
         const pdfs = children.filter(
           (child) =>
             child.data.itemType === 'attachment' &&
-            child.data.contentType === 'application/pdf'
+            (child.data as any).contentType === 'application/pdf'
         );
         pdfCount += pdfs.length;
       }

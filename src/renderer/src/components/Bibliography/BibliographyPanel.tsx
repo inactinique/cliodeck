@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Plus } from 'lucide-react';
 import { useBibliographyStore } from '../../stores/bibliographyStore';
 import { CitationList } from './CitationList';
 import { CitationCard } from './CitationCard';
@@ -36,12 +37,8 @@ export const BibliographyPanel: React.FC = () => {
     <div className="bibliography-panel">
       {/* Header */}
       <div className="bibliography-header">
-        <div className="header-title">
-          <span className="header-icon">📚</span>
-          <h3>Bibliographie</h3>
-        </div>
-        <button className="import-btn" onClick={handleImportBibTeX} title="Importer BibTeX">
-          ➕
+        <button className="toolbar-btn" onClick={handleImportBibTeX} title="Importer BibTeX">
+          <Plus size={20} strokeWidth={1} />
         </button>
       </div>
 
@@ -87,7 +84,6 @@ export const BibliographyPanel: React.FC = () => {
         <div className="bibliography-content">
           {filteredCitations.length === 0 ? (
             <div className="bibliography-empty">
-              <div className="empty-icon">📖</div>
               <h4>Aucune citation</h4>
               <p>Importez un fichier BibTeX pour commencer</p>
             </div>

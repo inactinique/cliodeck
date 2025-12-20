@@ -122,18 +122,13 @@ export const ProjectPanel: React.FC = () => {
 
   return (
     <div className="project-panel">
-      <div className="project-header">
-        <h2>Projets</h2>
-        <p>Gérer vos projets d'écriture</p>
-      </div>
-
       <div className="project-content">
         {/* Action Buttons */}
         <div className="project-actions">
-          <button className="project-btn primary" onClick={() => setShowCreateModal(true)} title="Nouveau projet">
+          <button className="toolbar-btn" onClick={() => setShowCreateModal(true)} title="Nouveau projet">
             <FilePlus size={20} strokeWidth={1} />
           </button>
-          <button className="project-btn" onClick={handleOpenProject} title="Ouvrir un projet">
+          <button className="toolbar-btn" onClick={handleOpenProject} title="Ouvrir un projet">
             <FolderOpen size={20} strokeWidth={1} />
           </button>
         </div>

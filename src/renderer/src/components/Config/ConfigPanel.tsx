@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
+import { RotateCcw, Save } from 'lucide-react';
 import { RAGConfigSection } from './RAGConfigSection';
 import { LLMConfigSection } from './LLMConfigSection';
 import { EditorConfigSection, type EditorConfig } from './EditorConfigSection';
 import { UIConfigSection } from './UIConfigSection';
 import { ActionsSection } from './ActionsSection';
+import { useEditorStore } from '../../stores/editorStore';
 import './ConfigPanel.css';
 
 export interface RAGConfig {
@@ -20,6 +22,8 @@ export interface LLMConfig {
 }
 
 export const ConfigPanel: React.FC = () => {
+  const { settings: editorSettings, updateSettings } = useEditorStore();
+
   const [ragConfig, setRagConfig] = useState<RAGConfig>({
     topK: 10,
     similarityThreshold: 0.2,
@@ -37,6 +41,7 @@ export const ConfigPanel: React.FC = () => {
     fontSize: 14,
     wordWrap: true,
     showMinimap: true,
+    fontFamily: 'system',
   });
 
   const [availableModels, setAvailableModels] = useState<string[]>([]);
@@ -47,6 +52,16 @@ export const ConfigPanel: React.FC = () => {
   useEffect(() => {
     loadConfig();
   }, []);
+
+  // Sync editorConfig with editorStore on mount
+  useEffect(() => {
+    setEditorConfig({
+      fontSize: editorSettings.fontSize,
+      wordWrap: editorSettings.wordWrap,
+      showMinimap: editorSettings.showMinimap,
+      fontFamily: editorSettings.fontFamily,
+    });
+  }, [editorSettings]);
 
   const loadConfig = async () => {
     try {
@@ -70,6 +85,14 @@ export const ConfigPanel: React.FC = () => {
       await window.electron.config.set('rag', ragConfig);
       await window.electron.config.set('llm', llmConfig);
       await window.electron.config.set('editor', editorConfig);
+
+      // Update editorStore with new settings
+      updateSettings({
+        fontSize: editorConfig.fontSize,
+        wordWrap: editorConfig.wordWrap,
+        showMinimap: editorConfig.showMinimap,
+        fontFamily: editorConfig.fontFamily,
+      });
 
       setSaveMessage('✅ Configuration sauvegardée');
       setTimeout(() => setSaveMessage(''), 3000);
@@ -103,6 +126,7 @@ export const ConfigPanel: React.FC = () => {
         fontSize: 14,
         wordWrap: true,
         showMinimap: true,
+        fontFamily: 'system',
       });
 
       await handleSaveConfig();
@@ -114,21 +138,22 @@ export const ConfigPanel: React.FC = () => {
   return (
     <div className="config-panel">
       <div className="config-header">
-        <h2>Configuration</h2>
         <div className="config-actions">
           {saveMessage && <span className="save-message">{saveMessage}</span>}
           <button
-            className="config-btn secondary"
+            className="toolbar-btn"
             onClick={handleResetConfig}
+            title="Réinitialiser"
           >
-            🔄 Réinitialiser
+            <RotateCcw size={20} strokeWidth={1} />
           </button>
           <button
-            className="config-btn primary"
+            className="toolbar-btn"
             onClick={handleSaveConfig}
             disabled={isSaving}
+            title={isSaving ? 'Sauvegarde...' : 'Sauvegarder'}
           >
-            💾 {isSaving ? 'Sauvegarde...' : 'Sauvegarder'}
+            <Save size={20} strokeWidth={1} />
           </button>
         </div>
       </div>

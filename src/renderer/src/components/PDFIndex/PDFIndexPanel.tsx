@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Plus } from 'lucide-react';
 import { PDFList } from './PDFList';
 import { IndexingProgress } from './IndexingProgress';
 import { CollapsibleSection } from '../common/CollapsibleSection';
@@ -162,12 +163,8 @@ export const PDFIndexPanel: React.FC = () => {
     <div className="pdf-index-panel">
       {/* Header */}
       <div className="pdf-header">
-        <div className="header-title">
-          <span className="header-icon">📄</span>
-          <h3>Documents PDF</h3>
-        </div>
-        <button className="add-btn" onClick={handleAddPDF} title="Ajouter PDF">
-          ➕
+        <button className="toolbar-btn" onClick={handleAddPDF} title="Ajouter PDF">
+          <Plus size={20} strokeWidth={1} />
         </button>
       </div>
 

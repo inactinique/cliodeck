@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { Trash2 } from 'lucide-react';
 import { useChatStore } from '../../stores/chatStore';
 import { MessageList } from './MessageList';
 import { MessageInput } from './MessageInput';
@@ -43,20 +44,14 @@ export const ChatInterface: React.FC = () => {
     <div className="chat-interface">
       {/* Header */}
       <div className="chat-header">
-        <div className="chat-title">
-          <span className="chat-icon">💬</span>
-          <h3>Assistant RAG</h3>
-        </div>
-        <div className="chat-actions">
-          <button
-            className="header-btn"
-            onClick={handleClear}
-            title="Effacer l'historique"
-            disabled={messages.length === 0}
-          >
-            🗑️
-          </button>
-        </div>
+        <button
+          className="toolbar-btn"
+          onClick={handleClear}
+          title="Effacer l'historique"
+          disabled={messages.length === 0}
+        >
+          <Trash2 size={20} strokeWidth={1} />
+        </button>
       </div>
 
       {/* Messages */}

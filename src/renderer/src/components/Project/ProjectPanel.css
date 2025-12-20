@@ -6,65 +6,35 @@
   color: #d4d4d4;
 }
 
-.project-header {
-  padding: var(--spacing-lg);
-  border-bottom: 1px solid #3e3e42;
-  background-color: #252526;
-}
-
-.project-header h2 {
-  margin: 0 0 0.5rem 0;
-  font-size: 1.25rem;
-  color: #ccc;
-}
-
-.project-header p {
-  margin: 0;
-  font-size: var(--font-size-sm);
-  color: #888;
-}
-
 .project-content {
   flex: 1;
   overflow-y: auto;
-  padding: var(--spacing-lg);
+  padding: var(--spacing-md) var(--spacing-lg);
 }
 
 .project-actions {
   display: flex;
-  gap: var(--list-item-gap);
-  margin-bottom: var(--spacing-xl);
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-md);
+  padding: var(--spacing-sm);
 }
 
-.project-btn {
-  flex: 1;
-  padding: var(--item-padding-vertical) var(--item-padding-horizontal) 1rem;
-  background-color: #3c3c3c;
+.project-panel .toolbar-btn {
+  padding: 0.375rem;
+  background-color: transparent;
   color: #ccc;
-  border: 1px solid #3e3e42;
-  border-radius: 6px;
+  border: none;
   cursor: pointer;
-  font-size: var(--font-size-sm);
   transition: all 0.2s;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: var(--list-item-gap);
+  border-radius: 4px;
 }
 
-.project-btn:hover {
-  background-color: #4a4a4a;
-  border-color: #007acc;
-}
-
-.project-btn.primary {
-  background-color: #007acc;
-  color: white;
-  border-color: #007acc;
-}
-
-.project-btn.primary:hover {
-  background-color: #005a9e;
+.project-panel .toolbar-btn:hover {
+  background-color: #3a3a3a;
+  color: #fff;
 }
 
 .current-project-info {
@@ -170,23 +140,23 @@
   background-color: #1e1e1e;
   border: 1px solid #3e3e42;
   border-radius: 8px;
-  padding: 1.5rem;
+  padding: 1rem;
   max-width: 500px;
   width: 90%;
 }
 
 .create-project-content h3 {
-  margin: 0 0 1rem 0;
+  margin: 0 0 var(--spacing-lg) 0;
   color: #ccc;
 }
 
 .form-field {
-  margin-bottom: 1rem;
+  margin-bottom: var(--spacing-lg);
 }
 
 .form-field label {
   display: block;
-  margin-bottom: 0.5rem;
+  margin-bottom: var(--spacing-sm);
   font-size: var(--font-size-sm);
   font-weight: 600;
   color: #ccc;
@@ -195,7 +165,7 @@
 .form-field input,
 .form-field select {
   width: 100%;
-  padding: 0.5rem;
+  padding: var(--item-padding-vertical) var(--item-padding-horizontal);
   background-color: #252526;
   color: #ccc;
   border: 1px solid #3e3e42;
@@ -212,7 +182,7 @@
 .form-actions {
   display: flex;
   gap: var(--list-item-gap);
-  margin-top: 1.5rem;
+  margin-top: var(--spacing-lg);
 }
 
 .form-actions button {
@@ -251,7 +221,7 @@
 
 .empty-state {
   text-align: center;
-  padding: 2rem;
+  padding: 1rem;
   color: #888;
 }
 

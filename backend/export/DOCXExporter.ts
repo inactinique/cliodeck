@@ -219,7 +219,7 @@ export class DOCXExporter {
     });
   }
 
-  private getHeadingLevel(level: number): HeadingLevel {
+  private getHeadingLevel(level: number): typeof HeadingLevel[keyof typeof HeadingLevel] {
     const levels = [
       HeadingLevel.HEADING_1,
       HeadingLevel.HEADING_2,
@@ -347,7 +347,6 @@ export class DOCXExporter {
 
     return new Paragraph({
       children: runs,
-      italics: true,
       shading: { fill: 'F9F9F9' },
       spacing: { before: 120, after: 120 },
       indent: { left: 720 },
