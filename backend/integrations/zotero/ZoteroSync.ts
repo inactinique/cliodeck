@@ -59,7 +59,21 @@ export class ZoteroSync {
           collectionKey: options.collectionKey,
         });
         result.items = items;
-        console.log(`📄 ${items.length} items trouvés`);
+
+        // Count item types for debugging
+        const typeCounts: Record<string, number> = {};
+        items.forEach(item => {
+          const type = item.data.itemType;
+          typeCounts[type] = (typeCounts[type] || 0) + 1;
+        });
+
+        // Count bibliographic items (non-attachments, non-notes)
+        const bibliographicItems = items.filter(
+          item => item.data.itemType !== 'attachment' && item.data.itemType !== 'note'
+        );
+
+        console.log(`📄 ${items.length} items trouvés (${bibliographicItems.length} bibliographiques)`);
+        console.log('📊 Types d\'items:', typeCounts);
       } catch (error) {
         result.errors.push(`Failed to list items: ${error}`);
         return result;

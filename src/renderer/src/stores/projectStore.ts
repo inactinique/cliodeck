@@ -75,6 +75,28 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
         }
       }
 
+      // Load bibliography if configured
+      if (project.bibliography) {
+        try {
+          const { useBibliographyStore } = await import('./bibliographyStore');
+          await useBibliographyStore.getState().loadBibliography(project.bibliography);
+          console.log('📚 Bibliography loaded for project');
+        } catch (error) {
+          console.error('Failed to load project bibliography:', error);
+        }
+      }
+
+      // Load document.md into editor if it's not a notes project
+      if (project.type !== 'notes' && project.content) {
+        try {
+          const { useEditorStore } = await import('./editorStore');
+          useEditorStore.getState().setContent(project.content);
+          console.log('📝 Document loaded into editor');
+        } catch (error) {
+          console.error('Failed to load document into editor:', error);
+        }
+      }
+
       // Update recent projects
       await get().loadRecentProjects();
     } catch (error) {

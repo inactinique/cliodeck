@@ -372,14 +372,14 @@ export class BibTeXParser {
     key: string,
     fields: Record<string, string>
   ): Citation | null {
-    // Champs obligatoires : author, year, title
+    // Champs obligatoires : author et title (year optionnel)
     const author = fields.author;
-    const year = fields.year || fields.date;
+    const year = fields.year || fields.date || 'n.d.';
     const title = fields.title;
 
-    if (!author || !year || !title) {
+    if (!author || !title) {
       console.warn(
-        `⚠️ Citation incomplète ignorée: ${key} (author=${!!author}, year=${!!year}, title=${!!title})`
+        `⚠️ Citation incomplète ignorée: ${key} (author=${!!author}, title=${!!title})`
       );
       return null;
     }

@@ -9,6 +9,12 @@ const api = {
     save: (data: any) => ipcRenderer.invoke('project:save', data),
     getRecent: () => ipcRenderer.invoke('project:get-recent'),
     getChapters: (projectId: string) => ipcRenderer.invoke('project:get-chapters', projectId),
+    setBibliographySource: (data: {
+      projectPath: string;
+      type: 'file' | 'zotero';
+      filePath?: string;
+      zoteroCollection?: string;
+    }) => ipcRenderer.invoke('project:set-bibliography-source', data),
   },
 
   // PDF & Documents
@@ -66,6 +72,21 @@ const api = {
   // File system
   fs: {
     readDirectory: (dirPath: string) => ipcRenderer.invoke('fs:read-directory', dirPath),
+  },
+
+  // Zotero
+  zotero: {
+    testConnection: (userId: string, apiKey: string) =>
+      ipcRenderer.invoke('zotero:test-connection', userId, apiKey),
+    listCollections: (userId: string, apiKey: string) =>
+      ipcRenderer.invoke('zotero:list-collections', userId, apiKey),
+    sync: (options: {
+      userId: string;
+      apiKey: string;
+      collectionKey?: string;
+      downloadPDFs: boolean;
+      exportBibTeX: boolean;
+    }) => ipcRenderer.invoke('zotero:sync', options),
   },
 };
 

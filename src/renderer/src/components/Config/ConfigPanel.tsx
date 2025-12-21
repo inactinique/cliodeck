@@ -5,6 +5,7 @@ import { LLMConfigSection } from './LLMConfigSection';
 import { EditorConfigSection, type EditorConfig } from './EditorConfigSection';
 import { UIConfigSection } from './UIConfigSection';
 import { ActionsSection } from './ActionsSection';
+import { ZoteroConfigSection, type ZoteroConfig } from './ZoteroConfigSection';
 import { useEditorStore } from '../../stores/editorStore';
 import './ConfigPanel.css';
 
@@ -44,6 +45,12 @@ export const ConfigPanel: React.FC = () => {
     fontFamily: 'system',
   });
 
+  const [zoteroConfig, setZoteroConfig] = useState<ZoteroConfig>({
+    userId: '',
+    apiKey: '',
+    autoSync: false,
+  });
+
   const [availableModels, setAvailableModels] = useState<string[]>([]);
   const [isSaving, setIsSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState('');
@@ -68,10 +75,12 @@ export const ConfigPanel: React.FC = () => {
       const rag = await window.electron.config.get('rag');
       const llm = await window.electron.config.get('llm');
       const editor = await window.electron.config.get('editor');
+      const zotero = await window.electron.config.get('zotero');
 
       if (rag) setRagConfig(rag);
       if (llm) setLLMConfig(llm);
       if (editor) setEditorConfig(editor);
+      if (zotero) setZoteroConfig(zotero);
     } catch (error) {
       console.error('Failed to load config:', error);
     }
@@ -85,6 +94,7 @@ export const ConfigPanel: React.FC = () => {
       await window.electron.config.set('rag', ragConfig);
       await window.electron.config.set('llm', llmConfig);
       await window.electron.config.set('editor', editorConfig);
+      await window.electron.config.set('zotero', zoteroConfig);
 
       // Update editorStore with new settings
       updateSettings({
@@ -176,6 +186,11 @@ export const ConfigPanel: React.FC = () => {
         <EditorConfigSection
           config={editorConfig}
           onChange={setEditorConfig}
+        />
+
+        <ZoteroConfigSection
+          config={zoteroConfig}
+          onChange={setZoteroConfig}
         />
 
         <ActionsSection />

@@ -15,6 +15,11 @@ interface Project {
   lastOpenedAt?: string;
   content?: string;
   bibliography?: string;
+  bibliographySource?: {
+    type: 'file' | 'zotero';
+    filePath?: string; // Path to .bib file relative to project
+    zoteroCollection?: string; // Zotero collection key
+  };
   chapters?: Chapter[];
 }
 
@@ -109,6 +114,15 @@ export class ProjectManager {
         project.content = await readFile(mdFile, 'utf-8');
       }
 
+      // Load bibliography if configured
+      if (project.bibliographySource?.filePath) {
+        const bibPath = path.join(path.dirname(projectPath), project.bibliographySource.filePath);
+        if (existsSync(bibPath)) {
+          project.bibliography = bibPath;
+          console.log('📚 Bibliography found:', bibPath);
+        }
+      }
+
       // Save update
       await writeFile(projectPath, JSON.stringify(project, null, 2));
 
@@ -166,6 +180,34 @@ export class ProjectManager {
     } catch (error) {
       console.error('❌ Failed to get chapters:', error);
       return { success: false, chapters: [], error: error.message };
+    }
+  }
+
+  async setBibliographySource(data: {
+    projectPath: string;
+    type: 'file' | 'zotero';
+    filePath?: string;
+    zoteroCollection?: string;
+  }) {
+    try {
+      const projectContent = await readFile(data.projectPath, 'utf-8');
+      const project: Project = JSON.parse(projectContent);
+
+      project.bibliographySource = {
+        type: data.type,
+        filePath: data.filePath,
+        zoteroCollection: data.zoteroCollection,
+      };
+
+      project.updatedAt = new Date().toISOString();
+
+      await writeFile(data.projectPath, JSON.stringify(project, null, 2));
+
+      console.log('✅ Bibliography source configured:', data.type);
+      return { success: true };
+    } catch (error) {
+      console.error('❌ Failed to set bibliography source:', error);
+      return { success: false, error: error.message };
     }
   }
 }

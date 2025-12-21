@@ -4,6 +4,7 @@ import { useBibliographyStore } from '../../stores/bibliographyStore';
 import { CitationList } from './CitationList';
 import { CitationCard } from './CitationCard';
 import { CollapsibleSection } from '../common/CollapsibleSection';
+import { ZoteroImport } from './ZoteroImport';
 import './BibliographyPanel.css';
 
 export const BibliographyPanel: React.FC = () => {
@@ -37,10 +38,13 @@ export const BibliographyPanel: React.FC = () => {
     <div className="bibliography-panel">
       {/* Header */}
       <div className="bibliography-header">
-        <button className="toolbar-btn" onClick={handleImportBibTeX} title="Importer BibTeX">
+        <button className="toolbar-btn" onClick={handleImportBibTeX} title="Importer fichier BibTeX">
           <Plus size={20} strokeWidth={1} />
         </button>
       </div>
+
+      {/* Zotero Import */}
+      <ZoteroImport />
 
       {/* Search & Filters */}
       <CollapsibleSection title="Recherche et filtres" defaultExpanded={true}>

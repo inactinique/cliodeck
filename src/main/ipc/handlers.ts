@@ -4,6 +4,7 @@ import { projectManager } from '../services/project-manager.js';
 import { pdfService } from '../services/pdf-service.js';
 import { bibliographyService } from '../services/bibliography-service.js';
 import { chatService } from '../services/chat-service.js';
+import { zoteroService } from '../services/zotero-service.js';
 
 /**
  * Setup all IPC handlers
@@ -79,6 +80,18 @@ export function setupIPCHandlers() {
     } catch (error: any) {
       console.error('❌ project:get-chapters error:', error);
       return { success: false, chapters: [], error: error.message };
+    }
+  });
+
+  ipcMain.handle('project:set-bibliography-source', async (_event, data: any) => {
+    console.log('📞 IPC Call: project:set-bibliography-source', data);
+    try {
+      const result = await projectManager.setBibliographySource(data);
+      console.log('📤 IPC Response: project:set-bibliography-source', result);
+      return result;
+    } catch (error: any) {
+      console.error('❌ project:set-bibliography-source error:', error);
+      return { success: false, error: error.message };
     }
   });
 
@@ -303,6 +316,55 @@ export function setupIPCHandlers() {
     const result = await dialog.showSaveDialog(options);
     console.log('📤 IPC Response: dialog:save-file', { canceled: result.canceled, filePath: result.filePath });
     return result;
+  });
+
+  // Zotero handlers
+  ipcMain.handle('zotero:test-connection', async (_event, userId: string, apiKey: string) => {
+    console.log('📞 IPC Call: zotero:test-connection', { userId });
+    try {
+      const result = await zoteroService.testConnection(userId, apiKey);
+      console.log('📤 IPC Response: zotero:test-connection', result);
+      return result;
+    } catch (error: any) {
+      console.error('❌ zotero:test-connection error:', error);
+      return { success: false, error: error.message };
+    }
+  });
+
+  ipcMain.handle('zotero:list-collections', async (_event, userId: string, apiKey: string) => {
+    console.log('📞 IPC Call: zotero:list-collections', { userId });
+    try {
+      const result = await zoteroService.listCollections(userId, apiKey);
+      console.log('📤 IPC Response: zotero:list-collections', {
+        success: result.success,
+        collectionCount: result.collections?.length,
+      });
+      return result;
+    } catch (error: any) {
+      console.error('❌ zotero:list-collections error:', error);
+      return { success: false, error: error.message };
+    }
+  });
+
+  ipcMain.handle('zotero:sync', async (_event, options: any) => {
+    console.log('📞 IPC Call: zotero:sync', {
+      userId: options.userId,
+      collectionKey: options.collectionKey,
+      downloadPDFs: options.downloadPDFs,
+      exportBibTeX: options.exportBibTeX,
+    });
+    try {
+      const result = await zoteroService.sync(options);
+      console.log('📤 IPC Response: zotero:sync', {
+        success: result.success,
+        itemCount: result.itemCount,
+        pdfCount: result.pdfCount,
+      });
+      return result;
+    } catch (error: any) {
+      console.error('❌ zotero:sync error:', error);
+      return { success: false, error: error.message };
+    }
   });
 
   console.log('✅ IPC handlers registered');

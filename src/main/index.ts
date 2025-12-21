@@ -18,9 +18,12 @@ function createWindow() {
   console.log('📂 Preload path:', preloadPath);
   console.log('📂 Preload exists:', existsSync(preloadPath));
 
+  const iconPath = path.join(__dirname, '../../../build/icon.png');
+
   mainWindow = new BrowserWindow({
     width: 1400,
     height: 900,
+    icon: iconPath,
     webPreferences: {
       preload: preloadPath,
       contextIsolation: true,

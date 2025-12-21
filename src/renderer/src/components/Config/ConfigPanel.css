@@ -37,6 +37,39 @@
   to { opacity: 1; }
 }
 
+.sync-button {
+  padding: 10px 20px;
+  background: #0e639c;
+  color: #ffffff;
+  border: none;
+  border-radius: 4px;
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: background 0.2s;
+  margin-top: 12px;
+}
+
+.sync-button:hover {
+  background: #1177bb;
+}
+
+.sync-button:disabled {
+  background: #555;
+  cursor: not-allowed;
+}
+
+.spinning {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
 .config-btn {
   padding: 8px 16px;
   border: none;
@@ -228,4 +261,27 @@
 .config-description small {
   font-size: 12px;
   color: #6a6a6a;
+}
+
+.config-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: #007acc;
+  text-decoration: none;
+  font-size: 12px;
+  transition: color 0.2s;
+  margin-left: 12px;
+}
+
+.config-link:hover {
+  color: #1177bb;
+  text-decoration: underline;
+}
+
+.config-btn.secondary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
 }
