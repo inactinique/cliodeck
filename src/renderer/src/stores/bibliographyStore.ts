@@ -137,8 +137,10 @@ export const useBibliographyStore = create<BibliographyState>((set, get) => ({
 
     if (!citation) return;
 
-    // Build citation text (e.g., "[@author2023]" or "[Author, 2023]")
-    const citationText = `[@${citation.author.split(' ').pop()?.toLowerCase()}${citation.year}]`;
+    // Use the actual BibTeX key from the citation id
+    const citationText = `[@${citation.id}]`;
+
+    console.log('📝 Inserting citation:', citationText, 'for', citation.title);
 
     // Call IPC to insert citation into editor
     window.electron.editor.insertText(citationText);

@@ -40,8 +40,10 @@ const getLatexTemplate = (projectType: string): string => {
 \\usepackage{graphicx}
 \\usepackage{fancyhdr}
 
-% Fonts
-\\setmainfont{Latin Modern Roman}
+% Fonts - EB Garamond with oldstyle numbers
+\\setmainfont{EB Garamond}[Numbers=OldStyle]
+\\setsansfont{Helvetica}
+\\setmonofont{Courier New}
 
 % Header/Footer
 \\pagestyle{fancy}
@@ -72,14 +74,35 @@ $body$
 \\usepackage{graphicx}
 \\usepackage{fancyhdr}
 
-% Bibliography
-\\usepackage[style=authoryear,backend=biber]{biblatex}
-$if(bibliography)$
-\\addbibresource{$bibliography$}
-$endif$
+% Disable section numbering
+\\setcounter{secnumdepth}{0}
 
-% Fonts
-\\setmainfont{Latin Modern Roman}
+% Fonts - EB Garamond with oldstyle numbers
+\\setmainfont{EB Garamond}[Numbers=OldStyle]
+\\setsansfont{Helvetica}
+\\setmonofont{Courier New}
+
+% CSLReferences environment and commands for pandoc citeproc
+\\newlength{\\cslhangindent}
+\\setlength{\\cslhangindent}{1.5em}
+\\newlength{\\csllabelwidth}
+\\setlength{\\csllabelwidth}{3em}
+\\newenvironment{CSLReferences}[2] % #1 hanging-ident, #2 entry spacing
+ {\\begin{list}{}{%
+  \\setlength{\\itemindent}{-1.5em}
+  \\setlength{\\leftmargin}{1.5em}
+  \\setlength{\\itemsep}{#2\\baselineskip}
+  \\setlength{\\parsep}{0pt}}}
+ {\\end{list}}
+\\newcommand{\\CSLBlock}[1]{#1\\hfill\\break}
+\\newcommand{\\CSLLeftMargin}[1]{\\parbox[t]{\\csllabelwidth}{}}
+\\newcommand{\\CSLRightInline}[1]{\\parbox[t]{\\linewidth - \\csllabelwidth}{#1}\\break}
+\\newcommand{\\CSLIndent}[1]{\\hspace{\\cslhangindent}#1}
+\\DeclareRobustCommand{\\citeproctext}{}
+\\DeclareRobustCommand{\\citeprocdate}{}
+\\DeclareRobustCommand{\\citeprocvolume}{}
+\\DeclareRobustCommand{\\citeprocissue}{}
+\\DeclareRobustCommand{\\citeprocpages}{}
 
 % Header/Footer
 \\pagestyle{fancy}
@@ -105,10 +128,6 @@ $endif$
 
 $body$
 
-$if(bibliography)$
-\\printbibliography
-$endif$
-
 \\end{document}`;
 
     case 'book':
@@ -122,14 +141,35 @@ $endif$
 \\usepackage{graphicx}
 \\usepackage{fancyhdr}
 
-% Bibliography
-\\usepackage[style=authoryear,backend=biber]{biblatex}
-$if(bibliography)$
-\\addbibresource{$bibliography$}
-$endif$
+% Disable section numbering
+\\setcounter{secnumdepth}{0}
 
-% Fonts
-\\setmainfont{Latin Modern Roman}
+% Fonts - EB Garamond with oldstyle numbers
+\\setmainfont{EB Garamond}[Numbers=OldStyle]
+\\setsansfont{Helvetica}
+\\setmonofont{Courier New}
+
+% CSLReferences environment and commands for pandoc citeproc
+\\newlength{\\cslhangindent}
+\\setlength{\\cslhangindent}{1.5em}
+\\newlength{\\csllabelwidth}
+\\setlength{\\csllabelwidth}{3em}
+\\newenvironment{CSLReferences}[2] % #1 hanging-ident, #2 entry spacing
+ {\\begin{list}{}{%
+  \\setlength{\\itemindent}{-1.5em}
+  \\setlength{\\leftmargin}{1.5em}
+  \\setlength{\\itemsep}{#2\\baselineskip}
+  \\setlength{\\parsep}{0pt}}}
+ {\\end{list}}
+\\newcommand{\\CSLBlock}[1]{#1\\hfill\\break}
+\\newcommand{\\CSLLeftMargin}[1]{\\parbox[t]{\\csllabelwidth}{}}
+\\newcommand{\\CSLRightInline}[1]{\\parbox[t]{\\linewidth - \\csllabelwidth}{#1}\\break}
+\\newcommand{\\CSLIndent}[1]{\\hspace{\\cslhangindent}#1}
+\\DeclareRobustCommand{\\citeproctext}{}
+\\DeclareRobustCommand{\\citeprocdate}{}
+\\DeclareRobustCommand{\\citeprocvolume}{}
+\\DeclareRobustCommand{\\citeprocissue}{}
+\\DeclareRobustCommand{\\citeprocpages}{}
 
 % Header/Footer
 \\pagestyle{fancy}
@@ -153,10 +193,6 @@ $endif$
 $body$
 
 \\backmatter
-
-$if(bibliography)$
-\\printbibliography
-$endif$
 
 \\end{document}`;
 
@@ -216,6 +252,8 @@ export class PDFExportService {
       // Write markdown content
       const mdPath = join(tempDir, 'input.md');
       await writeFile(mdPath, options.content);
+      console.log('📝 Markdown content written:', mdPath);
+      console.log('📝 Content preview (first 500 chars):', options.content.substring(0, 500));
 
       // Write template
       const templatePath = join(tempDir, 'template.latex');
@@ -231,6 +269,10 @@ export class PDFExportService {
         bibPath = join(tempDir, 'bibliography.bib');
         const bibContent = await readFile(options.bibliographyPath, 'utf-8');
         await writeFile(bibPath, bibContent);
+        console.log('📚 Bibliography copied:', options.bibliographyPath, '->', bibPath);
+        console.log('📚 Bibliography size:', bibContent.length, 'bytes');
+      } else {
+        console.log('⚠️ No bibliography found at:', options.bibliographyPath);
       }
 
       // Build pandoc arguments
@@ -239,20 +281,28 @@ export class PDFExportService {
         '-o', outputPath,
         '--template', templatePath,
         '--pdf-engine=xelatex',
-        '--from=markdown',
+        '--from=markdown+autolink_bare_uris',
         '--toc', // Table of contents
-        '--number-sections', // Number sections
+        '--pdf-engine-opt=-interaction=nonstopmode', // Don't stop on errors
       ];
 
-      // Add metadata
+      // Add metadata - escape special LaTeX characters
+      const escapeLatex = (str: string): string => {
+        return str
+          .replace(/\\/g, '\\textbackslash{}')
+          .replace(/[&%$#_{}]/g, '\\$&')
+          .replace(/~/g, '\\textasciitilde{}')
+          .replace(/\^/g, '\\textasciicircum{}');
+      };
+
       if (options.metadata?.title) {
-        pandocArgs.push('-V', `title=${options.metadata.title}`);
+        pandocArgs.push('-M', `title=${escapeLatex(options.metadata.title)}`);
       }
       if (options.metadata?.author) {
-        pandocArgs.push('-V', `author=${options.metadata.author}`);
+        pandocArgs.push('-M', `author=${escapeLatex(options.metadata.author)}`);
       }
       if (options.metadata?.date) {
-        pandocArgs.push('-V', `date=${options.metadata.date}`);
+        pandocArgs.push('-M', `date=${options.metadata.date}`);
       }
 
       // Add bibliography if available
