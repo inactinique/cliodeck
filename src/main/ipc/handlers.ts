@@ -35,6 +35,13 @@ export function setupIPCHandlers() {
     return result;
   });
 
+  ipcMain.handle('project:remove-recent', (_event, path: string) => {
+    console.log('📞 IPC Call: project:remove-recent', { path });
+    configManager.removeRecentProject(path);
+    console.log('📤 IPC Response: project:remove-recent success');
+    return { success: true };
+  });
+
   ipcMain.handle('project:create', async (_event, data: any) => {
     console.log('📞 IPC Call: project:create', data);
     try {
@@ -97,6 +104,7 @@ export function setupIPCHandlers() {
 
   // PDF handlers
   ipcMain.handle('pdf:index', async (event, filePath: string, bibtexKey?: string) => {
+    console.log('📞 IPC Call: pdf:index', { filePath, bibtexKey });
     try {
       const window = BrowserWindow.fromWebContents(event.sender);
 
@@ -107,6 +115,7 @@ export function setupIPCHandlers() {
         }
       });
 
+      console.log('📤 IPC Response: pdf:index success');
       return { success: true, document };
     } catch (error: any) {
       console.error('❌ pdf:index error:', error);

@@ -115,12 +115,18 @@ export class ProjectManager {
       }
 
       // Load bibliography if configured
+      console.log('🔍 Checking for bibliography source:', project.bibliographySource);
       if (project.bibliographySource?.filePath) {
         const bibPath = path.join(path.dirname(projectPath), project.bibliographySource.filePath);
+        console.log('🔍 Looking for bibliography at:', bibPath);
         if (existsSync(bibPath)) {
           project.bibliography = bibPath;
           console.log('📚 Bibliography found:', bibPath);
+        } else {
+          console.log('⚠️ Bibliography file not found:', bibPath);
         }
+      } else {
+        console.log('ℹ️ No bibliography source configured');
       }
 
       // Save update
@@ -128,6 +134,11 @@ export class ProjectManager {
 
       configManager.addRecentProject(projectPath);
       console.log('✅ Project loaded:', projectPath);
+      console.log('📤 Returning project with bibliography:', {
+        hasBibliography: !!project.bibliography,
+        bibliographyPath: project.bibliography,
+        hasBibliographySource: !!project.bibliographySource
+      });
 
       return { success: true, project };
     } catch (error) {

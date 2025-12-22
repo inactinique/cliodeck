@@ -87,12 +87,32 @@ export const ProjectPanel: React.FC = () => {
     }
   };
 
-  const handleLoadRecentProject = async (projectPath: string) => {
+  const handleLoadRecentProject = async (project: any) => {
     try {
+      // For non-notes projects, construct path to project.json
+      // For notes projects, use the path directly (folder path)
+      const projectPath = project.type === 'notes'
+        ? project.path
+        : `${project.path}/project.json`;
+
       await loadProject(projectPath);
     } catch (error: any) {
       console.error('Failed to load recent project:', error);
       alert('Erreur lors de l\'ouverture du projet: ' + error.message);
+    }
+  };
+
+  const handleRemoveRecentProject = async (project: any) => {
+    try {
+      // Construct the path that was stored in recent projects
+      const projectPath = project.type === 'notes'
+        ? project.path
+        : `${project.path}/project.json`;
+
+      await window.electron.project.removeRecent(projectPath);
+      await loadRecentProjects();
+    } catch (error: any) {
+      console.error('Failed to remove recent project:', error);
     }
   };
 
@@ -191,12 +211,26 @@ export const ProjectPanel: React.FC = () => {
                 <div
                   key={project.id}
                   className="recent-project-item"
-                  onClick={() => handleLoadRecentProject(project.path)}
                 >
-                  <div className="recent-project-name">
-                    {project.name} <span className="project-type-badge">{getProjectTypeName(project.type)}</span>
+                  <div
+                    className="recent-project-content"
+                    onClick={() => handleLoadRecentProject(project)}
+                  >
+                    <div className="recent-project-name">
+                      {project.name} <span className="project-type-badge">{getProjectTypeName(project.type)}</span>
+                    </div>
+                    <div className="recent-project-path">{project.path}</div>
                   </div>
-                  <div className="recent-project-path">{project.path}</div>
+                  <button
+                    className="recent-project-remove"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleRemoveRecentProject(project);
+                    }}
+                    title="Retirer des projets récents"
+                  >
+                    <X size={16} />
+                  </button>
                 </div>
               ))}
             </div>

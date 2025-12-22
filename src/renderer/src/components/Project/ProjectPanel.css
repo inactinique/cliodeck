@@ -100,13 +100,40 @@
   border: 1px solid #3e3e42;
   border-radius: 6px;
   padding: var(--item-padding-vertical) var(--item-padding-horizontal);
-  cursor: pointer;
   transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .recent-project-item:hover {
   border-color: #007acc;
   background-color: #2a2a2a;
+}
+
+.recent-project-content {
+  flex: 1;
+  cursor: pointer;
+  min-width: 0;
+}
+
+.recent-project-remove {
+  flex-shrink: 0;
+  background: transparent;
+  border: none;
+  color: #888;
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.recent-project-remove:hover {
+  background-color: #f44336;
+  color: white;
 }
 
 .recent-project-name {

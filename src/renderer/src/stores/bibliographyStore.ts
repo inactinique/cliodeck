@@ -153,11 +153,18 @@ export const useBibliographyStore = create<BibliographyState>((set, get) => ({
         throw new Error('No PDF file associated with this citation');
       }
 
-      await window.electron.pdf.index(citation.file, citationId);
+      console.log(`🔍 Indexing PDF for citation: ${citation.title}`);
+      console.log(`📁 PDF file path: ${citation.file}`);
+
+      const result = await window.electron.pdf.index(citation.file, citationId);
+
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to index PDF');
+      }
 
       console.log(`✅ PDF indexed from citation: ${citation.title}`);
     } catch (error) {
-      console.error('Failed to index PDF from citation:', error);
+      console.error('❌ Failed to index PDF from citation:', error);
       throw error;
     }
   },

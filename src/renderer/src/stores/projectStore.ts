@@ -59,6 +59,12 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
 
       const project = result.project;
 
+      console.log('📥 Raw project data from backend:', {
+        project: project,
+        bibliography: project.bibliography,
+        bibliographySource: project.bibliographySource
+      });
+
       set({
         currentProject: {
           ...project,
@@ -76,14 +82,23 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
       }
 
       // Load bibliography if configured
+      console.log('🔍 Project data received:', {
+        hasBibliography: !!project.bibliography,
+        bibliographyPath: project.bibliography,
+        hasBibliographySource: !!project.bibliographySource
+      });
+
       if (project.bibliography) {
         try {
           const { useBibliographyStore } = await import('./bibliographyStore');
+          console.log('📚 Loading bibliography from:', project.bibliography);
           await useBibliographyStore.getState().loadBibliography(project.bibliography);
-          console.log('📚 Bibliography loaded for project');
+          console.log('✅ Bibliography loaded for project');
         } catch (error) {
-          console.error('Failed to load project bibliography:', error);
+          console.error('❌ Failed to load project bibliography:', error);
         }
+      } else {
+        console.log('ℹ️ No bibliography to load');
       }
 
       // Load document.md into editor if it's not a notes project

@@ -79,18 +79,20 @@ export const ZoteroImport: React.FC = () => {
       let projectJsonPath: string | undefined;
 
       if (currentProject) {
-        if (currentProject.type === 'notes') {
-          // For notes projects, path is the folder
-          targetDirectory = currentProject.path;
-        } else {
-          // For other projects, path is the project.json file
-          // Extract the directory containing project.json
-          const pathParts = currentProject.path.split('/');
-          pathParts.pop(); // Remove project.json
-          targetDirectory = pathParts.join('/');
-          projectJsonPath = currentProject.path;
+        // currentProject.path is always the folder path for all project types
+        targetDirectory = currentProject.path;
+
+        // For non-notes projects, the project.json is at path/project.json
+        if (currentProject.type !== 'notes') {
+          projectJsonPath = `${currentProject.path}/project.json`;
         }
       }
+
+      console.log('🔍 Zotero import - Project paths:', {
+        currentProjectPath: currentProject?.path,
+        targetDirectory,
+        projectJsonPath
+      });
 
       // Sync to get BibTeX
       const syncResult = await window.electron.zotero.sync({

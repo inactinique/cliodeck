@@ -8,6 +8,7 @@ const api = {
     load: (path: string) => ipcRenderer.invoke('project:load', path),
     save: (data: any) => ipcRenderer.invoke('project:save', data),
     getRecent: () => ipcRenderer.invoke('project:get-recent'),
+    removeRecent: (path: string) => ipcRenderer.invoke('project:remove-recent', path),
     getChapters: (projectId: string) => ipcRenderer.invoke('project:get-chapters', projectId),
     setBibliographySource: (data: {
       projectPath: string;

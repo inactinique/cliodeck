@@ -8,6 +8,34 @@ export const MarkdownEditor: React.FC = () => {
   const { content, setContent, settings } = useEditorStore();
   const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null);
 
+  // Listen for insert text commands from bibliography
+  useEffect(() => {
+    const unsubscribe = window.electron.editor.onInsertText((text: string) => {
+      if (editorRef.current) {
+        const selection = editorRef.current.getSelection();
+        if (selection) {
+          editorRef.current.executeEdits('insert-citation', [
+            {
+              range: selection,
+              text: text,
+            },
+          ]);
+          // Move cursor to end of inserted text
+          const newPosition = {
+            lineNumber: selection.startLineNumber,
+            column: selection.startColumn + text.length,
+          };
+          editorRef.current.setPosition(newPosition);
+          editorRef.current.focus();
+        }
+      }
+    });
+
+    return () => {
+      unsubscribe();
+    };
+  }, []);
+
   const handleEditorDidMount: OnMount = (editor, monaco) => {
     editorRef.current = editor;
 
