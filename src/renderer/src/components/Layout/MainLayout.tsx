@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { MessageCircle, FileText, Settings, Folder, BookOpen } from 'lucide-react';
+import { MessageCircle, FileText, Settings, Folder, BookOpen, FileDown } from 'lucide-react';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import { BibliographyPanel } from '../Bibliography/BibliographyPanel';
 import { PDFIndexPanel } from '../PDFIndex/PDFIndexPanel';
 import { ChatInterface } from '../Chat/ChatInterface';
 import { ConfigPanel } from '../Config/ConfigPanel';
 import { ProjectPanel } from '../Project/ProjectPanel';
+import { PDFExportModal } from '../Export/PDFExportModal';
 import { logger } from '../../utils/logger';
 import './MainLayout.css';
 
@@ -25,6 +26,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
 }) => {
   const [leftView, setLeftView] = useState<LeftPanelView>('projects');
   const [rightView, setRightView] = useState<RightPanelView>('chat');
+  const [showExportModal, setShowExportModal] = useState(false);
 
   const handleLeftViewChange = (view: LeftPanelView) => {
     logger.component('MainLayout', 'Left tab clicked', { view });
@@ -47,6 +49,9 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
           <span className="project-name">Sans titre</span>
         </div>
         <div className="toolbar-right">
+          <button className="toolbar-button" onClick={() => setShowExportModal(true)} title="Exporter en PDF">
+            <FileDown size={20} strokeWidth={1} />
+          </button>
           <button className="toolbar-button" onClick={() => handleRightViewChange('settings')}>
             <Settings size={20} strokeWidth={1} />
           </button>
@@ -136,6 +141,9 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
           </Panel>
         </PanelGroup>
       </div>
+
+      {/* PDF Export Modal */}
+      <PDFExportModal isOpen={showExportModal} onClose={() => setShowExportModal(false)} />
     </div>
   );
 };

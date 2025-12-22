@@ -5,6 +5,7 @@ import { pdfService } from '../services/pdf-service.js';
 import { bibliographyService } from '../services/bibliography-service.js';
 import { chatService } from '../services/chat-service.js';
 import { zoteroService } from '../services/zotero-service.js';
+import { pdfExportService } from '../services/pdf-export.js';
 
 /**
  * Setup all IPC handlers
@@ -372,6 +373,44 @@ export function setupIPCHandlers() {
       return result;
     } catch (error: any) {
       console.error('❌ zotero:sync error:', error);
+      return { success: false, error: error.message };
+    }
+  });
+
+  // PDF Export handlers
+  ipcMain.handle('pdf-export:check-dependencies', async () => {
+    console.log('📞 IPC Call: pdf-export:check-dependencies');
+    try {
+      const result = await pdfExportService.checkDependencies();
+      console.log('📤 IPC Response: pdf-export:check-dependencies', result);
+      return { success: true, ...result };
+    } catch (error: any) {
+      console.error('❌ pdf-export:check-dependencies error:', error);
+      return { success: false, error: error.message };
+    }
+  });
+
+  ipcMain.handle('pdf-export:export', async (event, options: any) => {
+    console.log('📞 IPC Call: pdf-export:export', {
+      projectType: options.projectType,
+      hasBibliography: !!options.bibliographyPath,
+    });
+    try {
+      const window = BrowserWindow.fromWebContents(event.sender);
+
+      const result = await pdfExportService.exportToPDF(options, (progress) => {
+        if (window) {
+          window.webContents.send('pdf-export:progress', progress);
+        }
+      });
+
+      console.log('📤 IPC Response: pdf-export:export', {
+        success: result.success,
+        outputPath: result.outputPath,
+      });
+      return result;
+    } catch (error: any) {
+      console.error('❌ pdf-export:export error:', error);
       return { success: false, error: error.message };
     }
   });

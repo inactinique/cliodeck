@@ -89,6 +89,28 @@ const api = {
       exportBibTeX: boolean;
     }) => ipcRenderer.invoke('zotero:sync', options),
   },
+
+  // PDF Export
+  pdfExport: {
+    checkDependencies: () => ipcRenderer.invoke('pdf-export:check-dependencies'),
+    export: (options: {
+      projectPath: string;
+      projectType: 'notes' | 'article' | 'book' | 'presentation';
+      content: string;
+      outputPath?: string;
+      bibliographyPath?: string;
+      metadata?: {
+        title?: string;
+        author?: string;
+        date?: string;
+      };
+    }) => ipcRenderer.invoke('pdf-export:export', options),
+    onProgress: (callback: (progress: any) => void) => {
+      const listener = (_event: any, progress: any) => callback(progress);
+      ipcRenderer.on('pdf-export:progress', listener);
+      return () => ipcRenderer.removeListener('pdf-export:progress', listener);
+    },
+  },
 };
 
 // Exposer l'API au renderer via window.electron
