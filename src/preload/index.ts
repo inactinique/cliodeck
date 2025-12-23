@@ -73,6 +73,9 @@ const api = {
   // File system
   fs: {
     readDirectory: (dirPath: string) => ipcRenderer.invoke('fs:read-directory', dirPath),
+    exists: (filePath: string) => ipcRenderer.invoke('fs:exists', filePath),
+    readFile: (filePath: string) => ipcRenderer.invoke('fs:read-file', filePath),
+    writeFile: (filePath: string, content: string) => ipcRenderer.invoke('fs:write-file', filePath, content),
   },
 
   // Zotero
@@ -109,6 +112,26 @@ const api = {
       const listener = (_event: any, progress: any) => callback(progress);
       ipcRenderer.on('pdf-export:progress', listener);
       return () => ipcRenderer.removeListener('pdf-export:progress', listener);
+    },
+  },
+
+  // Reveal.js Export
+  revealJsExport: {
+    export: (options: {
+      projectPath: string;
+      content: string;
+      outputPath?: string;
+      metadata?: {
+        title?: string;
+        author?: string;
+        date?: string;
+      };
+      config?: any;
+    }) => ipcRenderer.invoke('revealjs-export:export', options),
+    onProgress: (callback: (progress: any) => void) => {
+      const listener = (_event: any, progress: any) => callback(progress);
+      ipcRenderer.on('revealjs-export:progress', listener);
+      return () => ipcRenderer.removeListener('revealjs-export:progress', listener);
     },
   },
 };

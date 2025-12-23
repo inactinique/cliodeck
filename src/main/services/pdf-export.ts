@@ -18,6 +18,41 @@ export interface ExportOptions {
     date?: string;
     abstract?: string;
   };
+  beamerConfig?: {
+    // Theme options
+    theme?: string;
+    colortheme?: string;
+    fonttheme?: string;
+    aspectratio?: string;
+    navigation?: boolean;
+    showNotes?: boolean;
+
+    // Title page options
+    institute?: string;
+    logo?: string;
+    titlegraphic?: string;
+
+    // TOC options
+    showToc?: boolean;
+    tocBeforeSection?: boolean;
+
+    // Frame numbering
+    showFrameNumber?: boolean;
+    frameNumberStyle?: 'total' | 'simple' | 'none';
+
+    // Section numbering
+    showSectionNumber?: boolean;
+    sectionNumberInToc?: boolean;
+
+    // Footer customization
+    showAuthorInFooter?: boolean;
+    showTitleInFooter?: boolean;
+    showDateInFooter?: boolean;
+
+    // Advanced options
+    incremental?: boolean;
+    overlays?: boolean;
+  };
 }
 
 interface PandocProgress {
@@ -209,6 +244,159 @@ $body$
 
 \\end{document}`;
 
+    case 'presentation':
+      return `\\documentclass[11pt,aspectratio=169,xcolor={dvipsnames}]{beamer}
+\\usepackage{fontspec}
+\\usepackage{polyglossia}
+\\setmainlanguage{french}
+
+% Fonts - Latin Modern (guaranteed availability)
+\\setmainfont{${mainFont}}
+\\setsansfont{${sansFont}}
+\\setmonofont{${monoFont}}
+
+\\usepackage{graphicx}
+\\usepackage{hyperref}
+\\usepackage{listings}
+\\usepackage{longtable}
+\\usepackage{booktabs}
+\\usepackage{caption}
+
+% Pandoc compatibility - define tightlist BEFORE any Beamer configuration
+\\providecommand{\\tightlist}{}
+
+% ============================================================================
+% Elegant Slides Theme - Adapted for Pandoc
+% Based on https://github.com/lsprung/elegant-slides
+% License: CC BY 4.0
+% ============================================================================
+
+% Color definitions (Lecture theme)
+\\definecolor{primary}{HTML}{08457E}
+\\definecolor{secondary}{HTML}{B8860B}
+\\definecolor{tertiary}{HTML}{B22222}
+\\definecolor{accent}{HTML}{F5F5F5}
+
+% Beamer color theme
+\\setbeamercolor{frametitle}{fg=primary}
+\\setbeamercolor{framesubtitle}{fg=secondary}
+\\setbeamercolor{title}{fg=primary}
+\\setbeamercolor{subtitle}{fg=secondary}
+\\setbeamercolor{author}{fg=black}
+\\setbeamercolor{date}{fg=black}
+\\setbeamercolor{institute}{fg=black}
+\\setbeamercolor{section in toc}{fg=primary}
+\\setbeamercolor{subsection in toc}{fg=secondary}
+\\setbeamercolor{item}{fg=primary}
+\\setbeamercolor{subitem}{fg=secondary}
+\\setbeamercolor{subsubitem}{fg=tertiary}
+\\setbeamercolor{block title}{fg=white,bg=primary}
+\\setbeamercolor{block body}{fg=black,bg=accent}
+\\setbeamercolor{block title alerted}{fg=white,bg=tertiary}
+\\setbeamercolor{block body alerted}{fg=black,bg=accent}
+\\setbeamercolor{block title example}{fg=white,bg=secondary}
+\\setbeamercolor{block body example}{fg=black,bg=accent}
+
+% Font settings
+\\setbeamerfont{frametitle}{size=\\Large,series=\\bfseries}
+\\setbeamerfont{framesubtitle}{size=\\normalsize,series=\\mdseries}
+\\setbeamerfont{title}{size=\\LARGE,series=\\bfseries}
+\\setbeamerfont{subtitle}{size=\\large,series=\\mdseries}
+\\setbeamerfont{author}{size=\\normalsize}
+\\setbeamerfont{date}{size=\\small}
+\\setbeamerfont{institute}{size=\\small}
+
+% Disable navigation symbols
+\\setbeamertemplate{navigation symbols}{}
+
+% Customize footline (frame number)
+\\setbeamertemplate{footline}{
+  \\hfill\\insertframenumber\\hspace{0.5cm}\\vspace{0.3cm}
+}
+
+% Customize frame title
+\\setbeamertemplate{frametitle}{
+  \\vspace{0.5cm}
+  \\textbf{\\insertframetitle}
+  \\ifx\\insertframesubtitle\\@empty
+  \\else
+    \\\\{\\color{secondary}\\small\\insertframesubtitle}
+  \\fi
+  \\vspace{0.2cm}
+}
+
+% Customize itemize
+\\setbeamertemplate{itemize items}[circle]
+\\setbeamertemplate{itemize subitem}[triangle]
+\\setbeamertemplate{itemize subsubitem}[square]
+
+% Customize title page
+\\setbeamertemplate{title page}{
+  \\vfill
+  \\begin{centering}
+    {\\usebeamerfont{title}\\usebeamercolor[fg]{title}\\inserttitle\\par}
+    \\vspace{0.5cm}
+    {\\usebeamerfont{subtitle}\\usebeamercolor[fg]{subtitle}\\insertsubtitle\\par}
+    \\vspace{1.5cm}
+    {\\usebeamerfont{author}\\usebeamercolor[fg]{author}\\insertauthor\\par}
+    \\vspace{0.3cm}
+    {\\usebeamerfont{institute}\\usebeamercolor[fg]{institute}\\insertinstitute\\par}
+    \\vspace{0.3cm}
+    {\\usebeamerfont{date}\\usebeamercolor[fg]{date}\\insertdate\\par}
+  \\end{centering}
+  \\vfill
+}
+
+% Code listings style (elegant)
+\\lstset{
+  basicstyle=\\ttfamily\\small,
+  breaklines=true,
+  frame=leftline,
+  framerule=2pt,
+  rulecolor=\\color{primary},
+  backgroundcolor=\\color{accent},
+  xleftmargin=10pt,
+  framexleftmargin=8pt
+}
+
+% Hyperref setup
+\\hypersetup{
+  colorlinks=true,
+  linkcolor=primary,
+  urlcolor=secondary,
+  citecolor=tertiary
+}
+
+% Title page info
+\\title{$title$}
+\\author{$author$}
+\\date{$date$}
+$if(institute)$\\institute{$institute$}$endif$
+$if(subtitle)$\\subtitle{$subtitle$}$endif$
+
+\\begin{document}
+
+% Title page
+{
+\\setbeamertemplate{footline}{}
+\\begin{frame}
+  \\titlepage
+\\end{frame}
+}
+\\addtocounter{framenumber}{-1}
+
+% Abstract
+$if(abstract)$
+\\begin{frame}{Résumé}
+$abstract$
+\\end{frame}
+$endif$
+
+% Content
+$body$
+
+\\end{document}`;
+
     default:
       return getLatexTemplate('notes');
   }
@@ -306,15 +494,153 @@ export class PDFExportService {
       }
 
       // Build pandoc arguments
+      // For presentations, use native Beamer support instead of custom template
       const pandocArgs = [
         mdPath,
         '-o', outputPath,
-        '--template', templatePath,
         '--pdf-engine=xelatex',
         '--from=markdown+autolink_bare_uris',
-        '--toc', // Table of contents
         '--pdf-engine-opt=-interaction=nonstopmode', // Don't stop on errors
       ];
+
+      // Use different approach for presentations vs documents
+      if (options.projectType === 'presentation') {
+        // Use Pandoc's native Beamer support
+        pandocArgs.push('--to=beamer');
+        pandocArgs.push('--slide-level=1'); // H1 = new slide
+
+        // Beamer-specific options via variables from config or defaults
+        const cfg = options.beamerConfig || {};
+
+        // Theme options
+        const beamerTheme = cfg.theme || 'Madrid';
+        const beamerColorTheme = cfg.colortheme || 'default';
+        const beamerFontTheme = cfg.fonttheme || 'default';
+        const beamerAspectRatio = cfg.aspectratio || '169';
+
+        pandocArgs.push('-V', `theme:${beamerTheme}`);
+        if (beamerColorTheme !== 'default') {
+          pandocArgs.push('-V', `colortheme:${beamerColorTheme}`);
+        }
+        if (beamerFontTheme !== 'default') {
+          pandocArgs.push('-V', `fonttheme:${beamerFontTheme}`);
+        }
+        pandocArgs.push('-V', `aspectratio:${beamerAspectRatio}`);
+
+        // Title page options
+        if (cfg.institute) {
+          pandocArgs.push('-V', `institute:${cfg.institute}`);
+        }
+        if (cfg.logo) {
+          pandocArgs.push('-V', `logo:${cfg.logo}`);
+        }
+        if (cfg.titlegraphic) {
+          pandocArgs.push('-V', `titlegraphic:${cfg.titlegraphic}`);
+        }
+
+        // Section numbering
+        if (cfg.showSectionNumber) {
+          pandocArgs.push('-V', 'section-titles=true');
+          pandocArgs.push('-V', 'numbersections=true');
+        } else {
+          pandocArgs.push('-V', 'numbersections=false');
+        }
+
+        // TOC in TOC
+        if (cfg.sectionNumberInToc) {
+          pandocArgs.push('-V', 'toc-numbering=true');
+        }
+
+        // Navigation symbols
+        if (!cfg.navigation) {
+          pandocArgs.push('-V', 'navigation:empty');
+        }
+
+        // Notes
+        if (cfg.showNotes) {
+          pandocArgs.push('-V', 'classoption=handout');
+          pandocArgs.push('-V', 'notes=show');
+        }
+
+        // Incremental lists
+        if (cfg.incremental) {
+          pandocArgs.push('--incremental');
+        }
+
+        // Table of contents
+        if (cfg.showToc) {
+          pandocArgs.push('--toc');
+          pandocArgs.push('--toc-depth=2');
+        }
+
+        // Advanced Beamer customization via header-includes
+        const beamerCustomizations: string[] = [];
+
+        // Frame numbering customization
+        if (cfg.showFrameNumber) {
+          if (cfg.frameNumberStyle === 'total') {
+            beamerCustomizations.push('\\setbeamertemplate{footline}[frame number]');
+          } else if (cfg.frameNumberStyle === 'simple') {
+            beamerCustomizations.push('\\setbeamertemplate{footline}{\\hfill\\insertframenumber\\hspace{0.5cm}\\vspace{0.3cm}}');
+          }
+        } else {
+          beamerCustomizations.push('\\setbeamertemplate{footline}{}');
+        }
+
+        // Custom footer with author/title/date
+        if (cfg.showAuthorInFooter || cfg.showTitleInFooter || cfg.showDateInFooter) {
+          const footerParts: string[] = [];
+          footerParts.push('\\setbeamertemplate{footline}{');
+          footerParts.push('  \\leavevmode%');
+          footerParts.push('  \\hbox{%');
+
+          if (cfg.showAuthorInFooter) {
+            footerParts.push('    \\begin{beamercolorbox}[wd=.33\\paperwidth,ht=2.25ex,dp=1ex,center]{author in head/foot}%');
+            footerParts.push('      \\usebeamerfont{author in head/foot}\\insertshortauthor%');
+            footerParts.push('    \\end{beamercolorbox}%');
+          }
+          if (cfg.showTitleInFooter) {
+            footerParts.push('    \\begin{beamercolorbox}[wd=.33\\paperwidth,ht=2.25ex,dp=1ex,center]{title in head/foot}%');
+            footerParts.push('      \\usebeamerfont{title in head/foot}\\insertshorttitle%');
+            footerParts.push('    \\end{beamercolorbox}%');
+          }
+          if (cfg.showDateInFooter) {
+            footerParts.push('    \\begin{beamercolorbox}[wd=.34\\paperwidth,ht=2.25ex,dp=1ex,right]{date in head/foot}%');
+            footerParts.push('      \\usebeamerfont{date in head/foot}\\insertshortdate{}\\hspace*{2em}');
+            footerParts.push('      \\insertframenumber{} / \\inserttotalframenumber\\hspace*{2ex}%');
+            footerParts.push('    \\end{beamercolorbox}%');
+          }
+
+          footerParts.push('  }%');
+          footerParts.push('  \\vskip0pt%');
+          footerParts.push('}');
+
+          beamerCustomizations.push(...footerParts);
+        }
+
+        // TOC before each section
+        if (cfg.tocBeforeSection && cfg.showToc) {
+          beamerCustomizations.push(
+            '\\AtBeginSection[]{',
+            '  \\begin{frame}<beamer>',
+            '    \\frametitle{Plan}',
+            '    \\tableofcontents[currentsection]',
+            '  \\end{frame}',
+            '}'
+          );
+        }
+
+        // Write header-includes file if we have customizations
+        if (beamerCustomizations.length > 0) {
+          const headerIncludesPath = join(tempDir, 'beamer-custom.tex');
+          await writeFile(headerIncludesPath, beamerCustomizations.join('\n'));
+          pandocArgs.push('--include-in-header', headerIncludesPath);
+        }
+      } else {
+        // Use custom template for articles/books/notes
+        pandocArgs.push('--template', templatePath);
+        pandocArgs.push('--toc');
+      }
 
       // Add metadata - escape special LaTeX characters
       const escapeLatex = (str: string): string => {

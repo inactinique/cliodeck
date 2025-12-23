@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { FilePlus, FolderOpen, X } from 'lucide-react';
+import { FilePlus, FolderOpen, X, FileDown } from 'lucide-react';
 import { useProjectStore } from '../../stores/projectStore';
 import { useEditorStore } from '../../stores/editorStore';
 import { FileTree } from '../FileTree/FileTree';
 import { CollapsibleSection } from '../common/CollapsibleSection';
+import { PDFExportModal } from '../Export/PDFExportModal';
+import { BeamerConfig } from './BeamerConfig';
 import './ProjectPanel.css';
 
 export const ProjectPanel: React.FC = () => {
@@ -19,6 +21,7 @@ export const ProjectPanel: React.FC = () => {
   const { loadFile } = useEditorStore();
 
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showPDFExportModal, setShowPDFExportModal] = useState(false);
   const [newProjectName, setNewProjectName] = useState('');
   const [newProjectType, setNewProjectType] = useState<'article' | 'book' | 'presentation' | 'notes'>('article');
   const [newProjectPath, setNewProjectPath] = useState('');
@@ -208,6 +211,35 @@ export const ProjectPanel: React.FC = () => {
               </CollapsibleSection>
             )}
 
+            {/* File list for Presentation projects */}
+            {currentProject.type === 'presentation' && (
+              <>
+                <CollapsibleSection title="Fichiers du projet" defaultExpanded={true}>
+                  <div className="project-files-list">
+                    <div
+                      className="project-file-item"
+                      onClick={() => handleFileSelect(`${currentProject.path}/slides.md`)}
+                    >
+                      🎬 slides.md
+                    </div>
+                  </div>
+                </CollapsibleSection>
+
+                <CollapsibleSection title="Apparence" defaultExpanded={true}>
+                  <BeamerConfig projectPath={currentProject.path} />
+                </CollapsibleSection>
+
+                <button
+                  className="project-btn export-btn"
+                  onClick={() => setShowPDFExportModal(true)}
+                  style={{ marginTop: '1rem', width: '100%' }}
+                >
+                  <FileDown size={18} />
+                  Exporter en PDF
+                </button>
+              </>
+            )}
+
             <button
               className="project-btn"
               onClick={closeProject}
@@ -328,6 +360,12 @@ export const ProjectPanel: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* PDF Export Modal (for all project types including presentations) */}
+      <PDFExportModal
+        isOpen={showPDFExportModal}
+        onClose={() => setShowPDFExportModal(false)}
+      />
     </div>
   );
 };

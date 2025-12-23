@@ -76,6 +76,63 @@ export class ProjectManager {
       await writeFile(abstractFile, '# Résumé\n\nRésumé à compléter...');
     }
 
+    // For presentations, create slides.md with Beamer syntax
+    if (projectType === 'presentation') {
+      const slidesFile = path.join(projectPath, 'slides.md');
+      const slidesTemplate = `# Introduction
+
+Votre contenu ici...
+
+- Point important 1
+- Point important 2
+- Point important 3
+
+# Plan de la présentation
+
+1. Contexte
+2. Méthodologie
+3. Résultats
+4. Conclusion
+
+# Section 1: Contexte
+
+## Sous-section
+
+Texte de votre slide...
+
+::: notes
+Ceci est une note pour le présentateur.
+Elle n'apparaîtra pas sur le slide, uniquement dans vos notes.
+:::
+
+# Section 2: Méthodologie
+
+## Approche
+
+- Méthode 1
+- Méthode 2
+- Méthode 3
+
+# Résultats
+
+## Tableau récapitulatif
+
+| Élément | Valeur |
+|---------|--------|
+| A       | 10     |
+| B       | 20     |
+
+# Conclusion
+
+Merci de votre attention !
+
+::: notes
+N'oubliez pas de mentionner les perspectives futures.
+:::
+`;
+      await writeFile(slidesFile, slidesTemplate);
+    }
+
     // Add to recent projects
     configManager.addRecentProject(projectFile);
 

@@ -1,0 +1,121 @@
+.presentation-config {
+  background-color: #252526;
+  border: 1px solid #3e3e42;
+  border-radius: 8px;
+  padding: var(--spacing-lg);
+  margin-bottom: var(--spacing-md);
+}
+
+.config-header {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-lg);
+  color: #ccc;
+}
+
+.config-header h4 {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.config-section {
+  margin-bottom: var(--spacing-md);
+}
+
+.config-section:last-child {
+  margin-bottom: 0;
+}
+
+.config-section > label:not(.checkbox-label) {
+  display: block;
+  margin-bottom: var(--spacing-sm);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: #ccc;
+}
+
+.config-section select,
+.config-section input[type="number"] {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  background-color: #1e1e1e;
+  color: #ccc;
+  border: 1px solid #3e3e42;
+  border-radius: 4px;
+  font-size: var(--font-size-sm);
+  transition: all 0.2s;
+}
+
+.config-section select:hover,
+.config-section input[type="number"]:hover {
+  border-color: #007acc;
+}
+
+.config-section select:focus,
+.config-section input[type="number"]:focus {
+  outline: none;
+  border-color: #007acc;
+  box-shadow: 0 0 0 2px rgba(0, 122, 204, 0.1);
+}
+
+.config-section select:disabled,
+.config-section input[type="number"]:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  cursor: pointer;
+  font-size: var(--font-size-sm);
+  color: #ccc;
+  user-select: none;
+}
+
+.checkbox-label input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  accent-color: #007acc;
+}
+
+.checkbox-label input[type="checkbox"]:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.checkbox-label span {
+  flex: 1;
+}
+
+.config-hint {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 0.75rem;
+  color: #888;
+  font-style: italic;
+}
+
+.config-saving {
+  margin-top: var(--spacing-md);
+  padding: 0.5rem;
+  background-color: #007acc;
+  color: white;
+  text-align: center;
+  border-radius: 4px;
+  font-size: var(--font-size-sm);
+  animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}

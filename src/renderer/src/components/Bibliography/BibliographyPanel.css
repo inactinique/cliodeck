@@ -54,7 +54,7 @@
 
 /* Controls */
 .bibliography-controls {
-  padding: 12px 16px;
+  padding: 5px 5px;
   background-color: #252526;
   border-bottom: 1px solid #3e3e42;
   display: flex;
@@ -70,7 +70,7 @@
   background-color: #2d2d2d;
   border: 1px solid #3e3e42;
   border-radius: 6px;
-  padding: 6px 10px;
+  padding: 5px 5px;
   transition: border-color 0.2s;
 }
 
@@ -145,7 +145,7 @@
 
 /* Citation Count */
 .citation-count {
-  padding: 8px 16px;
+  padding: 5px 5px;
   font-size: 12px;
   color: #888;
   background-color: #252526;
@@ -209,7 +209,7 @@
 
 /* Zotero Import */
 .zotero-import {
-  padding: 12px 16px;
+  padding: 5px 5px;
   background-color: #252526;
   border-bottom: 1px solid #3e3e42;
 }

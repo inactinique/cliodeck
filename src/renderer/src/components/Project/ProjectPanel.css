@@ -20,7 +20,7 @@
 }
 
 .project-panel .toolbar-btn {
-  padding: 0.375rem;
+  padding: 0.175rem;
   background-color: transparent;
   color: #ccc;
   border: none;
@@ -306,4 +306,24 @@
   background-color: #2a2a2a;
   border-color: #007acc;
   color: #fff;
+}
+
+.project-btn.export-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background-color: #007acc;
+  color: white;
+  border: 1px solid #007acc;
+  padding: 0.75rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+.project-btn.export-btn:hover {
+  background-color: #005a9e;
+  border-color: #005a9e;
 }

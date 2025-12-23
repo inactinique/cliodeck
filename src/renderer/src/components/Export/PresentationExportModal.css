@@ -1,0 +1,244 @@
+.presentation-export-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.presentation-export-content {
+  background-color: #1e1e1e;
+  border: 1px solid #3e3e42;
+  border-radius: 8px;
+  padding: 1.5rem;
+  max-width: 600px;
+  width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.presentation-export-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-lg);
+}
+
+.presentation-export-header h3 {
+  margin: 0;
+  color: #ccc;
+  font-size: 1.1rem;
+}
+
+.close-btn {
+  background: transparent;
+  border: none;
+  color: #888;
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.close-btn:hover {
+  background-color: #3a3a3a;
+  color: #fff;
+}
+
+.close-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.presentation-export-body {
+  margin-bottom: var(--spacing-lg);
+}
+
+.form-field {
+  margin-bottom: var(--spacing-lg);
+}
+
+.form-field label {
+  display: block;
+  margin-bottom: var(--spacing-sm);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: #ccc;
+}
+
+.form-field input,
+.form-field select {
+  width: 100%;
+  padding: var(--item-padding-vertical) var(--item-padding-horizontal);
+  background-color: #252526;
+  color: #ccc;
+  border: 1px solid #3e3e42;
+  border-radius: 4px;
+  font-size: var(--font-size-sm);
+}
+
+.form-field input:focus,
+.form-field select:focus {
+  outline: none;
+  border-color: #007acc;
+}
+
+.form-field input:disabled,
+.form-field select:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.path-selector {
+  display: flex;
+  gap: var(--list-item-gap);
+  align-items: center;
+}
+
+.path-selector input {
+  flex: 1;
+}
+
+.path-selector button {
+  padding: 0.5rem 1rem;
+  background-color: #3c3c3c;
+  color: #ccc;
+  border: 1px solid #3e3e42;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: var(--font-size-sm);
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.path-selector button:hover {
+  background-color: #4a4a4a;
+  border-color: #007acc;
+}
+
+.path-selector button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.export-progress {
+  margin: var(--spacing-lg) 0;
+  padding: var(--spacing-md);
+  background-color: #252526;
+  border-radius: 6px;
+}
+
+.progress-bar-container {
+  width: 100%;
+  height: 8px;
+  background-color: #3e3e42;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: var(--spacing-sm);
+}
+
+.progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #007acc, #00a0ff);
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+.progress-message {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  color: #888;
+  text-align: center;
+}
+
+.export-error {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-md);
+  background-color: rgba(244, 67, 54, 0.1);
+  border: 1px solid #f44336;
+  border-radius: 6px;
+  color: #ff6b6b;
+  font-size: var(--font-size-sm);
+}
+
+.export-success {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-md);
+  background-color: rgba(76, 175, 80, 0.1);
+  border: 1px solid #4caf50;
+  border-radius: 6px;
+  color: #4caf50;
+  font-size: var(--font-size-sm);
+}
+
+.presentation-export-footer {
+  display: flex;
+  gap: var(--list-item-gap);
+  justify-content: flex-end;
+}
+
+.presentation-export-footer button {
+  padding: var(--item-padding-vertical) var(--item-padding-horizontal);
+  border: 1px solid #3e3e42;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: var(--font-size-sm);
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.btn-cancel {
+  background-color: #252526;
+  color: #ccc;
+}
+
+.btn-cancel:hover {
+  background-color: #2a2a2a;
+}
+
+.btn-cancel:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-export {
+  background-color: #007acc;
+  color: white;
+  border-color: #007acc;
+}
+
+.btn-export:hover:not(:disabled) {
+  background-color: #005a9e;
+}
+
+.btn-export:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.presentation-export-content ul {
+  margin: 0;
+  padding-left: 1.5rem;
+}
+
+.presentation-export-content code {
+  padding: 0.1rem 0.3rem;
+  background-color: #3e3e42;
+  border-radius: 3px;
+  font-family: 'Courier New', monospace;
+  font-size: 0.85em;
+}

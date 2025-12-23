@@ -108,10 +108,39 @@ export const PDFExportModal: React.FC<PDFExportModalProps> = ({ isOpen, onClose 
     setSuccess(false);
 
     try {
+      // For presentations, load slides.md instead of document.md
+      let exportContent = content;
+      if (currentProject.type === 'presentation') {
+        try {
+          const slidesPath = `${currentProject.path}/slides.md`;
+          exportContent = await window.electron.fs.readFile(slidesPath);
+        } catch (err) {
+          setError('Impossible de lire slides.md. Assurez-vous que le fichier existe.');
+          setIsExporting(false);
+          return;
+        }
+      }
+
+      // For presentations, load Beamer configuration if it exists
+      let beamerConfig;
+      if (currentProject.type === 'presentation') {
+        try {
+          const beamerConfigPath = `${currentProject.path}/beamer-config.json`;
+          const configExists = await window.electron.fs.exists(beamerConfigPath);
+          if (configExists) {
+            const configContent = await window.electron.fs.readFile(beamerConfigPath);
+            beamerConfig = JSON.parse(configContent);
+            console.log('📊 Beamer configuration loaded:', beamerConfig);
+          }
+        } catch (err) {
+          console.warn('No Beamer config found, using defaults');
+        }
+      }
+
       const result = await window.electron.pdfExport.export({
         projectPath: currentProject.path,
         projectType: currentProject.type,
-        content: content,
+        content: exportContent,
         outputPath: outputPath,
         bibliographyPath: currentProject.bibliography,
         metadata: {
@@ -119,6 +148,7 @@ export const PDFExportModal: React.FC<PDFExportModalProps> = ({ isOpen, onClose 
           author: author || 'MDFocus',
           date: new Date().toLocaleDateString('fr-FR'),
         },
+        beamerConfig,
       });
 
       if (result.success) {
@@ -205,6 +235,20 @@ export const PDFExportModal: React.FC<PDFExportModalProps> = ({ isOpen, onClose 
           {(currentProject?.type === 'article' || currentProject?.type === 'book') && (
             <div style={{ fontSize: '0.875rem', color: '#888', marginBottom: '1rem', padding: '0.75rem', backgroundColor: '#2a2a2a', borderRadius: '4px' }}>
               💡 Le résumé sera automatiquement lu depuis le fichier <code style={{ color: '#4ec9b0' }}>abstract.md</code> de votre projet
+            </div>
+          )}
+
+          {/* Info about presentations */}
+          {currentProject?.type === 'presentation' && (
+            <div style={{ fontSize: '0.875rem', color: '#888', marginBottom: '1rem', padding: '0.75rem', backgroundColor: '#2a2a2a', borderRadius: '4px' }}>
+              🎬 Présentation Beamer : Le contenu sera lu depuis <code style={{ color: '#4ec9b0' }}>slides.md</code>
+              <br /><br />
+              <strong>Syntaxe :</strong>
+              <ul style={{ marginTop: '0.5rem', paddingLeft: '1.5rem' }}>
+                <li><code>#</code> Titre de slide (niveau 1)</li>
+                <li><code>##</code> Sous-titre (niveau 2)</li>
+                <li><code>::: notes</code> ... <code>:::</code> Notes de présentateur</li>
+              </ul>
             </div>
           )}
 

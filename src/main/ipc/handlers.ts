@@ -6,6 +6,7 @@ import { bibliographyService } from '../services/bibliography-service.js';
 import { chatService } from '../services/chat-service.js';
 import { zoteroService } from '../services/zotero-service.js';
 import { pdfExportService } from '../services/pdf-export.js';
+import { revealJsExportService } from '../services/revealjs-export.js';
 
 /**
  * Setup all IPC handlers
@@ -313,6 +314,45 @@ export function setupIPCHandlers() {
     }
   });
 
+  ipcMain.handle('fs:exists', async (_event, filePath: string) => {
+    console.log('📞 IPC Call: fs:exists', { filePath });
+    try {
+      const { access } = await import('fs/promises');
+      await access(filePath);
+      console.log('📤 IPC Response: fs:exists - true');
+      return true;
+    } catch {
+      console.log('📤 IPC Response: fs:exists - false');
+      return false;
+    }
+  });
+
+  ipcMain.handle('fs:read-file', async (_event, filePath: string) => {
+    console.log('📞 IPC Call: fs:read-file', { filePath });
+    try {
+      const { readFile } = await import('fs/promises');
+      const content = await readFile(filePath, 'utf-8');
+      console.log('📤 IPC Response: fs:read-file', { contentLength: content.length });
+      return content;
+    } catch (error: any) {
+      console.error('❌ fs:read-file error:', error);
+      throw error;
+    }
+  });
+
+  ipcMain.handle('fs:write-file', async (_event, filePath: string, content: string) => {
+    console.log('📞 IPC Call: fs:write-file', { filePath, contentLength: content.length });
+    try {
+      const { writeFile } = await import('fs/promises');
+      await writeFile(filePath, content, 'utf-8');
+      console.log('📤 IPC Response: fs:write-file - success');
+      return { success: true };
+    } catch (error: any) {
+      console.error('❌ fs:write-file error:', error);
+      throw error;
+    }
+  });
+
   // Dialog handlers
   ipcMain.handle('dialog:open-file', async (_event, options: any) => {
     console.log('📞 IPC Call: dialog:open-file', options);
@@ -411,6 +451,32 @@ export function setupIPCHandlers() {
       return result;
     } catch (error: any) {
       console.error('❌ pdf-export:export error:', error);
+      return { success: false, error: error.message };
+    }
+  });
+
+  // Reveal.js Export handlers
+  ipcMain.handle('revealjs-export:export', async (event, options: any) => {
+    console.log('📞 IPC Call: revealjs-export:export', {
+      projectType: options.projectType,
+      hasConfig: !!options.config,
+    });
+    try {
+      const window = BrowserWindow.fromWebContents(event.sender);
+
+      const result = await revealJsExportService.exportToRevealJs(options, (progress) => {
+        if (window) {
+          window.webContents.send('revealjs-export:progress', progress);
+        }
+      });
+
+      console.log('📤 IPC Response: revealjs-export:export', {
+        success: result.success,
+        outputPath: result.outputPath,
+      });
+      return result;
+    } catch (error: any) {
+      console.error('❌ revealjs-export:export error:', error);
       return { success: false, error: error.message };
     }
   });
