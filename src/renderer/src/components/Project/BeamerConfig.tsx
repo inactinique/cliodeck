@@ -184,6 +184,16 @@ export const BeamerConfig: React.FC<BeamerConfigProps> = ({
     saveConfig(newConfig);
   };
 
+  const handleTextChange = (key: keyof BeamerConfigOptions, value: any) => {
+    // For text inputs, only update local state without saving
+    setConfig({ ...config, [key]: value });
+  };
+
+  const handleTextBlur = (key: keyof BeamerConfigOptions) => {
+    // Save when user leaves the text field
+    saveConfig(config);
+  };
+
   return (
     <div className="beamer-config">
       <div className="config-header">
@@ -261,7 +271,8 @@ export const BeamerConfig: React.FC<BeamerConfigProps> = ({
           <input
             type="text"
             value={config.institute || ''}
-            onChange={(e) => handleChange('institute', e.target.value)}
+            onChange={(e) => handleTextChange('institute', e.target.value)}
+            onBlur={() => handleTextBlur('institute')}
             placeholder="Université de..."
             disabled={isSaving}
             style={{
@@ -281,7 +292,8 @@ export const BeamerConfig: React.FC<BeamerConfigProps> = ({
           <input
             type="text"
             value={config.logo || ''}
-            onChange={(e) => handleChange('logo', e.target.value)}
+            onChange={(e) => handleTextChange('logo', e.target.value)}
+            onBlur={() => handleTextBlur('logo')}
             placeholder="logo.png"
             disabled={isSaving}
             style={{
