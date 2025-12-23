@@ -58,18 +58,18 @@ INTERFACE UTILISATEUR
 - [x] Créer branche git `exploration`
 - [x] Créer ce fichier de plan
 
-### 🔲 1. Enrichissement de la base de données
+### ✅ 1. Enrichissement de la base de données
 
 **Fichier :** [backend/core/vector-store/VectorStore.ts](backend/core/vector-store/VectorStore.ts)
 
 **Modifications :**
-- [ ] Ajouter colonnes à `documents` :
+- [x] Ajouter colonnes à `documents` :
   - `summary TEXT` (résumé généré)
   - `summary_embedding BLOB` (embedding du résumé)
   - `citations_extracted TEXT` (JSON array)
   - `language TEXT` (fr/en/etc.)
 
-- [ ] Créer table `document_citations` :
+- [x] Créer table `document_citations` :
   ```sql
   CREATE TABLE document_citations (
     id TEXT PRIMARY KEY,
@@ -82,7 +82,7 @@ INTERFACE UTILISATEUR
   );
   ```
 
-- [ ] Créer table `document_similarities` (optionnel) :
+- [x] Créer table `document_similarities` (optionnel) :
   ```sql
   CREATE TABLE document_similarities (
     doc_id_1 TEXT NOT NULL,
@@ -92,67 +92,88 @@ INTERFACE UTILISATEUR
   );
   ```
 
-- [ ] Ajouter méthodes CRUD pour citations
-- [ ] Ajouter migration pour bases existantes
+- [x] Ajouter méthodes CRUD pour citations
+  - `saveCitation()`
+  - `getCitationsForDocument()`
+  - `getDocumentsCitedBy()`
+  - `getDocumentsCiting()`
+  - `deleteCitationsForDocument()`
+
+- [x] Ajouter méthodes pour similarités
+  - `saveSimilarity()`
+  - `getSimilarDocuments()`
+  - `deleteSimilaritiesForDocument()`
+
+- [x] Ajouter migration pour bases existantes
+  - Migration automatique des colonnes manquantes
+
+- [x] Mettre à jour les types TypeScript
+  - Ajout interfaces `Citation`, `DocumentCitation`, `DocumentSimilarity`
+  - Enrichissement de `PDFDocument`
 
 **Tests :**
 - [ ] Créer tests pour nouvelles tables
 - [ ] Vérifier intégrité référentielle (CASCADE)
 
-**Charge :** ~2-3 heures
+**Charge :** ~2-3 heures → **Terminé le 2025-12-23**
 
 ---
 
-### 🔲 2. Extraction de Citations
+### ✅ 2. Extraction de Citations
 
 **Nouveau fichier :** `backend/core/analysis/CitationExtractor.ts`
 
 **Fonctionnalités :**
-- [ ] Détection de patterns de citations :
-  - `(Auteur, YYYY)`
-  - `Auteur (YYYY)`
-  - `Auteur et al. (YYYY)`
-  - Regex multilingues (français/anglais)
+- [x] Détection de patterns de citations :
+  - `(Auteur, YYYY)` et `(Auteur YYYY)`
+  - `Auteur (YYYY)` et `Auteur, YYYY`
+  - `Auteur et Auteur (YYYY)`
+  - `Auteur et al. (YYYY)` / `Auteur et collaborateurs (YYYY)`
+  - Regex multilingues (français/anglais) avec accents
 
-- [ ] Extraction de bibliographies (fin de document) :
-  - Détecter section "Références" / "Bibliography" / "Bibliographie"
-  - Parser entrées avec [citation-js](https://citation.js.org/) ou regex custom
+- [x] Extraction de bibliographies (fin de document) :
+  - Détection de section "Références" / "Bibliography" / "Bibliographie"
+  - Parser entrées avec regex custom (pas de dépendance externe)
+  - Support multi-formats (numérotées, à puces, etc.)
 
-- [ ] Matching avec documents existants :
-  - Comparer citations extraites avec métadonnées Zotero (auteur + année)
-  - Créer entrées dans `document_citations`
+- [x] Matching avec documents existants :
+  - Comparaison citations extraites avec métadonnées Zotero (auteur + année)
+  - Normalisation des noms d'auteurs (accents, casse)
+  - Algorithme de similarité pour matching fuzzy
 
-- [ ] Extraction du contexte :
-  - Récupérer paragraphe contenant la citation
+- [x] Extraction du contexte :
+  - Récupération du paragraphe contenant la citation
+  - Limite de 300 caractères par contexte
+  - Détection du numéro de page si disponible
 
-**Interface :**
+- [x] Fonctionnalités additionnelles :
+  - Détection de langue (heuristique FR/EN)
+  - Statistiques sur les citations extraites
+  - Déduplication automatique
+
+**Méthodes principales :**
 ```typescript
-export interface Citation {
-  text: string;              // ex: "Papert, 1980"
-  author?: string;           // ex: "Papert"
-  year?: string;             // ex: "1980"
-  context: string;           // paragraphe contenant la citation
-  pageNumber: number;
-}
-
 export class CitationExtractor {
-  extractCitations(fullText: string): Citation[];
-  matchWithExistingDocuments(citations: Citation[], documents: PDFDocument[]): void;
+  extractCitations(fullText: string, pages?: Array<{...}>): Citation[];
+  matchCitationsWithDocuments(citations: Citation[], documents: PDFDocument[]): Map<string, string>;
+  detectLanguage(text: string): string;
+  getCitationStatistics(citations: Citation[]): {...};
 }
 ```
 
 **Dépendances :**
-- [ ] Installer `citation-js` ou utiliser regex custom
-- [ ] Installer `franc` pour détection de langue (optionnel)
+- [x] Pas de dépendances externes (regex custom)
+- [x] Détection de langue intégrée (pas besoin de `franc`)
 
 **Tests :**
 - [ ] Tester détection citations français
 - [ ] Tester détection citations anglais
 - [ ] Tester matching avec documents
+- [ ] Tester extraction bibliographie
 
 **Performance estimée :** ~1-2s par document (CPU)
 
-**Charge :** ~4-6 heures
+**Charge :** ~4-6 heures → **Terminé le 2025-12-23**
 
 ---
 
@@ -549,9 +570,48 @@ pip install -r requirements.txt
 ## Historique des Modifications
 
 ### 2025-12-23
+
+**Session 1 - Setup initial**
 - ✅ Création de la branche `exploration`
 - ✅ Rédaction du plan initial
-- 🔲 Début implémentation Phase 1.1 (enrichissement BDD)
+
+**Session 2 - Phase 1.1 : Enrichissement base de données**
+- ✅ Ajout de 4 nouvelles colonnes à la table `documents` :
+  - `summary`, `summary_embedding`, `citations_extracted`, `language`
+- ✅ Création de la table `document_citations` avec clés étrangères
+- ✅ Création de la table `document_similarities`
+- ✅ Ajout de 6 index pour optimiser les requêtes
+- ✅ Implémentation de la migration automatique pour bases existantes
+- ✅ Ajout de 8 méthodes CRUD pour gérer citations et similarités :
+  - Citations : `saveCitation`, `getCitationsForDocument`, `getDocumentsCitedBy`, `getDocumentsCiting`, `deleteCitationsForDocument`
+  - Similarités : `saveSimilarity`, `getSimilarDocuments`, `deleteSimilaritiesForDocument`
+- ✅ Mise à jour des types TypeScript :
+  - Nouvelles interfaces : `Citation`, `DocumentCitation`, `DocumentSimilarity`
+  - Enrichissement de `PDFDocument` avec les nouveaux champs optionnels
+
+**Session 3 - Phase 1.2 : Extraction de Citations**
+- ✅ Création du fichier `CitationExtractor.ts` (420 lignes)
+- ✅ Implémentation de 4 patterns regex pour citations in-text :
+  - Format parenthèses : `(Auteur, YYYY)`, `(Auteur YYYY)`
+  - Format inline : `Auteur (YYYY)`, `Auteur, YYYY`
+  - Multi-auteurs : `Auteur et Auteur (YYYY)`
+  - Et al. : `Auteur et al. (YYYY)`, `Auteur et collaborateurs (YYYY)`
+- ✅ Support complet des accents français (À, É, È, etc.)
+- ✅ Extraction de bibliographies :
+  - Détection de sections avec 6 mots-clés multilingues
+  - Parser intelligent d'entrées (bullets, numéros, etc.)
+  - Extraction auteur + année depuis entrées
+- ✅ Matching avec documents existants :
+  - Normalisation des noms (accents, casse)
+  - Algorithme de similarité fuzzy
+  - Gestion des suffixes d'année (2020a, 2020b)
+- ✅ Extraction de contexte (paragraphe, max 300 chars)
+- ✅ Détection de langue (heuristique FR/EN basée sur mots communs)
+- ✅ Statistiques : total citations, auteurs uniques, range d'années
+- ✅ **Aucune dépendance externe** - regex custom uniquement
+
+**Prochaines étapes :**
+- 🔲 Phase 1.3 : Génération de Résumés (DocumentSummarizer)
 
 ---
 
@@ -561,6 +621,27 @@ pip install -r requirements.txt
 
 ### Décisions techniques
 
+**Migration de base de données (2025-12-23)**
+- Choix d'utiliser `ALTER TABLE` avec vérification via `PRAGMA table_info()` pour éviter les erreurs sur bases existantes
+- Les nouvelles colonnes sont ajoutées avec `DEFAULT NULL` pour compatibilité
+- Utilisation de `FOREIGN KEY ... ON DELETE CASCADE` pour les citations (suppression automatique)
+- Utilisation de `ON DELETE SET NULL` pour `target_doc_id` (si document cible supprimé, la citation reste mais sans lien)
+
+**Stockage des similarités (2025-12-23)**
+- Choix de toujours stocker `(doc_id_1, doc_id_2)` avec `doc_id_1 < doc_id_2` pour éviter les doublons `(A,B)` vs `(B,A)`
+- La requête `getSimilarDocuments()` utilise un `CASE` pour récupérer l'autre document quelle que soit la position
+
+**CitationExtractor - Pas de dépendances externes (2025-12-23)**
+- Choix de ne pas utiliser `citation-js` pour éviter une dépendance lourde
+- Regex custom suffisants pour les formats académiques standards
+- Détection de langue avec heuristique simple (mots communs FR/EN) au lieu de `franc` (économie de 2.5MB)
+- Support complet Unicode pour les accents français (regex avec `ÀÂÄÆÇÉÈÊËÏÎÔŒÙÛÜ`)
+
+**CitationExtractor - Algorithme de matching (2025-12-23)**
+- Normalisation des noms : conversion en minuscules + suppression accents (NFD) + caractères spéciaux
+- Matching flexible : auteur peut être un sous-ensemble (ex: "Papert" match "Seymour Papert")
+- Gestion des suffixes d'année (2020a, 2020b) pour publications multiples la même année
+- Priorité au matching exact sur l'année + nom de famille (premier mot)
 
 ### Problèmes rencontrés
 

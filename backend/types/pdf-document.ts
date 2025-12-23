@@ -8,6 +8,29 @@ export interface PDFMetadata {
   [key: string]: any;
 }
 
+export interface Citation {
+  id: string;
+  text: string; // ex: "Papert, 1980" ou "(Papert, 1980)"
+  author?: string; // ex: "Papert"
+  year?: string; // ex: "1980"
+  context?: string; // Paragraphe contenant la citation
+  pageNumber?: number;
+}
+
+export interface DocumentCitation {
+  id: string;
+  sourceDocId: string;
+  targetCitation: string;
+  targetDocId?: string;
+  context?: string;
+  pageNumber?: number;
+}
+
+export interface DocumentSimilarity {
+  documentId: string;
+  similarity: number;
+}
+
 export interface PDFDocument {
   id: string;
   fileURL: string;
@@ -20,6 +43,12 @@ export interface PDFDocument {
   createdAt: Date;
   indexedAt: Date;
   lastAccessedAt: Date;
+
+  // Nouveaux champs enrichis
+  summary?: string;
+  summaryEmbedding?: Float32Array;
+  citationsExtracted?: Citation[];
+  language?: string;
 
   // Computed property pour affichage
   get displayString(): string;
