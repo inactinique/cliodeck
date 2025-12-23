@@ -96,8 +96,16 @@
         "deb"
       ],
       "category": "Office",
-      "icon": "build/icon.png",
-      "description": "Assistant d'écriture pour historiens avec RAG et intégration Zotero/Tropy"
+      "icon": "build/icons",
+      "description": "Assistant d'écriture pour historiens avec RAG et intégration Zotero/Tropy",
+      "desktop": {
+        "Name": "mdFocus",
+        "Exec": "/opt/mdFocus/mdfocus-electron --no-sandbox %U",
+        "Comment": "Assistant d'écriture pour historiens avec RAG et intégration Zotero/Tropy",
+        "Categories": "Office;TextEditor;",
+        "MimeType": "text/markdown;",
+        "StartupWMClass": "mdFocus"
+      }
     },
     "mac": {
       "target": [
