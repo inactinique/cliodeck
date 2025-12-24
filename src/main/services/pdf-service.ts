@@ -10,10 +10,28 @@ class PDFService {
   private pdfIndexer: PDFIndexer | null = null;
   private vectorStore: VectorStore | null = null;
   private ollamaClient: OllamaClient | null = null;
-  private initialized: boolean = false;
+  private currentProjectPath: string | null = null;
 
-  async init() {
-    if (this.initialized) return;
+  /**
+   * Initialise le PDF Service pour un projet spécifique
+   * @param projectPath Chemin absolu vers le dossier du projet
+   * @throws Error si projectPath n'est pas fourni ou si c'est un projet "notes"
+   */
+  async init(projectPath: string) {
+    if (!projectPath) {
+      throw new Error('PDF Service requires a project path');
+    }
+
+    // Si déjà initialisé pour ce projet, ne rien faire
+    if (this.currentProjectPath === projectPath && this.vectorStore) {
+      console.log('✅ PDF Service already initialized for this project');
+      return;
+    }
+
+    // Fermer la base précédente si elle existe
+    if (this.vectorStore) {
+      this.vectorStore.close();
+    }
 
     try {
       const config = configManager.getLLMConfig();
@@ -26,20 +44,22 @@ class PDFService {
         config.ollamaEmbeddingModel
       );
 
-      // Initialiser VectorStore avec un chemin dans userData
-      const dbPath = path.join(app.getPath('userData'), 'vector-store.db');
-      this.vectorStore = new VectorStore(dbPath);
+      // Initialiser VectorStore pour ce projet spécifique
+      this.vectorStore = new VectorStore(projectPath);
 
-      // Initialiser PDFIndexer
+      // Initialiser PDFIndexer avec configuration du summarizer
       this.pdfIndexer = new PDFIndexer(
         this.vectorStore,
         this.ollamaClient,
-        ragConfig.chunkingConfig
+        ragConfig.chunkingConfig,
+        ragConfig.summarizer
       );
 
-      this.initialized = true;
-      console.log('✅ PDF Service initialized');
-      console.log(`   VectorStore DB: ${dbPath}`);
+      this.currentProjectPath = projectPath;
+
+      console.log('✅ PDF Service initialized for project');
+      console.log(`   Project: ${projectPath}`);
+      console.log(`   VectorStore DB: ${this.vectorStore.projectPath}/.mdfocus/vectors.db`);
       console.log(`   Ollama URL: ${config.ollamaURL}`);
     } catch (error) {
       console.error('❌ Failed to initialize PDF Service:', error);
@@ -47,13 +67,22 @@ class PDFService {
     }
   }
 
+  /**
+   * Vérifie si le service est initialisé
+   */
+  private ensureInitialized() {
+    if (!this.vectorStore || !this.pdfIndexer || !this.ollamaClient) {
+      throw new Error('PDF Service not initialized. Call init(projectPath) first.');
+    }
+  }
+
   async indexPDF(filePath: string, bibtexKey?: string, onProgress?: any) {
-    if (!this.initialized) await this.init();
+    this.ensureInitialized();
     return this.pdfIndexer!.indexPDF(filePath, bibtexKey, onProgress);
   }
 
   async search(query: string, options?: any) {
-    if (!this.initialized) await this.init();
+    this.ensureInitialized();
 
     // Generate embedding for the query using Ollama
     const queryEmbedding = await this.ollamaClient!.generateEmbedding(query);
@@ -71,18 +100,25 @@ class PDFService {
   }
 
   async getAllDocuments() {
-    if (!this.initialized) await this.init();
+    this.ensureInitialized();
     return this.vectorStore!.getAllDocuments();
   }
 
   async deleteDocument(documentId: string) {
-    if (!this.initialized) await this.init();
+    this.ensureInitialized();
     return this.vectorStore!.deleteDocument(documentId);
   }
 
   async getStatistics() {
-    if (!this.initialized) await this.init();
+    this.ensureInitialized();
     return this.vectorStore!.getStatistics();
+  }
+
+  /**
+   * Retourne le chemin du projet actuel
+   */
+  getCurrentProjectPath(): string | null {
+    return this.currentProjectPath;
   }
 
   getOllamaClient() {

@@ -104,10 +104,13 @@ export function setupIPCHandlers() {
     }
   });
 
-  // PDF handlers
-  ipcMain.handle('pdf:index', async (event, filePath: string, bibtexKey?: string) => {
-    console.log('📞 IPC Call: pdf:index', { filePath, bibtexKey });
+  // PDF handlers (project-scoped)
+  ipcMain.handle('pdf:index', async (event, projectPath: string, filePath: string, bibtexKey?: string) => {
+    console.log('📞 IPC Call: pdf:index', { projectPath, filePath, bibtexKey });
     try {
+      // Initialiser le service pour ce projet
+      await pdfService.init(projectPath);
+
       const window = BrowserWindow.fromWebContents(event.sender);
 
       const document = await pdfService.indexPDF(filePath, bibtexKey, (progress) => {
@@ -125,8 +128,9 @@ export function setupIPCHandlers() {
     }
   });
 
-  ipcMain.handle('pdf:search', async (_event, query: string, options?: any) => {
+  ipcMain.handle('pdf:search', async (_event, projectPath: string, query: string, options?: any) => {
     try {
+      await pdfService.init(projectPath);
       const results = await pdfService.search(query, options);
       return { success: true, results };
     } catch (error: any) {
@@ -135,8 +139,9 @@ export function setupIPCHandlers() {
     }
   });
 
-  ipcMain.handle('pdf:delete', async (_event, documentId: string) => {
+  ipcMain.handle('pdf:delete', async (_event, projectPath: string, documentId: string) => {
     try {
+      await pdfService.init(projectPath);
       await pdfService.deleteDocument(documentId);
       return { success: true };
     } catch (error: any) {
@@ -145,8 +150,9 @@ export function setupIPCHandlers() {
     }
   });
 
-  ipcMain.handle('pdf:get-all', async () => {
+  ipcMain.handle('pdf:get-all', async (_event, projectPath: string) => {
     try {
+      await pdfService.init(projectPath);
       const documents = await pdfService.getAllDocuments();
       return { success: true, documents };
     } catch (error: any) {
@@ -155,9 +161,10 @@ export function setupIPCHandlers() {
     }
   });
 
-  ipcMain.handle('pdf:get-statistics', async () => {
-    console.log('📞 IPC Call: pdf:get-statistics');
+  ipcMain.handle('pdf:get-statistics', async (_event, projectPath: string) => {
+    console.log('📞 IPC Call: pdf:get-statistics', { projectPath });
     try {
+      await pdfService.init(projectPath);
       const stats = await pdfService.getStatistics();
       console.log('📤 IPC Response: pdf:get-statistics', stats);
       // Map backend names to frontend names
@@ -174,10 +181,15 @@ export function setupIPCHandlers() {
     }
   });
 
-  // Chat handlers
-  ipcMain.handle('chat:send', async (event, message: string, options?: any) => {
-    console.log('📞 IPC Call: chat:send', { message: message.substring(0, 50) + '...', options });
+  // Chat handlers (project-scoped)
+  ipcMain.handle('chat:send', async (event, projectPath: string, message: string, options?: any) => {
+    console.log('📞 IPC Call: chat:send', { projectPath, message: message.substring(0, 50) + '...', options });
     try {
+      // Initialiser le service PDF pour ce projet (nécessaire pour le RAG)
+      if (options?.context) {
+        await pdfService.init(projectPath);
+      }
+
       const window = BrowserWindow.fromWebContents(event.sender);
 
       const response = await chatService.sendMessage(message, {

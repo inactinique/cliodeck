@@ -1,7 +1,5 @@
 import Database from 'better-sqlite3';
 import path from 'path';
-import { app } from 'electron';
-import { randomUUID } from 'crypto';
 import { existsSync, mkdirSync } from 'fs';
 import type {
   PDFDocument,
@@ -14,23 +12,29 @@ import type {
 export class VectorStore {
   private db: Database.Database;
   private dbPath: string;
+  public readonly projectPath: string;
 
-  constructor(projectPath?: string) {
-    // Path: userData/mdfocus/vectors.db ou project/.mdfocus/vectors.db
-    if (projectPath) {
-      this.dbPath = path.join(projectPath, '.mdfocus', 'vectors.db');
-    } else {
-      const userDataPath = app.getPath('userData');
-      const appFolder = path.join(userDataPath, 'mdfocus');
-      this.dbPath = path.join(appFolder, 'vectors.db');
+  /**
+   * Crée un VectorStore pour un projet spécifique
+   * @param projectPath Chemin absolu vers le dossier du projet
+   * @throws Error si projectPath n'est pas fourni
+   */
+  constructor(projectPath: string) {
+    if (!projectPath) {
+      throw new Error('VectorStore requires a project path. Use project-based storage only.');
     }
 
-    console.log(`📁 Base de données: ${this.dbPath}`);
+    this.projectPath = projectPath;
+    // Base de données dans project/.mdfocus/vectors.db
+    this.dbPath = path.join(projectPath, '.mdfocus', 'vectors.db');
 
-    // Créer le dossier parent si nécessaire
-    const dir = path.dirname(this.dbPath);
-    if (!existsSync(dir)) {
-      mkdirSync(dir, { recursive: true });
+    console.log(`📁 Base de données projet: ${this.dbPath}`);
+
+    // Créer le dossier .mdfocus si nécessaire
+    const mdfocusDir = path.join(projectPath, '.mdfocus');
+    if (!existsSync(mdfocusDir)) {
+      mkdirSync(mdfocusDir, { recursive: true });
+      console.log(`📂 Dossier .mdfocus créé: ${mdfocusDir}`);
     }
 
     // Ouvrir la base de données

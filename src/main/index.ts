@@ -52,12 +52,10 @@ app.whenReady().then(async () => {
   await configManager.init();
   console.log('✅ configManager initialized');
 
-  // Initialiser pdfService (Ollama client + vector store)
-  console.log('🔧 Initializing pdfService...');
-  await pdfService.init();
-  console.log('✅ pdfService initialized');
+  // Note: pdfService is now project-scoped and initialized on-demand
+  // via IPC handlers when a project is loaded (not at app startup)
 
-  // Setup IPC handlers après l'initialisation des services
+  // Setup IPC handlers
   setupIPCHandlers();
 
   createWindow();

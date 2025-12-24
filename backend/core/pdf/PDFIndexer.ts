@@ -3,10 +3,20 @@ import { PDFExtractor } from './PDFExtractor';
 import { DocumentChunker, CHUNKING_CONFIGS } from '../chunking/DocumentChunker';
 import { VectorStore } from '../vector-store/VectorStore';
 import { OllamaClient } from '../llm/OllamaClient';
-import type { PDFDocument } from '../../types/pdf-document';
+import { CitationExtractor } from '../analysis/CitationExtractor';
+import { DocumentSummarizer, type SummarizerConfig } from '../analysis/DocumentSummarizer';
+import type { PDFDocument, Citation } from '../../types/pdf-document';
 
 export interface IndexingProgress {
-  stage: 'extracting' | 'chunking' | 'embedding' | 'completed' | 'error';
+  stage:
+    | 'extracting'
+    | 'analyzing'
+    | 'citations'
+    | 'summarizing'
+    | 'chunking'
+    | 'embedding'
+    | 'completed'
+    | 'error';
   progress: number; // 0-100
   message: string;
   currentPage?: number;
@@ -20,16 +30,32 @@ export class PDFIndexer {
   private chunker: DocumentChunker;
   private vectorStore: VectorStore;
   private ollamaClient: OllamaClient;
+  private citationExtractor: CitationExtractor;
+  private documentSummarizer: DocumentSummarizer | null = null;
+  private summarizerConfig: SummarizerConfig;
 
   constructor(
     vectorStore: VectorStore,
     ollamaClient: OllamaClient,
-    chunkingConfig: 'cpuOptimized' | 'standard' | 'large' = 'cpuOptimized'
+    chunkingConfig: 'cpuOptimized' | 'standard' | 'large' = 'cpuOptimized',
+    summarizerConfig?: SummarizerConfig
   ) {
     this.pdfExtractor = new PDFExtractor();
     this.chunker = new DocumentChunker(CHUNKING_CONFIGS[chunkingConfig]);
     this.vectorStore = vectorStore;
     this.ollamaClient = ollamaClient;
+    this.citationExtractor = new CitationExtractor();
+
+    // Initialiser DocumentSummarizer si activé
+    this.summarizerConfig = summarizerConfig || {
+      enabled: false,
+      method: 'extractive',
+      maxLength: 250,
+    };
+
+    if (this.summarizerConfig.enabled) {
+      this.documentSummarizer = new DocumentSummarizer(this.summarizerConfig, ollamaClient);
+    }
   }
 
   /**
@@ -61,7 +87,58 @@ export class PDFIndexer {
       const author = await this.pdfExtractor.extractAuthor(filePath);
       const year = await this.pdfExtractor.extractYear(filePath);
 
-      // 3. Créer le document
+      // 3. Extraire le texte complet pour analyse
+      const fullText = pages.map((p) => p.text).join('\n\n');
+
+      // 4. Détecter la langue du document
+      onProgress?.({
+        stage: 'analyzing',
+        progress: 27,
+        message: 'Analyse du document...',
+      });
+
+      const language = this.citationExtractor.detectLanguage(fullText);
+      console.log(`   Langue détectée: ${language}`);
+
+      // 5. Extraction des citations
+      onProgress?.({
+        stage: 'citations',
+        progress: 30,
+        message: 'Extraction des citations...',
+      });
+
+      const citations = this.citationExtractor.extractCitations(fullText, pages);
+      console.log(`   Citations extraites: ${citations.length}`);
+
+      // Statistiques sur les citations
+      if (citations.length > 0) {
+        const stats = this.citationExtractor.getCitationStatistics(citations);
+        console.log(
+          `   - ${stats.totalCitations} citations, ${stats.uniqueAuthors} auteurs, années ${stats.yearRange.min}-${stats.yearRange.max}`
+        );
+      }
+
+      // 6. Génération du résumé (optionnel)
+      let summary: string | undefined;
+      let summaryEmbedding: Float32Array | undefined;
+
+      if (this.documentSummarizer) {
+        onProgress?.({
+          stage: 'summarizing',
+          progress: 33,
+          message: `Génération du résumé (${this.summarizerConfig.method})...`,
+        });
+
+        summary = await this.documentSummarizer.generateSummary(fullText, metadata);
+
+        // Générer l'embedding du résumé
+        if (summary) {
+          summaryEmbedding = await this.documentSummarizer.generateSummaryEmbedding(summary);
+          console.log(`   Résumé généré: ${summary.split(' ').length} mots`);
+        }
+      }
+
+      // 7. Créer le document avec données enrichies
       const documentId = randomUUID();
       const now = new Date();
 
@@ -85,13 +162,45 @@ export class PDFIndexer {
         },
       };
 
-      // 4. Sauvegarder le document
+      // Ajouter les champs enrichis
+      (document as any).language = language;
+      (document as any).citationsExtracted = citations;
+      (document as any).summary = summary;
+      (document as any).summaryEmbedding = summaryEmbedding;
+
+      // 8. Sauvegarder le document
       this.vectorStore.saveDocument(document);
 
-      // 5. Créer les chunks
+      // 9. Matcher et sauvegarder les citations avec documents existants
+      const allDocuments = this.vectorStore.getAllDocuments();
+      const citationMatches = this.citationExtractor.matchCitationsWithDocuments(
+        citations,
+        allDocuments
+      );
+
+      // Sauvegarder les citations matchées en BDD
+      for (const citation of citations) {
+        const citationId = randomUUID();
+        const targetDocId = citationMatches.get(citation.id);
+
+        this.vectorStore.saveCitation({
+          id: citationId,
+          sourceDocId: documentId,
+          targetCitation: citation.text,
+          targetDocId,
+          context: citation.context,
+          pageNumber: citation.pageNumber,
+        });
+      }
+
+      if (citationMatches.size > 0) {
+        console.log(`   Citations matchées: ${citationMatches.size}/${citations.length}`);
+      }
+
+      // 10. Créer les chunks
       onProgress?.({
         stage: 'chunking',
-        progress: 35,
+        progress: 40,
         message: 'Découpage du texte en chunks...',
       });
 
@@ -109,7 +218,7 @@ export class PDFIndexer {
         totalChunks: chunks.length,
       });
 
-      // 6. Générer les embeddings et sauvegarder
+      // 11. Générer les embeddings et sauvegarder
       onProgress?.({
         stage: 'embedding',
         progress: 50,

@@ -1,0 +1,13 @@
+# BERTopic pour topic modeling
+bertopic==0.16.0
+
+# FastAPI pour l'API REST
+fastapi==0.109.0
+uvicorn==0.27.0
+
+# Dépendances scientifiques
+numpy==1.26.0
+scikit-learn==1.4.0
+
+# Pour parser les requêtes JSON
+pydantic==2.5.0
