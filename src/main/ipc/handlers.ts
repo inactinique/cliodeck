@@ -105,9 +105,18 @@ export function setupIPCHandlers() {
   });
 
   // PDF handlers (project-scoped)
-  ipcMain.handle('pdf:index', async (event, projectPath: string, filePath: string, bibtexKey?: string) => {
-    console.log('📞 IPC Call: pdf:index', { projectPath, filePath, bibtexKey });
+  ipcMain.handle('pdf:index', async (event, filePath: string, bibtexKey?: string) => {
+    console.log('📞 IPC Call: pdf:index', { filePath, bibtexKey });
     try {
+      // Récupérer le projet actuel
+      const projectPath = projectManager.getCurrentProjectPath();
+      if (!projectPath) {
+        console.error('❌ No project currently open');
+        return { success: false, error: 'No project is currently open. Please open or create a project first.' };
+      }
+
+      console.log('📁 Using project path:', projectPath);
+
       // Initialiser le service pour ce projet
       await pdfService.init(projectPath);
 
@@ -128,8 +137,13 @@ export function setupIPCHandlers() {
     }
   });
 
-  ipcMain.handle('pdf:search', async (_event, projectPath: string, query: string, options?: any) => {
+  ipcMain.handle('pdf:search', async (_event, query: string, options?: any) => {
     try {
+      const projectPath = projectManager.getCurrentProjectPath();
+      if (!projectPath) {
+        return { success: false, results: [], error: 'No project is currently open. Please open or create a project first.' };
+      }
+
       await pdfService.init(projectPath);
       const results = await pdfService.search(query, options);
       return { success: true, results };
@@ -139,8 +153,13 @@ export function setupIPCHandlers() {
     }
   });
 
-  ipcMain.handle('pdf:delete', async (_event, projectPath: string, documentId: string) => {
+  ipcMain.handle('pdf:delete', async (_event, documentId: string) => {
     try {
+      const projectPath = projectManager.getCurrentProjectPath();
+      if (!projectPath) {
+        return { success: false, error: 'No project is currently open. Please open or create a project first.' };
+      }
+
       await pdfService.init(projectPath);
       await pdfService.deleteDocument(documentId);
       return { success: true };
@@ -150,8 +169,13 @@ export function setupIPCHandlers() {
     }
   });
 
-  ipcMain.handle('pdf:get-all', async (_event, projectPath: string) => {
+  ipcMain.handle('pdf:get-all', async (_event) => {
     try {
+      const projectPath = projectManager.getCurrentProjectPath();
+      if (!projectPath) {
+        return { success: false, documents: [], error: 'No project is currently open. Please open or create a project first.' };
+      }
+
       await pdfService.init(projectPath);
       const documents = await pdfService.getAllDocuments();
       return { success: true, documents };
@@ -161,9 +185,16 @@ export function setupIPCHandlers() {
     }
   });
 
-  ipcMain.handle('pdf:get-statistics', async (_event, projectPath: string) => {
-    console.log('📞 IPC Call: pdf:get-statistics', { projectPath });
+  ipcMain.handle('pdf:get-statistics', async (_event) => {
+    console.log('📞 IPC Call: pdf:get-statistics');
     try {
+      const projectPath = projectManager.getCurrentProjectPath();
+      if (!projectPath) {
+        console.log('⚠️ No project currently open');
+        return { success: false, statistics: { totalDocuments: 0, totalChunks: 0, totalEmbeddings: 0 }, error: 'No project is currently open.' };
+      }
+
+      console.log('📁 Using project path:', projectPath);
       await pdfService.init(projectPath);
       const stats = await pdfService.getStatistics();
       console.log('📤 IPC Response: pdf:get-statistics', stats);
@@ -182,12 +213,15 @@ export function setupIPCHandlers() {
   });
 
   // Chat handlers (project-scoped)
-  ipcMain.handle('chat:send', async (event, projectPath: string, message: string, options?: any) => {
-    console.log('📞 IPC Call: chat:send', { projectPath, message: message.substring(0, 50) + '...', options });
+  ipcMain.handle('chat:send', async (event, message: string, options?: any) => {
+    console.log('📞 IPC Call: chat:send', { message: message.substring(0, 50) + '...', options });
     try {
       // Initialiser le service PDF pour ce projet (nécessaire pour le RAG)
       if (options?.context) {
-        await pdfService.init(projectPath);
+        const projectPath = projectManager.getCurrentProjectPath();
+        if (projectPath) {
+          await pdfService.init(projectPath);
+        }
       }
 
       const window = BrowserWindow.fromWebContents(event.sender);
@@ -489,6 +523,70 @@ export function setupIPCHandlers() {
       return result;
     } catch (error: any) {
       console.error('❌ revealjs-export:export error:', error);
+      return { success: false, error: error.message };
+    }
+  });
+
+  // Corpus Explorer handlers (Knowledge Graph)
+  ipcMain.handle('corpus:get-graph', async (_event, options?: any) => {
+    console.log('📞 IPC Call: corpus:get-graph', options);
+    try {
+      const projectPath = projectManager.getCurrentProjectPath();
+      if (!projectPath) {
+        return { success: false, error: 'No project is currently open. Please open or create a project first.' };
+      }
+
+      await pdfService.init(projectPath);
+      const graphData = await pdfService.buildKnowledgeGraph(options);
+
+      console.log('📤 IPC Response: corpus:get-graph', {
+        nodeCount: graphData.nodes.length,
+        edgeCount: graphData.edges.length,
+      });
+      return { success: true, graph: graphData };
+    } catch (error: any) {
+      console.error('❌ corpus:get-graph error:', error);
+      return { success: false, error: error.message };
+    }
+  });
+
+  ipcMain.handle('corpus:get-statistics', async (_event) => {
+    console.log('📞 IPC Call: corpus:get-statistics');
+    try {
+      const projectPath = projectManager.getCurrentProjectPath();
+      if (!projectPath) {
+        return { success: false, error: 'No project is currently open. Please open or create a project first.' };
+      }
+
+      await pdfService.init(projectPath);
+      const statistics = await pdfService.getCorpusStatistics();
+
+      console.log('📤 IPC Response: corpus:get-statistics', statistics);
+      return { success: true, statistics };
+    } catch (error: any) {
+      console.error('❌ corpus:get-statistics error:', error);
+      return { success: false, error: error.message };
+    }
+  });
+
+  ipcMain.handle('corpus:analyze-topics', async (_event, options?: any) => {
+    console.log('📞 IPC Call: corpus:analyze-topics', options);
+    try {
+      const projectPath = projectManager.getCurrentProjectPath();
+      if (!projectPath) {
+        return { success: false, error: 'No project is currently open. Please open or create a project first.' };
+      }
+
+      await pdfService.init(projectPath);
+      const result = await pdfService.analyzeTopics(options);
+
+      console.log('📤 IPC Response: corpus:analyze-topics', {
+        topicCount: result.topics.length,
+        documentCount: result.topicAssignments ? Object.keys(result.topicAssignments).length : 0,
+      });
+      return { success: true, ...result };
+    } catch (error: any) {
+      console.error('❌ corpus:analyze-topics error:', error);
       return { success: false, error: error.message };
     }
   });

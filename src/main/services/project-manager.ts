@@ -31,6 +31,25 @@ interface Chapter {
 }
 
 export class ProjectManager {
+  private currentProject: Project | null = null;
+  private currentProjectPath: string | null = null;
+
+  /**
+   * Retourne le chemin du dossier du projet actuellement ouvert
+   * Pour un projet.json: retourne le dossier parent
+   * Pour un dossier notes: retourne le dossier lui-même
+   */
+  getCurrentProjectPath(): string | null {
+    return this.currentProjectPath;
+  }
+
+  /**
+   * Retourne le projet actuellement ouvert
+   */
+  getCurrentProject(): Project | null {
+    return this.currentProject;
+  }
+
   async createProject(data: { name: string; type?: string; path: string; content?: string }) {
     const projectType = data.type || 'article';
 
@@ -160,6 +179,11 @@ N'oubliez pas de mentionner les perspectives futures.
         };
 
         configManager.addRecentProject(projectPath);
+
+        // Store current project
+        this.currentProject = project;
+        this.currentProjectPath = projectPath; // For notes, it's the folder itself
+
         console.log('✅ Notes folder loaded:', projectPath);
         return { success: true, project };
       }
@@ -196,6 +220,11 @@ N'oubliez pas de mentionner les perspectives futures.
       await writeFile(projectPath, JSON.stringify(project, null, 2));
 
       configManager.addRecentProject(projectPath);
+
+      // Store current project
+      this.currentProject = project;
+      this.currentProjectPath = path.dirname(projectPath); // For project.json, use parent folder
+
       console.log('✅ Project loaded:', projectPath);
       console.log('📤 Returning project with bibliography:', {
         hasBibliography: !!project.bibliography,

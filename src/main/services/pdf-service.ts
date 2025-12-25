@@ -2,6 +2,8 @@
 import { PDFIndexer } from '../../../backend/core/pdf/PDFIndexer.js';
 import { VectorStore } from '../../../backend/core/vector-store/VectorStore.js';
 import { OllamaClient } from '../../../backend/core/llm/OllamaClient.js';
+import { KnowledgeGraphBuilder } from '../../../backend/core/analysis/KnowledgeGraphBuilder.js';
+import { TopicModelingService } from '../../../backend/core/analysis/TopicModelingService.js';
 import { configManager } from './config-manager.js';
 import path from 'path';
 import { app } from 'electron';
@@ -123,6 +125,125 @@ class PDFService {
 
   getOllamaClient() {
     return this.ollamaClient;
+  }
+
+  getVectorStore() {
+    return this.vectorStore;
+  }
+
+  /**
+   * Construit et retourne le graphe de connaissances
+   */
+  async buildKnowledgeGraph(options?: any) {
+    this.ensureInitialized();
+
+    const graphBuilder = new KnowledgeGraphBuilder(this.vectorStore!);
+    const graph = await graphBuilder.buildGraph({
+      includeSimilarityEdges: options?.includeSimilarityEdges !== false,
+      similarityThreshold: options?.similarityThreshold || 0.7,
+      includeAuthorNodes: options?.includeAuthorNodes || false,
+      computeLayout: options?.computeLayout !== false,
+    });
+
+    return graphBuilder.exportForVisualization(graph);
+  }
+
+  /**
+   * Retourne les statistiques du corpus
+   */
+  async getCorpusStatistics() {
+    this.ensureInitialized();
+
+    const stats = await this.vectorStore!.getStatistics();
+    const documents = await this.vectorStore!.getAllDocuments();
+
+    // Calculer statistiques supplémentaires
+    const languages = new Set<string>();
+    const years = new Set<string>();
+    const authors = new Set<string>();
+    let totalCitations = 0;
+
+    for (const doc of documents) {
+      if (doc.language) languages.add(doc.language);
+      if (doc.year) years.add(doc.year);
+      if (doc.author) authors.add(doc.author);
+      if (doc.citationsExtracted) {
+        try {
+          const citations = JSON.parse(doc.citationsExtracted);
+          totalCitations += citations.length;
+        } catch (e) {
+          // Ignorer erreurs de parsing
+        }
+      }
+    }
+
+    return {
+      documentCount: stats.documentCount,
+      chunkCount: stats.chunkCount,
+      citationCount: totalCitations,
+      languageCount: languages.size,
+      languages: Array.from(languages),
+      yearRange: years.size > 0 ? {
+        min: Math.min(...Array.from(years).map(y => parseInt(y))),
+        max: Math.max(...Array.from(years).map(y => parseInt(y))),
+      } : null,
+      authorCount: authors.size,
+    };
+  }
+
+  /**
+   * Analyse les topics du corpus avec BERTopic
+   */
+  async analyzeTopics(options?: any) {
+    this.ensureInitialized();
+
+    const documents = await this.vectorStore!.getAllDocuments();
+
+    if (documents.length < 5) {
+      throw new Error('Topic modeling requires at least 5 documents');
+    }
+
+    // Récupérer les embeddings et textes
+    const embeddings: Float32Array[] = [];
+    const texts: string[] = [];
+    const documentIds: string[] = [];
+
+    for (const doc of documents) {
+      // Utiliser le résumé si disponible, sinon le titre
+      const text = doc.summary || doc.title;
+      if (text && doc.summaryEmbedding) {
+        embeddings.push(doc.summaryEmbedding);
+        texts.push(text);
+        documentIds.push(doc.id);
+      }
+    }
+
+    if (embeddings.length < 5) {
+      throw new Error('Not enough documents with embeddings for topic modeling. Try indexing more documents with summary generation enabled.');
+    }
+
+    // Initialiser et démarrer le service Topic Modeling
+    const topicService = new TopicModelingService();
+
+    try {
+      await topicService.start();
+
+      const result = await topicService.analyzeTopics(
+        embeddings,
+        texts,
+        documentIds,
+        {
+          minTopicSize: options?.minTopicSize || 3,
+          language: options?.language || 'multilingual',
+          nGramRange: options?.nGramRange || [1, 3],
+        }
+      );
+
+      return result;
+    } finally {
+      // Toujours arrêter le service
+      await topicService.stop();
+    }
   }
 }
 

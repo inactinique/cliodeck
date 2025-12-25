@@ -2,12 +2,87 @@
 import { pdfService } from './pdf-service.js';
 import { BrowserWindow } from 'electron';
 
+// Options enrichies pour le RAG
+interface EnrichedRAGOptions {
+  context?: boolean;              // Activer le RAG
+  useGraphContext?: boolean;      // Utiliser le graphe de connaissances
+  includeSummaries?: boolean;     // Utiliser résumés au lieu de chunks
+  topK?: number;                  // Nombre de résultats de recherche
+  additionalGraphDocs?: number;   // Nombre de documents liés à inclure
+  window?: BrowserWindow;         // Fenêtre pour streaming
+}
+
 class ChatService {
   private currentStream: any = null;
 
+  /**
+   * Convertit les résultats de recherche en utilisant les résumés au lieu des chunks
+   */
+  private convertChunksToSummaries(searchResults: any[]): any[] {
+    const summaryResults: any[] = [];
+    const seenDocuments = new Set<string>();
+
+    for (const result of searchResults) {
+      const docId = result.document.id;
+
+      // Éviter les doublons (un résumé par document)
+      if (seenDocuments.has(docId)) {
+        continue;
+      }
+
+      if (result.document.summary) {
+        seenDocuments.add(docId);
+        summaryResults.push({
+          document: result.document,
+          chunk: {
+            content: result.document.summary,
+            pageNumber: 1
+          },
+          similarity: result.similarity
+        });
+      }
+    }
+
+    return summaryResults;
+  }
+
+  /**
+   * Récupère les documents liés via le graphe de connaissances
+   */
+  private async getRelatedDocumentsFromGraph(
+    documentIds: string[],
+    limit: number = 3
+  ): Promise<Set<string>> {
+    const relatedDocs = new Set<string>();
+    const vectorStore = pdfService.getVectorStore();
+
+    if (!vectorStore) {
+      return relatedDocs;
+    }
+
+    for (const docId of documentIds) {
+      // Récupérer documents cités par ce document
+      const citedDocs = vectorStore.getDocumentsCitedBy(docId);
+      citedDocs.slice(0, Math.ceil(limit / 2)).forEach(id => relatedDocs.add(id));
+
+      // Récupérer documents qui citent ce document
+      const citingDocs = vectorStore.getDocumentsCiting(docId);
+      citingDocs.slice(0, Math.ceil(limit / 2)).forEach(id => relatedDocs.add(id));
+
+      // Récupérer documents similaires
+      const similarDocs = vectorStore.getSimilarDocuments(docId, 0.7, limit);
+      similarDocs.forEach(({ documentId }) => relatedDocs.add(documentId));
+    }
+
+    // Retirer les documents originaux
+    documentIds.forEach(id => relatedDocs.delete(id));
+
+    return relatedDocs;
+  }
+
   async sendMessage(
     message: string,
-    options: { context?: boolean; window?: BrowserWindow } = {}
+    options: EnrichedRAGOptions = {}
   ): Promise<string> {
     try {
       // Obtenir le client Ollama
@@ -18,6 +93,7 @@ class ChatService {
 
       let fullResponse = '';
       let searchResults: any[] = [];
+      let relatedDocuments: any[] = [];
 
       // Si contexte activé, rechercher dans les documents
       if (options.context) {
@@ -26,6 +102,45 @@ class ChatService {
 
         if (searchResults.length > 0) {
           console.log(`📚 Using ${searchResults.length} context chunks for RAG`);
+
+          // Si graphe activé, récupérer documents liés
+          if (options.useGraphContext) {
+            const uniqueDocIds = [...new Set(searchResults.map(r => r.document.id))];
+            const relatedDocIds = await this.getRelatedDocumentsFromGraph(
+              uniqueDocIds,
+              options.additionalGraphDocs || 3
+            );
+
+            console.log(`🔗 Found ${relatedDocIds.size} related documents via graph`);
+
+            // Récupérer les documents complets
+            const vectorStore = pdfService.getVectorStore();
+            if (vectorStore && relatedDocIds.size > 0) {
+              relatedDocuments = Array.from(relatedDocIds)
+                .map(id => vectorStore.getDocument(id))
+                .filter(doc => doc !== null);
+            }
+          }
+
+          // Si résumés activés, utiliser résumés au lieu de chunks
+          if (options.includeSummaries) {
+            console.log('📝 Using document summaries instead of chunks');
+            // Remplacer chunks par résumés
+            searchResults = this.convertChunksToSummaries(searchResults);
+            if (relatedDocuments.length > 0) {
+              // Ajouter résumés des documents liés
+              relatedDocuments.forEach(doc => {
+                if (doc.summary) {
+                  searchResults.push({
+                    document: doc,
+                    chunk: { content: doc.summary, pageNumber: 1 },
+                    similarity: 0.7, // Score arbitraire pour documents liés
+                    isRelatedDoc: true
+                  });
+                }
+              });
+            }
+          }
         }
       }
 

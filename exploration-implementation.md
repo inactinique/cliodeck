@@ -493,15 +493,15 @@ export class KnowledgeGraphBuilder {
 
 ---
 
-### 🔲 2. Intégration avec Electron
+### ✅ 2. Intégration avec Electron
 
 **Nouveau fichier :** `backend/core/analysis/TopicModelingService.ts`
 
 **Fonctionnalités :**
-- [ ] Démarrer/arrêter service Python en subprocess
-- [ ] Health check au démarrage
-- [ ] Envoyer embeddings via HTTP
-- [ ] Parser réponse et stocker topics
+- [x] Démarrer/arrêter service Python en subprocess
+- [x] Health check au démarrage
+- [x] Envoyer embeddings via HTTP
+- [x] Parser réponse et stocker topics
 
 **Interface :**
 ```typescript
@@ -517,13 +517,14 @@ export class TopicModelingService {
 ```
 
 **Gestion d'erreurs :**
-- [ ] Vérifier Python installé
-- [ ] Gérer service non disponible (mode dégradé)
-- [ ] Afficher message utilisateur si Python manquant
+- [x] Vérifier Python installé
+- [x] Gérer service non disponible (mode dégradé)
+- [x] Afficher message utilisateur si Python manquant
 
 **Tests :**
-- [ ] Tester start/stop service
-- [ ] Tester analyse topics
+- [x] Build vérifié et fonctionnel
+- [ ] Tester start/stop service avec Python réel
+- [ ] Tester analyse topics avec données réelles
 - [ ] Tester gestion d'erreurs
 
 **Charge :** ~4-5 heures
@@ -532,62 +533,114 @@ export class TopicModelingService {
 
 ## Phase 3 - RAG Enrichi
 
-### 🔲 1. Améliorer ChatService
+### ✅ 1. Améliorer ChatService
 
 **Fichier :** [src/main/services/chat-service.ts](src/main/services/chat-service.ts)
 
 **Modifications :**
-- [ ] Ajouter option `useGraphContext` dans options
-- [ ] Si activé, récupérer documents connectés dans le graphe
-- [ ] Inclure résumés dans le contexte
-- [ ] Modifier prompt pour mentionner documents liés
+- [x] Ajouter option `useGraphContext` dans options
+- [x] Si activé, récupérer documents connectés dans le graphe
+- [x] Inclure résumés dans le contexte
+- [x] Modifier prompt pour mentionner documents liés
 
 **Nouveau retrieval hybride :**
 ```typescript
 interface EnrichedRAGOptions {
-  context: boolean;
-  useGraphContext: boolean;
-  includeSummaries: boolean;
-  topK: number;
-  additionalGraphDocs: number;
+  context?: boolean;
+  useGraphContext?: boolean;
+  includeSummaries?: boolean;
+  topK?: number;
+  additionalGraphDocs?: number;
+  window?: BrowserWindow;
 }
 ```
+
+**Fonctionnalités implémentées :**
+- [x] Méthode `convertChunksToSummaries()` : convertit les résultats de recherche pour utiliser résumés au lieu de chunks
+- [x] Méthode `getRelatedDocumentsFromGraph()` : récupère documents liés via citations et similarité
+- [x] Intégration dans `sendMessage()` : enrichissement automatique du contexte si options activées
+- [x] Support des documents liés du graphe avec score de similarité
 
 **Tests :**
 - [ ] Tester RAG avec graphe
 - [ ] Comparer qualité réponses (avec/sans graphe)
 
-**Charge :** ~3-4 heures
+**Charge :** ~3-4 heures → **Terminé le 2025-12-24**
 
 ---
 
 ## Phase 4 - Interface Frontend (après backend)
 
-### 🔲 1. Vue "Corpus Explorer"
+### ✅ 1. Enrichir configuration UI
 
-**Nouveau fichier :** `src/renderer/src/components/Corpus/CorpusExplorerPanel.tsx`
+**Fichiers :**
+- [src/renderer/src/components/Config/ConfigPanel.tsx](src/renderer/src/components/Config/ConfigPanel.tsx)
+- [src/renderer/src/components/Config/RAGConfigSection.tsx](src/renderer/src/components/Config/RAGConfigSection.tsx)
 
-**Sections :**
-- [ ] Statistiques globales (docs, topics, citations, langues)
-- [ ] Graphe interactif ([react-force-graph](https://github.com/vasturiano/react-force-graph))
-- [ ] Liste des topics
-- [ ] Filtres (topic, année, auteur, langue)
+**Modifications interface RAGConfig :**
+- [x] Ajout champs pour génération de résumés :
+  - `summaryGeneration: 'extractive' | 'abstractive' | 'disabled'`
+  - `summaryMaxLength: number`
+- [x] Ajout champs pour graphe de connaissances :
+  - `useGraphContext: boolean`
+  - `graphSimilarityThreshold: number`
+  - `additionalGraphDocs: number`
+- [x] Ajout champs pour RAG enrichi :
+  - `includeSummaries: boolean`
+- [x] Ajout champ pour topic modeling :
+  - `enableTopicModeling: boolean`
 
-**Charge :** ~10-12 heures
+**Ajouts UI dans RAGConfigSection :**
+- [x] Select "Génération de résumés" (désactivé/extractif/abstractif)
+- [x] Slider "Longueur maximale des résumés" (100-1000 mots, affiché conditionnellement)
+- [x] Checkbox "Utiliser le graphe de connaissances"
+- [x] Slider "Documents liés à inclure" (1-10, affiché si graphe activé)
+- [x] Slider "Seuil de similarité pour le graphe" (0.5-1.0, affiché si graphe activé)
+- [x] Checkbox "Utiliser résumés dans le RAG"
+- [x] Checkbox "Modélisation de topics"
+
+**Fonctionnalités :**
+- [x] Affichage conditionnel des options (résumés max length, options graphe)
+- [x] Valeurs par défaut cohérentes
+- [x] Sauvegarde/chargement de la configuration
+- [x] Reset vers valeurs par défaut
+- [x] Build vérifié et fonctionnel
+
+**Charge :** ~2-3 heures → **Terminé le 2025-12-24**
 
 ---
 
-### 🔲 2. Enrichir configuration UI
+### ✅ 2. Vue "Corpus Explorer"
 
-**Fichier :** [src/renderer/src/components/Config/RAGConfigSection.tsx](src/renderer/src/components/Config/RAGConfigSection.tsx)
+**Fichiers créés :**
+- `src/renderer/src/components/Corpus/CorpusExplorerPanel.tsx` (370+ lignes)
+- `src/renderer/src/components/Corpus/CorpusExplorerPanel.css` (300+ lignes)
 
-**Ajouts :**
-- [ ] Toggle résumés (extractif/abstractif/désactivé)
-- [ ] Toggle topic modeling
-- [ ] Toggle graphe de citations
-- [ ] Seuil de similarité pour graphe
+**Fonctionnalités implémentées :**
+- [x] Statistiques globales (documents, citations, auteurs, langues)
+- [x] Graphe interactif avec react-force-graph
+  - Nœuds colorés par communauté
+  - Taille basée sur la centralité
+  - Liens colorés par type (citation, similarité, co-citation)
+  - Flèches directionnelles pour les citations
+  - Zoom et pan interactifs
+  - Drag & drop des nœuds
+- [x] Panel de détails du nœud sélectionné
+- [x] Légende du graphe
+- [x] États de chargement et d'erreur
+- [ ] Liste des topics (futur)
+- [ ] Filtres (topic, année, auteur, langue) (futur)
 
-**Charge :** ~2-3 heures
+**Backend ajouté :**
+- [x] Handlers IPC `corpus:get-graph` et `corpus:get-statistics`
+- [x] Méthodes dans pdf-service.ts : `buildKnowledgeGraph()`, `getCorpusStatistics()`, `getVectorStore()`
+- [x] Types dans preload.ts pour `window.electron.corpus`
+
+**Dépendances installées :**
+- [x] react-force-graph
+- [x] recharts
+
+**Charge :** ~10-12 heures → **Terminé le 2025-12-24**
 
 ---
 
@@ -883,9 +936,168 @@ pip install -r requirements.txt
 - n_gram_range : (1, 3)
 
 **Prochaines étapes :**
-- [ ] Phase 2.2 : Intégration avec Electron (TopicModelingService.ts)
+- ✅ Phase 2.2 : Intégration avec Electron (TopicModelingService.ts) → **Terminé**
 - [ ] Tester le service Python avec données réelles
 - [ ] Créer handlers IPC pour topic modeling
+
+**Session 9 - Phase 2.2 : Intégration avec Electron**
+- ✅ Création du fichier `TopicModelingService.ts` (360+ lignes)
+- ✅ Interfaces TypeScript :
+  - `Topic` : représentation d'un topic (id, label, keywords, documents, size)
+  - `TopicAnalysisResult` : résultat complet de l'analyse
+  - `TopicAnalysisOptions` : options configurables (minTopicSize, language, nGramRange)
+  - `HealthResponse` : réponse du health check
+  - `AnalyzeResponse` : réponse brute de l'API Python
+- ✅ Classe `TopicModelingService` :
+  - Gestion du cycle de vie du subprocess Python
+  - Variables d'état : isRunning, isStarting
+  - Configuration : serviceURL (http://127.0.0.1:8001), timeout (30s)
+- ✅ Méthode `start()` :
+  - Vérification que Python est disponible via `checkPythonAvailable()`
+  - Démarrage du subprocess avec `spawn('python', ['main.py'])`
+  - Capture des logs stdout/stderr
+  - Gestion de l'événement 'exit' du processus
+  - Attente que le service soit prêt via `waitForServiceReady()`
+- ✅ Méthode `stop()` :
+  - Envoi de SIGTERM au processus Python
+  - Fallback SIGKILL après 5s si nécessaire
+  - Nettoyage des ressources
+- ✅ Méthode `checkPythonAvailable()` :
+  - Exécute `python --version` pour vérifier présence
+  - Retourne erreur claire si Python manquant
+- ✅ Méthode `waitForServiceReady()` :
+  - Boucle de health checks toutes les 1s
+  - Timeout de 30s
+  - Retourne erreur si service ne démarre pas à temps
+- ✅ Méthode `isHealthy()` :
+  - Requête GET vers `/health`
+  - Vérification du status "healthy"
+- ✅ Méthode `analyzeTopics()` :
+  - Validation des paramètres (longueurs, minimum de documents)
+  - Conversion Float32Array → Array pour JSON
+  - Requête POST vers `/analyze`
+  - Conversion snake_case → camelCase pour TypeScript
+  - Gestion d'erreurs HTTP avec messages clairs
+- ✅ Méthode `getStatus()` :
+  - Retourne l'état actuel du service (isRunning, isStarting, serviceURL)
+- ✅ Gestion d'erreurs robuste :
+  - Vérification Python installé
+  - Timeout de démarrage
+  - Messages d'erreur clairs pour l'utilisateur
+  - Nettoyage automatique en cas d'échec
+- ✅ Build vérifié et fonctionnel
+
+**Architecture :**
+```
+Electron (TypeScript)
+    ↓ spawn()
+Python Service (FastAPI)
+    ↓ HTTP POST /analyze
+BERTopic Analysis
+    ↓ Response JSON
+TopicAnalysisResult
+```
+
+**Prochaines étapes :**
+- ✅ Phase 3 : RAG Enrichi → **Terminé**
+- ✅ Phase 4.1 : Enrichir configuration UI → **Terminé**
+- [ ] Phase 4.2 : Vue "Corpus Explorer"
+- [ ] Créer handlers IPC pour topic modeling
+- [ ] Tester le service complet avec données réelles
+
+**Session 10 - Phase 3 : RAG Enrichi**
+- ✅ Modification du fichier `chat-service.ts` (192 lignes)
+- ✅ Création interface `EnrichedRAGOptions` :
+  - `context?: boolean` : Activer le RAG
+  - `useGraphContext?: boolean` : Utiliser le graphe de connaissances
+  - `includeSummaries?: boolean` : Utiliser résumés au lieu de chunks
+  - `topK?: number` : Nombre de résultats de recherche
+  - `additionalGraphDocs?: number` : Nombre de documents liés à inclure
+  - `window?: BrowserWindow` : Fenêtre pour streaming
+- ✅ Méthode `convertChunksToSummaries()` (47 lignes) :
+  - Convertit les résultats de recherche en utilisant résumés
+  - Évite les doublons (un résumé par document)
+  - Préserve les métadonnées de similarité
+- ✅ Méthode `getRelatedDocumentsFromGraph()` (30 lignes) :
+  - Récupère documents cités par les documents trouvés
+  - Récupère documents qui citent les documents trouvés
+  - Récupère documents similaires selon seuil de similarité
+  - Retourne Set de document IDs (sans doublons)
+- ✅ Intégration dans `sendMessage()` :
+  - Si `useGraphContext` activé, récupère documents liés via graphe
+  - Si `includeSummaries` activé, remplace chunks par résumés
+  - Ajoute résumés des documents liés au contexte
+  - Logs détaillés pour débogage
+- ✅ Build vérifié et fonctionnel
+
+**Session 11 - Phase 4.1 : Enrichir configuration UI**
+- ✅ Modification de `ConfigPanel.tsx` :
+  - Extension interface `RAGConfig` avec 8 nouveaux champs
+  - Mise à jour des valeurs par défaut dans `useState`
+  - Mise à jour du handler `handleResetConfig`
+- ✅ Modification de `RAGConfigSection.tsx` (366 lignes) :
+  - Ajout de 8 handlers pour les nouveaux champs
+  - Ajout select "Génération de résumés" (3 options)
+  - Ajout slider "Longueur maximale des résumés" (100-1000 mots)
+  - Ajout checkbox "Utiliser le graphe de connaissances"
+  - Ajout slider "Documents liés à inclure" (1-10)
+  - Ajout slider "Seuil de similarité pour le graphe" (0.5-1.0)
+  - Ajout checkbox "Utiliser résumés dans le RAG"
+  - Ajout checkbox "Modélisation de topics"
+- ✅ Fonctionnalités avancées :
+  - Affichage conditionnel du slider de longueur (si génération activée)
+  - Affichage conditionnel des options graphe (si graphe activé)
+  - Descriptions et aide pour chaque option
+  - Build vérifié et fonctionnel
+
+**Prochaines étapes :**
+- ✅ Phase 4.2 : Vue "Corpus Explorer" → **Terminé**
+- [ ] Créer handlers IPC pour topic modeling
+- [ ] Ajouter liste des topics dans Corpus Explorer
+- [ ] Ajouter filtres dans Corpus Explorer
+- [ ] Tester le système enrichi avec données réelles
+
+**Session 12 - Phase 4.2 : Vue "Corpus Explorer"**
+- ✅ Installation dépendances : react-force-graph, recharts (141 packages)
+- ✅ Ajout handlers IPC dans `handlers.ts` (45 lignes) :
+  - `corpus:get-graph` : Construction et export du graphe
+  - `corpus:get-statistics` : Statistiques du corpus
+- ✅ Extension de `pdf-service.ts` (70 lignes) :
+  - Import de `KnowledgeGraphBuilder`
+  - Méthode `getVectorStore()` : Retourne le VectorStore
+  - Méthode `buildKnowledgeGraph()` : Construit le graphe avec options
+  - Méthode `getCorpusStatistics()` : Calcule stats complètes (docs, citations, langues, années, auteurs)
+- ✅ Extension de `preload.ts` :
+  - Ajout section `corpus` dans l'API IPC
+  - Types pour `getGraph()` et `getStatistics()`
+- ✅ Création de `CorpusExplorerPanel.tsx` (370+ lignes) :
+  - Interfaces TypeScript : `GraphNode`, `GraphEdge`, `GraphData`, `CorpusStatistics`
+  - Hook `useEffect` pour chargement automatique des données
+  - Section statistiques : 4 cartes colorées (documents, citations, auteurs, langues)
+  - Info supplémentaires : période, langues
+  - Visualisation graphe avec ForceGraph2D :
+    - Nœuds colorés par communauté (5 couleurs)
+    - Taille basée sur centralité (4-12px)
+    - Liens colorés par type (rouge=citation, vert=similarité, violet=co-citation)
+    - Flèches directionnelles pour citations
+    - Zoom, pan, drag interactifs
+  - Panel détails nœud : titre, auteur, année, centralité, communauté
+  - Légende du graphe (3 types de liens)
+  - Info graphe : nombre de nœuds et liens
+  - États : loading spinner, error, empty state
+- ✅ Création de `CorpusExplorerPanel.css` (300+ lignes) :
+  - Styles pour statistiques (cartes avec gradients)
+  - Styles pour graphe (container, légende, visualisation)
+  - Styles pour panel détails nœud
+  - Responsive design
+  - Support dark mode
+- ✅ Build vérifié et fonctionnel
+
+**Prochaines étapes :**
+- [ ] Tester le Corpus Explorer avec des données réelles
+- [ ] Créer handlers IPC pour topic modeling
+- [ ] Ajouter liste des topics dans Corpus Explorer
+- [ ] Ajouter filtres dans Corpus Explorer
 
 ---
 

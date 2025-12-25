@@ -481,6 +481,14 @@ export class CitationExtractor {
   // MARK: - Statistics
 
   /**
+   * Vérifie si une année est valide (entre 1500 et 2100)
+   */
+  private isValidYear(year: string): boolean {
+    const yearNum = parseInt(year.replace(/[a-z]/g, ''));
+    return yearNum >= 1500 && yearNum <= 2100;
+  }
+
+  /**
    * Retourne des statistiques sur les citations extraites
    */
   getCitationStatistics(citations: Citation[]): {
@@ -491,14 +499,17 @@ export class CitationExtractor {
     citationsWithPage: number;
   } {
     const uniqueAuthors = new Set(citations.map((c) => c.author).filter(Boolean));
-    const years = citations.map((c) => c.year).filter(Boolean) as string[];
+    const allYears = citations.map((c) => c.year).filter(Boolean) as string[];
+
+    // Filtrer pour ne garder que les années valides
+    const validYears = allYears.filter((y) => this.isValidYear(y));
 
     return {
       totalCitations: citations.length,
       uniqueAuthors: uniqueAuthors.size,
       yearRange: {
-        min: years.length > 0 ? Math.min(...years.map((y) => parseInt(y))).toString() : undefined,
-        max: years.length > 0 ? Math.max(...years.map((y) => parseInt(y))).toString() : undefined,
+        min: validYears.length > 0 ? Math.min(...validYears.map((y) => parseInt(y))).toString() : undefined,
+        max: validYears.length > 0 ? Math.max(...validYears.map((y) => parseInt(y))).toString() : undefined,
       },
       citationsWithContext: citations.filter((c) => c.context).length,
       citationsWithPage: citations.filter((c) => c.pageNumber).length,
