@@ -88,35 +88,80 @@ mdfocus-electron/
 - **Vite** - Build tool
 
 ### Backend
-- **Node.js** - Runtime
+- **Node.js 20+** - Runtime JavaScript
 - **better-sqlite3** - Base SQLite (vector store)
 - **pdfjs-dist** - Extraction PDF
 - **electron-store** - Persistance config
+- **Python 3.11+** - Services d'analyse (topic modeling)
 
-### LLM
+### LLM & IA
 - **Ollama** - Modèles locaux (nomic-embed-text, gemma2:2b)
+  - Modèle d'embeddings : `nomic-embed-text` (768 dimensions)
+  - Modèle de chat : `gemma2:2b` (rapide, multilingue)
+- **BERTopic** - Topic modeling et clustering (Python)
 - **Claude API** - Option cloud (Anthropic)
 - **OpenAI API** - Option cloud alternative
 
 ## 🚀 Installation
 
-### Prérequis
+### Guides détaillés par plateforme
 
-- Node.js 20+
-- npm 10+
-- Ollama (optionnel, pour LLM local)
+Pour des instructions complètes d'installation avec gestion des dépendances système, configuration d'Ollama, et dépannage :
 
-### Setup
+- 📘 **[Guide d'installation macOS](INSTALL_MACOS.md)** - Installation complète sur macOS (Intel et Apple Silicon)
+- 📗 **[Guide d'installation Linux](INSTALL_LINUX.md)** - Installation sur Ubuntu, Debian, Fedora, Arch Linux, etc.
+
+### Installation rapide (développeurs)
+
+**Prérequis :**
+- Node.js 20+ et npm 10+
+- Python 3.11+ (avec venv)
+- Ollama avec les modèles :
+  - `nomic-embed-text` (obligatoire pour embeddings)
+  - `gemma2:2b` (recommandé pour chat)
+
+**Installation :**
 
 ```bash
-cd /home/inactinique/GitHub/mdfocus-electron
+# Cloner le dépôt
+git clone https://github.com/votre-org/mdfocus-electron.git
+cd mdfocus-electron
+
+# Installer les dépendances npm
 npm install
+
+# Compiler les modules natifs pour Electron
+npx electron-rebuild -f
+
+# Compiler le projet
+npm run build
+
+# Lancer l'application
+npm start
+```
+
+**Installation d'Ollama et des modèles :**
+
+```bash
+# macOS
+brew install ollama
+brew services start ollama
+
+# Linux
+curl -fsSL https://ollama.ai/install.sh | sh
+
+# Télécharger les modèles
+ollama pull nomic-embed-text
+ollama pull gemma2:2b
 ```
 
 ## 📦 Scripts disponibles
 
 ```bash
-# Développement (pas encore configuré)
+# Développement (compile en mode watch + lance l'app)
+npm run dev:full
+
+# Développement (compile uniquement en mode watch)
 npm run dev
 
 # Build production
@@ -125,14 +170,24 @@ npm run build
 # Lancer l'application
 npm start
 
+# Build pour distribution
+npm run build:linux    # AppImage + .deb
+npm run build:mac      # DMG (x64 + arm64)
+npm run build:win      # NSIS installer
+
 # Tests
 npm test
+npm run test:watch
+npm run test:coverage
 
 # Type checking
 npm run typecheck
 
 # Lint
 npm run lint
+
+# Nettoyage
+npm run clean
 ```
 
 ## 📚 Composants principaux
@@ -272,9 +327,15 @@ Le projet réécrit mdFocus (Swift/macOS) en Electron multi-plateforme.
 
 ## 📖 Documentation
 
-- [Plan complet](~/.claude/plans/bubbly-seeking-parrot.md) - Architecture détaillée
-- [VectorStore API](#vectorstore) - Documentation VectorStore
-- [Configuration](#configmanager) - Options de configuration
+### Guides d'installation
+- [INSTALL_MACOS.md](INSTALL_MACOS.md) - Guide complet pour macOS (Intel & Apple Silicon)
+- [INSTALL_LINUX.md](INSTALL_LINUX.md) - Guide complet pour Linux (Ubuntu, Debian, Fedora, Arch)
+- [DEPLOYMENT.md](DEPLOYMENT.md) - Déploiement en production et workflow utilisateur
+
+### Documentation technique
+- [VectorStore API](#vectorstore-complété) - Documentation VectorStore
+- [Configuration](#configmanager-complété) - Options de configuration
+- [Architecture](#architecture) - Structure du projet
 
 ## 🔗 Liens
 

@@ -1,7 +1,5 @@
 import Database from 'better-sqlite3';
 import path from 'path';
-import { app } from 'electron';
-import { randomUUID } from 'crypto';
 import { existsSync, mkdirSync } from 'fs';
 import type {
   PDFDocument,
@@ -14,23 +12,29 @@ import type {
 export class VectorStore {
   private db: Database.Database;
   private dbPath: string;
+  public readonly projectPath: string;
 
-  constructor(projectPath?: string) {
-    // Path: userData/mdfocus/vectors.db ou project/.mdfocus/vectors.db
-    if (projectPath) {
-      this.dbPath = path.join(projectPath, '.mdfocus', 'vectors.db');
-    } else {
-      const userDataPath = app.getPath('userData');
-      const appFolder = path.join(userDataPath, 'mdfocus');
-      this.dbPath = path.join(appFolder, 'vectors.db');
+  /**
+   * Crée un VectorStore pour un projet spécifique
+   * @param projectPath Chemin absolu vers le dossier du projet
+   * @throws Error si projectPath n'est pas fourni
+   */
+  constructor(projectPath: string) {
+    if (!projectPath) {
+      throw new Error('VectorStore requires a project path. Use project-based storage only.');
     }
 
-    console.log(`📁 Base de données: ${this.dbPath}`);
+    this.projectPath = projectPath;
+    // Base de données dans project/.mdfocus/vectors.db
+    this.dbPath = path.join(projectPath, '.mdfocus', 'vectors.db');
 
-    // Créer le dossier parent si nécessaire
-    const dir = path.dirname(this.dbPath);
-    if (!existsSync(dir)) {
-      mkdirSync(dir, { recursive: true });
+    console.log(`📁 Base de données projet: ${this.dbPath}`);
+
+    // Créer le dossier .mdfocus si nécessaire
+    const mdfocusDir = path.join(projectPath, '.mdfocus');
+    if (!existsSync(mdfocusDir)) {
+      mkdirSync(mdfocusDir, { recursive: true });
+      console.log(`📂 Dossier .mdfocus créé: ${mdfocusDir}`);
     }
 
     // Ouvrir la base de données
@@ -63,7 +67,11 @@ export class VectorStore {
         created_at TEXT NOT NULL,
         indexed_at TEXT NOT NULL,
         last_accessed_at TEXT NOT NULL,
-        metadata TEXT
+        metadata TEXT,
+        summary TEXT,
+        summary_embedding BLOB,
+        citations_extracted TEXT,
+        language TEXT
       );
     `);
 
@@ -82,13 +90,70 @@ export class VectorStore {
       );
     `);
 
+    // Table pour les citations entre documents
+    this.db.exec(`
+      CREATE TABLE IF NOT EXISTS document_citations (
+        id TEXT PRIMARY KEY,
+        source_doc_id TEXT NOT NULL,
+        target_citation TEXT NOT NULL,
+        target_doc_id TEXT,
+        context TEXT,
+        page_number INTEGER,
+        FOREIGN KEY (source_doc_id) REFERENCES documents(id) ON DELETE CASCADE,
+        FOREIGN KEY (target_doc_id) REFERENCES documents(id) ON DELETE SET NULL
+      );
+    `);
+
+    // Table pour les similarités pré-calculées (optionnel, pour performance)
+    this.db.exec(`
+      CREATE TABLE IF NOT EXISTS document_similarities (
+        doc_id_1 TEXT NOT NULL,
+        doc_id_2 TEXT NOT NULL,
+        similarity REAL NOT NULL,
+        PRIMARY KEY (doc_id_1, doc_id_2),
+        FOREIGN KEY (doc_id_1) REFERENCES documents(id) ON DELETE CASCADE,
+        FOREIGN KEY (doc_id_2) REFERENCES documents(id) ON DELETE CASCADE
+      );
+    `);
+
     // Index pour accélérer les recherches
     this.db.exec(`
       CREATE INDEX IF NOT EXISTS idx_chunks_document_id ON chunks(document_id);
       CREATE INDEX IF NOT EXISTS idx_chunks_page_number ON chunks(page_number);
+      CREATE INDEX IF NOT EXISTS idx_citations_source ON document_citations(source_doc_id);
+      CREATE INDEX IF NOT EXISTS idx_citations_target ON document_citations(target_doc_id);
+      CREATE INDEX IF NOT EXISTS idx_similarities_doc1 ON document_similarities(doc_id_1);
+      CREATE INDEX IF NOT EXISTS idx_similarities_doc2 ON document_similarities(doc_id_2);
     `);
 
     console.log('✅ Tables créées');
+
+    // Vérifier et migrer si nécessaire
+    this.migrateDatabase();
+  }
+
+  private migrateDatabase(): void {
+    // Vérifier si les nouvelles colonnes existent déjà
+    const tableInfo = this.db.pragma('table_info(documents)') as Array<{ name: string }>;
+    const columnNames = tableInfo.map((col) => col.name);
+
+    const newColumns = [
+      { name: 'summary', type: 'TEXT', default: 'NULL' },
+      { name: 'summary_embedding', type: 'BLOB', default: 'NULL' },
+      { name: 'citations_extracted', type: 'TEXT', default: 'NULL' },
+      { name: 'language', type: 'TEXT', default: 'NULL' },
+    ];
+
+    for (const column of newColumns) {
+      if (!columnNames.includes(column.name)) {
+        console.log(`📝 Migration: Ajout de la colonne ${column.name}`);
+        this.db.exec(
+          `ALTER TABLE documents ADD COLUMN ${column.name} ${column.type} DEFAULT ${column.default}`
+        );
+      }
+    }
+
+    console.log('✅ Migration de la base de données terminée');
   }
 
   // MARK: - Document Operations
@@ -97,11 +162,20 @@ export class VectorStore {
     const stmt = this.db.prepare(`
       INSERT OR REPLACE INTO documents
       (id, file_path, title, author, year, bibtex_key, page_count,
-       created_at, indexed_at, last_accessed_at, metadata)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+       created_at, indexed_at, last_accessed_at, metadata,
+       summary, summary_embedding, citations_extracted, language)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
 
     const metadataJSON = JSON.stringify(document.metadata);
+    const citationsJSON = (document as any).citationsExtracted
+      ? JSON.stringify((document as any).citationsExtracted)
+      : null;
+
+    // Convertir summary_embedding en Buffer si présent
+    const summaryEmbeddingBuffer = (document as any).summaryEmbedding
+      ? Buffer.from((document as any).summaryEmbedding.buffer)
+      : null;
 
     stmt.run(
       document.id,
@@ -114,7 +188,11 @@ export class VectorStore {
       document.createdAt.toISOString(),
       document.indexedAt.toISOString(),
       document.lastAccessedAt.toISOString(),
-      metadataJSON
+      metadataJSON,
+      (document as any).summary || null,
+      summaryEmbeddingBuffer,
+      citationsJSON,
+      (document as any).language || null
     );
 
     console.log(`✅ Document sauvegardé: ${document.title}`);
@@ -270,6 +348,20 @@ export class VectorStore {
 
   private parseDocument(row: any): PDFDocument {
     const metadata = JSON.parse(row.metadata || '{}');
+    const citationsExtracted = row.citations_extracted
+      ? JSON.parse(row.citations_extracted)
+      : undefined;
+
+    // Extraire summary_embedding si présent
+    let summaryEmbedding: Float32Array | undefined = undefined;
+    if (row.summary_embedding) {
+      const embeddingBuffer = row.summary_embedding as Buffer;
+      summaryEmbedding = new Float32Array(
+        embeddingBuffer.buffer,
+        embeddingBuffer.byteOffset,
+        embeddingBuffer.byteLength / Float32Array.BYTES_PER_ELEMENT
+      );
+    }
 
     const doc: PDFDocument = {
       id: row.id,
@@ -290,6 +382,12 @@ export class VectorStore {
         return this.title;
       },
     };
+
+    // Ajouter les nouveaux champs enrichis
+    (doc as any).summary = row.summary;
+    (doc as any).summaryEmbedding = summaryEmbedding;
+    (doc as any).citationsExtracted = citationsExtracted;
+    (doc as any).language = row.language;
 
     return doc;
   }
@@ -386,6 +484,162 @@ export class VectorStore {
     `);
 
     console.log('✅ Chunks orphelins supprimés');
+  }
+
+  // MARK: - Citation Operations
+
+  saveCitation(citation: {
+    id: string;
+    sourceDocId: string;
+    targetCitation: string;
+    targetDocId?: string;
+    context?: string;
+    pageNumber?: number;
+  }): void {
+    const stmt = this.db.prepare(`
+      INSERT OR REPLACE INTO document_citations
+      (id, source_doc_id, target_citation, target_doc_id, context, page_number)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `);
+
+    stmt.run(
+      citation.id,
+      citation.sourceDocId,
+      citation.targetCitation,
+      citation.targetDocId || null,
+      citation.context || null,
+      citation.pageNumber || null
+    );
+  }
+
+  getCitationsForDocument(documentId: string): Array<{
+    id: string;
+    sourceDocId: string;
+    targetCitation: string;
+    targetDocId?: string;
+    context?: string;
+    pageNumber?: number;
+  }> {
+    const stmt = this.db.prepare(`
+      SELECT * FROM document_citations
+      WHERE source_doc_id = ?
+      ORDER BY page_number ASC
+    `);
+
+    const rows = stmt.all(documentId) as any[];
+
+    return rows.map((row) => ({
+      id: row.id,
+      sourceDocId: row.source_doc_id,
+      targetCitation: row.target_citation,
+      targetDocId: row.target_doc_id,
+      context: row.context,
+      pageNumber: row.page_number,
+    }));
+  }
+
+  /**
+   * Compte le nombre de citations matchées (citations internes)
+   */
+  getMatchedCitationsCount(): number {
+    const stmt = this.db.prepare(`
+      SELECT COUNT(*) as count
+      FROM document_citations
+      WHERE target_doc_id IS NOT NULL
+    `);
+
+    const result = stmt.get() as { count: number };
+    return result.count;
+  }
+
+  /**
+   * Compte le nombre total de citations (y compris non matchées)
+   */
+  getTotalCitationsCount(): number {
+    const stmt = this.db.prepare(`
+      SELECT COUNT(*) as count
+      FROM document_citations
+    `);
+
+    const result = stmt.get() as { count: number };
+    return result.count;
+  }
+
+  getDocumentsCitedBy(documentId: string): string[] {
+    const stmt = this.db.prepare(`
+      SELECT DISTINCT target_doc_id FROM document_citations
+      WHERE source_doc_id = ? AND target_doc_id IS NOT NULL
+    `);
+
+    const rows = stmt.all(documentId) as Array<{ target_doc_id: string }>;
+    return rows.map((row) => row.target_doc_id);
+  }
+
+  getDocumentsCiting(documentId: string): string[] {
+    const stmt = this.db.prepare(`
+      SELECT DISTINCT source_doc_id FROM document_citations
+      WHERE target_doc_id = ?
+    `);
+
+    const rows = stmt.all(documentId) as Array<{ source_doc_id: string }>;
+    return rows.map((row) => row.source_doc_id);
+  }
+
+  deleteCitationsForDocument(documentId: string): void {
+    const stmt = this.db.prepare('DELETE FROM document_citations WHERE source_doc_id = ?');
+    stmt.run(documentId);
+  }
+
+  // MARK: - Similarity Operations
+
+  saveSimilarity(docId1: string, docId2: string, similarity: number): void {
+    // Toujours stocker avec docId1 < docId2 pour éviter les doublons
+    const [id1, id2] = docId1 < docId2 ? [docId1, docId2] : [docId2, docId1];
+
+    const stmt = this.db.prepare(`
+      INSERT OR REPLACE INTO document_similarities
+      (doc_id_1, doc_id_2, similarity)
+      VALUES (?, ?, ?)
+    `);
+
+    stmt.run(id1, id2, similarity);
+  }
+
+  getSimilarDocuments(
+    documentId: string,
+    threshold: number = 0.5,
+    limit: number = 10
+  ): Array<{ documentId: string; similarity: number }> {
+    const stmt = this.db.prepare(`
+      SELECT
+        CASE
+          WHEN doc_id_1 = ? THEN doc_id_2
+          ELSE doc_id_1
+        END as other_doc_id,
+        similarity
+      FROM document_similarities
+      WHERE (doc_id_1 = ? OR doc_id_2 = ?)
+        AND similarity >= ?
+      ORDER BY similarity DESC
+      LIMIT ?
+    `);
+
+    const rows = stmt.all(documentId, documentId, documentId, threshold, limit) as Array<{
+      other_doc_id: string;
+      similarity: number;
+    }>;
+
+    return rows.map((row) => ({
+      documentId: row.other_doc_id,
+      similarity: row.similarity,
+    }));
+  }
+
+  deleteSimilaritiesForDocument(documentId: string): void {
+    const stmt = this.db.prepare(
+      'DELETE FROM document_similarities WHERE doc_id_1 = ? OR doc_id_2 = ?'
+    );
+    stmt.run(documentId, documentId);
   }
 
   // Fermer la base de données

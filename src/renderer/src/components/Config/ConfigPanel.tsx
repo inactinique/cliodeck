@@ -10,9 +10,25 @@ import { useEditorStore } from '../../stores/editorStore';
 import './ConfigPanel.css';
 
 export interface RAGConfig {
+  // Retrieval configuration
   topK: number;
   similarityThreshold: number;
   chunkingConfig: 'cpuOptimized' | 'standard' | 'large';
+
+  // Summary generation
+  summaryGeneration: 'extractive' | 'abstractive' | 'disabled';
+  summaryMaxLength: number;
+
+  // Graph context
+  useGraphContext: boolean;
+  graphSimilarityThreshold: number;
+  additionalGraphDocs: number;
+
+  // RAG enrichment
+  includeSummaries: boolean; // Use summaries in RAG instead of chunks
+
+  // Topic modeling
+  enableTopicModeling: boolean;
 }
 
 export interface LLMConfig {
@@ -29,6 +45,13 @@ export const ConfigPanel: React.FC = () => {
     topK: 10,
     similarityThreshold: 0.2,
     chunkingConfig: 'cpuOptimized',
+    summaryGeneration: 'disabled',
+    summaryMaxLength: 500,
+    useGraphContext: false,
+    graphSimilarityThreshold: 0.7,
+    additionalGraphDocs: 3,
+    includeSummaries: false,
+    enableTopicModeling: false,
   });
 
   const [llmConfig, setLLMConfig] = useState<LLMConfig>({
@@ -125,6 +148,13 @@ export const ConfigPanel: React.FC = () => {
         topK: 10,
         similarityThreshold: 0.2,
         chunkingConfig: 'cpuOptimized',
+        summaryGeneration: 'disabled',
+        summaryMaxLength: 500,
+        useGraphContext: false,
+        graphSimilarityThreshold: 0.7,
+        additionalGraphDocs: 3,
+        includeSummaries: false,
+        enableTopicModeling: false,
       });
       setLLMConfig({
         backend: 'ollama',

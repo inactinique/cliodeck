@@ -134,6 +134,23 @@ const api = {
       return () => ipcRenderer.removeListener('revealjs-export:progress', listener);
     },
   },
+
+  // Corpus Explorer
+  corpus: {
+    getGraph: (options?: {
+      includeSimilarityEdges?: boolean;
+      similarityThreshold?: number;
+      includeAuthorNodes?: boolean;
+      computeLayout?: boolean;
+    }) => ipcRenderer.invoke('corpus:get-graph', options),
+    getStatistics: () => ipcRenderer.invoke('corpus:get-statistics'),
+    analyzeTopics: (options?: {
+      minTopicSize?: number;
+      language?: string;
+      nGramRange?: [number, number];
+      nrTopics?: number;
+    }) => ipcRenderer.invoke('corpus:analyze-topics', options),
+  },
 };
 
 // Exposer l'API au renderer via window.electron

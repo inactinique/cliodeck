@@ -41,15 +41,22 @@
     "better-sqlite3": "^11.0.0",
     "docx": "^9.5.1",
     "electron-store": "^10.0.0",
+    "graphology": "^0.26.0",
+    "graphology-communities-louvain": "^2.0.2",
+    "graphology-layout-forceatlas2": "^0.10.1",
+    "graphology-metrics": "^2.4.0",
     "lucide-react": "^0.562.0",
     "marked": "^17.0.1",
     "pdfjs-dist": "^4.0.0",
     "puppeteer": "^24.33.1",
     "react": "^18.3.0",
     "react-dom": "^18.3.0",
+    "react-force-graph": "^1.48.1",
+    "react-force-graph-2d": "^1.29.0",
     "react-markdown": "^9.0.1",
     "react-resizable-panels": "^2.1.9",
     "react-router-dom": "^6.22.0",
+    "recharts": "^3.6.0",
     "zustand": "^4.5.7"
   },
   "devDependencies": {
@@ -88,6 +95,16 @@
         "filter": [
           "**/*"
         ]
+      },
+      {
+        "from": "backend/python-services",
+        "to": "python-services",
+        "filter": [
+          "**/*",
+          "!**/.venv",
+          "!**/__pycache__",
+          "!**/*.pyc"
+        ]
       }
     ],
     "linux": {
@@ -96,16 +113,20 @@
         "deb"
       ],
       "category": "Office",
-      "icon": "build/icons",
+      "icon": "build/icon.png",
+      "executableName": "mdfocus-electron",
       "description": "Assistant d'écriture pour historiens avec RAG et intégration Zotero/Tropy",
       "desktop": {
         "Name": "mdFocus",
-        "Exec": "/opt/mdFocus/mdfocus-electron --no-sandbox %U",
         "Comment": "Assistant d'écriture pour historiens avec RAG et intégration Zotero/Tropy",
         "Categories": "Office;TextEditor;",
         "MimeType": "text/markdown;",
         "StartupWMClass": "mdFocus"
-      }
+      },
+      "executableArgs": [
+        "--no-sandbox",
+        "%U"
+      ]
     },
     "mac": {
       "target": [

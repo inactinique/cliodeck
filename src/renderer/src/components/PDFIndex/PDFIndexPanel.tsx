@@ -3,6 +3,7 @@ import { Plus } from 'lucide-react';
 import { PDFList } from './PDFList';
 import { IndexingProgress } from './IndexingProgress';
 import { CollapsibleSection } from '../common/CollapsibleSection';
+import { useProjectStore } from '../../stores/projectStore';
 import './PDFIndexPanel.css';
 
 interface PDFDocument {
@@ -23,6 +24,7 @@ interface IndexingState {
 }
 
 export const PDFIndexPanel: React.FC = () => {
+  const { currentProject } = useProjectStore();
   const [documents, setDocuments] = useState<PDFDocument[]>([]);
   const [indexingState, setIndexingState] = useState<IndexingState>({
     isIndexing: false,
@@ -75,6 +77,12 @@ export const PDFIndexPanel: React.FC = () => {
   };
 
   const handleAddPDF = async () => {
+    // Check if a project is open BEFORE opening file dialog
+    if (!currentProject) {
+      alert('Aucun projet ouvert. Veuillez d\'abord ouvrir ou créer un projet.');
+      return;
+    }
+
     try {
       const result = await window.electron.dialog.openFile({
         filters: [{ name: 'PDF', extensions: ['pdf'] }],
@@ -100,7 +108,7 @@ export const PDFIndexPanel: React.FC = () => {
     });
 
     try {
-      await window.electron.pdf.index(filePath, undefined, (progress) => {
+      const result = await window.electron.pdf.index(filePath, undefined, (progress) => {
         setIndexingState({
           isIndexing: true,
           currentFile: filePath,
@@ -108,6 +116,18 @@ export const PDFIndexPanel: React.FC = () => {
           stage: progress.message,
         });
       });
+
+      // Check if indexing failed
+      if (result && !result.success) {
+        const errorMessage = result.error || 'Erreur inconnue';
+        alert(errorMessage);
+        setIndexingState({
+          isIndexing: false,
+          progress: 0,
+          stage: 'Erreur',
+        });
+        return;
+      }
 
       await loadDocuments();
       await loadStats();
@@ -119,6 +139,8 @@ export const PDFIndexPanel: React.FC = () => {
       });
     } catch (error) {
       console.error('Indexing failed:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue';
+      alert(`Erreur lors de l'indexation: ${errorMessage}`);
       setIndexingState({
         isIndexing: false,
         progress: 0,
@@ -149,6 +171,12 @@ export const PDFIndexPanel: React.FC = () => {
   const handleDrop = async (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
+
+    // Check if a project is open BEFORE processing dropped files
+    if (!currentProject) {
+      alert('Aucun projet ouvert. Veuillez d\'abord ouvrir ou créer un projet.');
+      return;
+    }
 
     const files = Array.from(e.dataTransfer.files).filter((file) =>
       file.name.toLowerCase().endsWith('.pdf')

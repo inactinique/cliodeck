@@ -9,10 +9,18 @@ export interface LLMConfig {
   openaiModel?: string;
 }
 
+export interface SummarizerConfig {
+  enabled: boolean;
+  method: 'extractive' | 'abstractive';
+  maxLength: number; // En nombre de mots
+  llmModel?: string; // Pour abstractif uniquement
+}
+
 export interface RAGConfig {
   topK: number;
   similarityThreshold: number;
   chunkingConfig: 'cpuOptimized' | 'standard' | 'large';
+  summarizer: SummarizerConfig;
 }
 
 export interface ZoteroConfig {
@@ -47,6 +55,12 @@ export const DEFAULT_CONFIG: AppConfig = {
     topK: 10,
     similarityThreshold: 0.2,
     chunkingConfig: 'cpuOptimized',
+    summarizer: {
+      enabled: true,
+      method: 'extractive',
+      maxLength: 250, // ~250 mots = 1 paragraphe
+      llmModel: 'gemma2:2b', // Pour abstractif si activé
+    },
   },
   editor: {
     fontSize: 14,

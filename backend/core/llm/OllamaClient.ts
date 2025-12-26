@@ -46,6 +46,10 @@ export class OllamaClient {
   public embeddingModel: string = 'nomic-embed-text';
   public chatModel: string = 'gemma2:2b';
 
+  // Limite de caractères pour nomic-embed-text (échec entre 2100-2200)
+  // On utilise 2000 comme limite sécuritaire
+  private readonly NOMIC_MAX_LENGTH = 2000;
+
   constructor(
     baseURL: string = 'http://localhost:11434',
     chatModel?: string,
@@ -94,11 +98,60 @@ export class OllamaClient {
 
   // MARK: - Génération d'embeddings
 
-  async generateEmbedding(text: string): Promise<Float32Array> {
+  /**
+   * Découpe un texte en chunks de taille maximale
+   */
+  private chunkText(text: string, maxLength: number): string[] {
+    if (text.length <= maxLength) {
+      return [text];
+    }
+
+    const chunks: string[] = [];
+    let currentIndex = 0;
+
+    while (currentIndex < text.length) {
+      const chunk = text.substring(currentIndex, currentIndex + maxLength);
+      chunks.push(chunk);
+      currentIndex += maxLength;
+    }
+
+    return chunks;
+  }
+
+  /**
+   * Moyenne plusieurs embeddings en un seul
+   */
+  private averageEmbeddings(embeddings: Float32Array[]): Float32Array {
+    if (embeddings.length === 0) {
+      throw new Error('Cannot average zero embeddings');
+    }
+
+    if (embeddings.length === 1) {
+      return embeddings[0];
+    }
+
+    const length = embeddings[0].length;
+    const averaged = new Float32Array(length);
+
+    for (let i = 0; i < length; i++) {
+      let sum = 0;
+      for (const embedding of embeddings) {
+        sum += embedding[i];
+      }
+      averaged[i] = sum / embeddings.length;
+    }
+
+    return averaged;
+  }
+
+  /**
+   * Génère un embedding pour un chunk de texte avec un modèle spécifique
+   */
+  private async generateEmbeddingWithModel(text: string, model: string): Promise<Float32Array> {
     const url = `${this.baseURL}/api/embeddings`;
 
     const request: OllamaEmbeddingRequest = {
-      model: this.embeddingModel,
+      model: model,
       prompt: text,
     };
 
@@ -109,11 +162,88 @@ export class OllamaClient {
     });
 
     if (!response.ok) {
-      throw new Error(`Ollama embedding error: ${response.status}`);
+      const errorBody = await response.text();
+      throw new Error(
+        `Ollama embedding error: ${response.status} ${response.statusText} - ${errorBody}`
+      );
     }
 
     const data = await response.json() as OllamaEmbeddingResponse;
     return new Float32Array(data.embedding);
+  }
+
+  /**
+   * Génère un embedding pour un chunk de texte (avec fallback automatique)
+   */
+  private async generateEmbeddingForChunk(text: string): Promise<Float32Array> {
+    try {
+      // Essayer avec le modèle configuré (nomic-embed-text normalement)
+      return await this.generateEmbeddingWithModel(text, this.embeddingModel);
+    } catch (error) {
+      // Si échec avec nomic-embed-text, fallback vers mxbai-embed-large
+      if (this.embeddingModel === 'nomic-embed-text') {
+        console.warn('⚠️ nomic-embed-text failed, falling back to mxbai-embed-large');
+        console.warn(`   Error: ${error instanceof Error ? error.message : String(error)}`);
+
+        try {
+          const result = await this.generateEmbeddingWithModel(text, 'mxbai-embed-large');
+          console.log('✅ Fallback to mxbai-embed-large successful');
+          return result;
+        } catch (fallbackError) {
+          console.error('❌ Fallback to mxbai-embed-large also failed:', fallbackError);
+          throw fallbackError;
+        }
+      }
+
+      // Si ce n'est pas nomic ou si le fallback a échoué, propager l'erreur
+      throw error;
+    }
+  }
+
+  /**
+   * Génère un embedding pour un texte (avec chunking automatique si nécessaire)
+   */
+  async generateEmbedding(text: string): Promise<Float32Array> {
+    // Pour nomic-embed-text, limiter à 2000 caractères par chunk
+    const maxLength = this.embeddingModel === 'nomic-embed-text'
+      ? this.NOMIC_MAX_LENGTH
+      : 8000; // Pour les autres modèles, utiliser une limite plus haute
+
+    console.log('📤 Sending Ollama embedding request:', {
+      url: `${this.baseURL}/api/embeddings`,
+      model: this.embeddingModel,
+      textLength: text.length,
+      textPreview: text.substring(0, 100) + (text.length > 100 ? '...' : ''),
+    });
+
+    // Si le texte est court, traitement normal
+    if (text.length <= maxLength) {
+      const embedding = await this.generateEmbeddingForChunk(text);
+      console.log('✅ Ollama embedding received:', {
+        embeddingLength: embedding.length,
+      });
+      return embedding;
+    }
+
+    // Sinon, chunking automatique
+    const chunks = this.chunkText(text, maxLength);
+    console.log(`⚠️ Text too long (${text.length} chars), splitting into ${chunks.length} chunks`);
+
+    const embeddings: Float32Array[] = [];
+    for (let i = 0; i < chunks.length; i++) {
+      console.log(`   Processing chunk ${i + 1}/${chunks.length} (${chunks[i].length} chars)...`);
+      const embedding = await this.generateEmbeddingForChunk(chunks[i]);
+      embeddings.push(embedding);
+    }
+
+    // Moyenner les embeddings
+    const averaged = this.averageEmbeddings(embeddings);
+    console.log('✅ Ollama embeddings averaged:', {
+      chunks: chunks.length,
+      embeddingLength: averaged.length,
+    });
+
+    return averaged;
   }
 
   // MARK: - Génération de réponse (non-streaming)
