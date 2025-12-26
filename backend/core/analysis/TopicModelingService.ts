@@ -11,6 +11,11 @@
 import { ChildProcess, spawn } from 'child_process';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import fs from 'fs';
+import { promisify } from 'util';
+
+const access = promisify(fs.access);
+const mkdir = promisify(fs.mkdir);
 
 // MARK: - Types
 
@@ -64,6 +69,83 @@ export class TopicModelingService {
   private isStarting: boolean = false;
   private isRunning: boolean = false;
   private startupTimeout: number = 30000; // 30 secondes
+  private venvPath?: string;
+
+  /**
+   * Retourne le chemin vers l'exécutable Python du venv
+   */
+  private getVenvPythonPath(pythonServicePath: string): string {
+    const venvDir = path.join(pythonServicePath, '.venv');
+    return path.join(venvDir, 'bin', 'python3');
+  }
+
+  /**
+   * Vérifie si le venv existe et est valide
+   */
+  private async checkVenvExists(pythonServicePath: string): Promise<boolean> {
+    const venvPython = this.getVenvPythonPath(pythonServicePath);
+    try {
+      await access(venvPython, fs.constants.X_OK);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Crée et configure le venv avec les dépendances
+   */
+  private async setupVenv(pythonServicePath: string): Promise<void> {
+    console.log('📦 Setting up Python virtual environment...');
+
+    const venvDir = path.join(pythonServicePath, '.venv');
+    const requirementsPath = path.join(pythonServicePath, 'requirements.txt');
+
+    return new Promise((resolve, reject) => {
+      // Créer le venv
+      const createVenv = spawn('python3', ['-m', 'venv', venvDir]);
+
+      createVenv.on('exit', (code) => {
+        if (code !== 0) {
+          reject(new Error('Failed to create virtual environment'));
+          return;
+        }
+
+        console.log('✅ Virtual environment created');
+        console.log('📦 Installing Python dependencies...');
+
+        // Installer les dépendances
+        const venvPip = path.join(venvDir, 'bin', 'pip3');
+        const installDeps = spawn(venvPip, ['install', '-r', requirementsPath]);
+
+        installDeps.stdout?.on('data', (data) => {
+          console.log(`[pip] ${data.toString().trim()}`);
+        });
+
+        installDeps.stderr?.on('data', (data) => {
+          console.error(`[pip] ${data.toString().trim()}`);
+        });
+
+        installDeps.on('exit', (installCode) => {
+          if (installCode !== 0) {
+            reject(new Error('Failed to install Python dependencies'));
+            return;
+          }
+
+          console.log('✅ Python dependencies installed successfully');
+          resolve();
+        });
+
+        installDeps.on('error', (err) => {
+          reject(new Error(`Failed to install dependencies: ${err.message}`));
+        });
+      });
+
+      createVenv.on('error', (err) => {
+        reject(new Error(`Failed to create venv: ${err.message}`));
+      });
+    });
+  }
 
   /**
    * Démarre le service Python en subprocess
@@ -87,18 +169,36 @@ export class TopicModelingService {
       console.log('🚀 Starting topic modeling service...');
 
       // Déterminer le chemin vers le script Python
+      // Le fichier compilé est dans dist/backend/core/analysis/
+      // Le service Python est dans backend/python-services/topic-modeling/
       const __filename = fileURLToPath(import.meta.url);
       const __dirname = path.dirname(__filename);
+
+      // Remonter jusqu'à la racine du projet (depuis dist/backend/core/analysis/)
+      const projectRoot = path.join(__dirname, '../../../..');
       const pythonServicePath = path.join(
-        __dirname,
-        '../../../python-services/topic-modeling'
+        projectRoot,
+        'backend/python-services/topic-modeling'
       );
+
+      console.log(`📂 Python service path: ${pythonServicePath}`);
 
       // Vérifier que Python est disponible
       await this.checkPythonAvailable();
 
-      // Démarrer le subprocess Python
-      this.pythonProcess = spawn('python', ['main.py'], {
+      // Vérifier si le venv existe, sinon le créer
+      const venvExists = await this.checkVenvExists(pythonServicePath);
+      if (!venvExists) {
+        console.log('🔧 Virtual environment not found, creating it...');
+        await this.setupVenv(pythonServicePath);
+      }
+
+      // Utiliser le Python du venv
+      const pythonExecutable = this.getVenvPythonPath(pythonServicePath);
+      console.log(`🐍 Using Python from venv: ${pythonExecutable}`);
+
+      // Démarrer le subprocess Python avec le venv
+      this.pythonProcess = spawn(pythonExecutable, ['main.py'], {
         cwd: pythonServicePath,
         stdio: ['ignore', 'pipe', 'pipe'],
       });
@@ -185,7 +285,7 @@ export class TopicModelingService {
    */
   private async checkPythonAvailable(): Promise<void> {
     return new Promise((resolve, reject) => {
-      const pythonCheck = spawn('python', ['--version']);
+      const pythonCheck = spawn('python3', ['--version']);
 
       pythonCheck.on('exit', (code) => {
         if (code === 0) {

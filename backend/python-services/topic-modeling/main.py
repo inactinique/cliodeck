@@ -45,6 +45,12 @@ class AnalyzeRequest(BaseModel):
         ge=2,
         le=50
     )
+    nr_topics: Optional[int] = Field(
+        None,
+        description="Nombre de topics souhaités (None = automatique)",
+        ge=2,
+        le=100
+    )
     language: Optional[str] = Field(
         "multilingual",
         description="Langue pour stop words (french, english, multilingual)"
@@ -168,6 +174,7 @@ async def analyze_topics(request: AnalyzeRequest):
         # Créer l'analyseur
         analyzer = TopicAnalyzer(
             min_topic_size=request.min_topic_size,
+            nr_topics=request.nr_topics,
             language=request.language,
             n_gram_range=request.n_gram_range,
         )

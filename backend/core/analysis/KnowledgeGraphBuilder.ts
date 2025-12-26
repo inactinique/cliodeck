@@ -95,8 +95,8 @@ export class KnowledgeGraphBuilder {
 
     console.log('📊 Building knowledge graph...');
 
-    // Créer un graphe orienté (pour les citations)
-    const graph = new Graph({ type: 'directed', allowSelfLoops: false });
+    // Créer un graphe mixte (orienté pour citations, non-orienté pour similarité et co-citations)
+    const graph = new Graph({ type: 'mixed', allowSelfLoops: false });
 
     // 1. Récupérer tous les documents
     const documents = this.vectorStore.getAllDocuments();
@@ -177,6 +177,11 @@ export class KnowledgeGraphBuilder {
           continue;
         }
 
+        // Ignorer les auto-citations (self-loops)
+        if (doc.id === citation.targetDocId) {
+          continue;
+        }
+
         // Vérifier que les deux nœuds existent
         if (!graph.hasNode(doc.id) || !graph.hasNode(citation.targetDocId)) {
           continue;
@@ -221,6 +226,11 @@ export class KnowledgeGraphBuilder {
       const similar = this.vectorStore.getSimilarDocuments(doc.id, threshold, 10);
 
       for (const sim of similar) {
+        // Ignorer les auto-similarités (self-loops)
+        if (doc.id === sim.documentId) {
+          continue;
+        }
+
         // Vérifier que les deux nœuds existent
         if (!graph.hasNode(doc.id) || !graph.hasNode(sim.documentId)) {
           continue;

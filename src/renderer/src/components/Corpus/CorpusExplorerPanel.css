@@ -418,6 +418,88 @@
   font-weight: 500;
 }
 
+.topics-config {
+  margin: 15px 0;
+  padding: 12px;
+  background: rgba(0, 0, 0, 0.02);
+  border-radius: 8px;
+}
+
+.topics-config label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.topics-number-input {
+  width: 80px;
+  padding: 6px 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.topic-expand-btn {
+  margin-top: 10px;
+  padding: 6px 12px;
+  background: rgba(102, 126, 234, 0.1);
+  border: 1px solid rgba(102, 126, 234, 0.3);
+  border-radius: 4px;
+  color: #667eea;
+  font-size: 12px;
+  cursor: pointer;
+  width: 100%;
+  transition: all 0.2s;
+}
+
+.topic-expand-btn:hover {
+  background: rgba(102, 126, 234, 0.2);
+}
+
+.topic-documents {
+  margin-top: 12px;
+  padding: 12px;
+  background: rgba(0, 0, 0, 0.02);
+  border-radius: 6px;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.topic-document-item {
+  padding: 8px;
+  margin-bottom: 6px;
+  background: white;
+  border-radius: 4px;
+  font-size: 13px;
+  line-height: 1.4;
+  border-left: 3px solid #667eea;
+}
+
+.topic-document-item:last-child {
+  margin-bottom: 0;
+}
+
+.doc-title {
+  font-weight: 500;
+  color: #333;
+}
+
+.doc-author {
+  color: #666;
+  font-size: 12px;
+}
+
+.doc-year {
+  color: #999;
+  font-size: 12px;
+}
+
+.topic-expanded {
+  border-color: #667eea;
+}
+
 /* Dark mode adjustments */
 @media (prefers-color-scheme: dark) {
   .stat-info {

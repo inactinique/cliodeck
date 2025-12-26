@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ForceGraph2D } from 'react-force-graph';
+import ForceGraph2D from 'react-force-graph-2d';
 import { CollapsibleSection } from '../common/CollapsibleSection';
 import './CorpusExplorerPanel.css';
 
@@ -70,6 +70,8 @@ export const CorpusExplorerPanel: React.FC = () => {
   const [loadingTopics, setLoadingTopics] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedNode, setSelectedNode] = useState<GraphNode | null>(null);
+  const [expandedTopic, setExpandedTopic] = useState<number | null>(null);
+  const [numTopics, setNumTopics] = useState<number>(10); // Nombre de topics souhaités
 
   // Filters
   const [filters, setFilters] = useState({
@@ -131,6 +133,7 @@ export const CorpusExplorerPanel: React.FC = () => {
         minTopicSize: 3,
         language: 'multilingual',
         nGramRange: [1, 3],
+        nrTopics: numTopics, // Nombre de topics souhaités
       });
 
       if (result.success) {
@@ -145,6 +148,17 @@ export const CorpusExplorerPanel: React.FC = () => {
     } finally {
       setLoadingTopics(false);
     }
+  };
+
+  // Obtenir les documents d'un topic
+  const getDocumentsForTopic = (topicId: number): GraphNode[] => {
+    if (!topicAnalysis?.topicAssignments || !fullGraphData) return [];
+
+    const docIds = Object.entries(topicAnalysis.topicAssignments)
+      .filter(([_, assignedTopicId]) => assignedTopicId === topicId)
+      .map(([docId, _]) => docId);
+
+    return fullGraphData.nodes.filter(node => docIds.includes(node.id));
   };
 
   const applyFilters = () => {
@@ -349,7 +363,7 @@ export const CorpusExplorerPanel: React.FC = () => {
               onChange={(e) => setFilters({ ...filters, language: e.target.value || null })}
             >
               <option value="">Toutes</option>
-              {statistics?.languages.map((lang) => (
+              {(statistics?.languages || []).map((lang) => (
                 <option key={lang} value={lang}>
                   {lang}
                 </option>
@@ -365,7 +379,7 @@ export const CorpusExplorerPanel: React.FC = () => {
               disabled={!topicAnalysis}
             >
               <option value="">Tous</option>
-              {topicAnalysis?.topics.map((topic) => (
+              {(topicAnalysis?.topics || []).map((topic) => (
                 <option key={topic.id} value={topic.id}>
                   Topic {topic.id}: {topic.keywords.slice(0, 3).join(', ')}
                 </option>
@@ -409,7 +423,7 @@ export const CorpusExplorerPanel: React.FC = () => {
           </div>
         )}
 
-        {statistics.languages.length > 0 && (
+        {statistics.languages && statistics.languages.length > 0 && (
           <div className="stat-info">
             <span className="stat-info-label">Langues:</span>
             <span className="stat-info-value">
@@ -424,40 +438,85 @@ export const CorpusExplorerPanel: React.FC = () => {
         {!topicAnalysis ? (
           <div className="topics-empty">
             <p>Aucune analyse thématique disponible.</p>
+            <div className="topics-config">
+              <label>
+                Nombre de topics:
+                <input
+                  type="number"
+                  min="2"
+                  max="50"
+                  value={numTopics}
+                  onChange={(e) => setNumTopics(parseInt(e.target.value) || 10)}
+                  className="topics-number-input"
+                />
+              </label>
+            </div>
             <button onClick={loadTopics} disabled={loadingTopics} className="load-topics-btn">
               {loadingTopics ? 'Analyse en cours...' : 'Analyser les topics'}
             </button>
             <p className="topics-help">
-              L'analyse thématique nécessite au moins 5 documents indexés avec des résumés.
+              L'analyse thématique nécessite au moins 5 documents indexés.
             </p>
           </div>
         ) : (
           <div className="topics-list">
             <div className="topics-header">
-              <span>{topicAnalysis.topics.length} topics identifiés</span>
+              <span>{topicAnalysis.topics?.length || 0} topics identifiés</span>
               <button onClick={loadTopics} disabled={loadingTopics} className="reload-topics-btn">
                 {loadingTopics ? 'Analyse...' : 'Réanalyser'}
               </button>
             </div>
-            {topicAnalysis.topics.map((topic) => (
-              <div
-                key={topic.id}
-                className={`topic-card ${filters.topic === topic.id ? 'topic-selected' : ''}`}
-                onClick={() => setFilters({ ...filters, topic: filters.topic === topic.id ? null : topic.id })}
-              >
-                <div className="topic-header">
-                  <span className="topic-id">Topic {topic.id}</span>
-                  <span className="topic-size">{topic.size} documents</span>
+            {(topicAnalysis.topics || []).map((topic) => {
+              const topicDocs = getDocumentsForTopic(topic.id);
+              const isExpanded = expandedTopic === topic.id;
+
+              return (
+                <div
+                  key={topic.id}
+                  className={`topic-card ${filters.topic === topic.id ? 'topic-selected' : ''} ${isExpanded ? 'topic-expanded' : ''}`}
+                >
+                  <div
+                    className="topic-header"
+                    onClick={() => setFilters({ ...filters, topic: filters.topic === topic.id ? null : topic.id })}
+                  >
+                    <span className="topic-id">Topic {topic.id}</span>
+                    <span className="topic-size">{topic.size} documents</span>
+                  </div>
+                  <div className="topic-keywords">
+                    {topic.keywords.slice(0, 5).map((keyword, idx) => (
+                      <span key={idx} className="topic-keyword">
+                        {keyword}
+                      </span>
+                    ))}
+                  </div>
+                  <button
+                    className="topic-expand-btn"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setExpandedTopic(isExpanded ? null : topic.id);
+                    }}
+                  >
+                    {isExpanded ? '▼ Masquer documents' : `▶ Voir ${topicDocs.length} documents`}
+                  </button>
+
+                  {isExpanded && (
+                    <div className="topic-documents">
+                      {topicDocs.map((doc) => (
+                        <div key={doc.id} className="topic-document-item">
+                          <span className="doc-title">{doc.metadata?.title || doc.label}</span>
+                          {doc.metadata?.author && (
+                            <span className="doc-author"> - {doc.metadata.author}</span>
+                          )}
+                          {doc.metadata?.year && (
+                            <span className="doc-year"> ({doc.metadata.year})</span>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
-                <div className="topic-keywords">
-                  {topic.keywords.slice(0, 5).map((keyword, idx) => (
-                    <span key={idx} className="topic-keyword">
-                      {keyword}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </CollapsibleSection>
@@ -483,7 +542,10 @@ export const CorpusExplorerPanel: React.FC = () => {
           <div className="graph-visualization">
             <ForceGraph2D
               ref={graphRef}
-              graphData={graphData}
+              graphData={{
+                nodes: graphData.nodes,
+                links: graphData.edges, // ForceGraph2D expects 'links' not 'edges'
+              }}
               nodeLabel={(node: any) => {
                 const n = node as GraphNode;
                 return n.metadata?.title || n.label;

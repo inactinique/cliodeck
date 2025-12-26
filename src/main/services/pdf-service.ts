@@ -211,15 +211,35 @@ class PDFService {
     for (const doc of documents) {
       // Utiliser le résumé si disponible, sinon le titre
       const text = doc.summary || doc.title;
-      if (text && doc.summaryEmbedding) {
-        embeddings.push(doc.summaryEmbedding);
-        texts.push(text);
-        documentIds.push(doc.id);
+      let embedding: Float32Array | null = null;
+
+      // Essayer d'utiliser l'embedding du résumé
+      if (doc.summaryEmbedding) {
+        embedding = doc.summaryEmbedding;
+      } else {
+        // Sinon, utiliser l'embedding du premier chunk
+        const chunks = this.vectorStore!.getChunksForDocument(doc.id);
+        if (chunks.length > 0 && chunks[0].embedding) {
+          embedding = chunks[0].embedding;
+        }
+      }
+
+      if (text && embedding) {
+        // Valider que l'embedding est complet (pas de valeurs null/undefined)
+        const isValid = embedding.length > 0 && !Array.from(embedding).some(v => v === null || v === undefined || isNaN(v));
+
+        if (isValid) {
+          embeddings.push(embedding);
+          texts.push(text);
+          documentIds.push(doc.id);
+        } else {
+          console.warn(`⚠️ Skipping document ${doc.id}: invalid embedding (contains null/NaN values)`);
+        }
       }
     }
 
     if (embeddings.length < 5) {
-      throw new Error('Not enough documents with embeddings for topic modeling. Try indexing more documents with summary generation enabled.');
+      throw new Error(`Not enough documents with embeddings for topic modeling. Found ${embeddings.length} documents, need at least 5.`);
     }
 
     // Initialiser et démarrer le service Topic Modeling

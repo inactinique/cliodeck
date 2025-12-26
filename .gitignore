@@ -34,3 +34,11 @@ out/
 
 # Config
 config.json
+
+# Python
+.venv/
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd

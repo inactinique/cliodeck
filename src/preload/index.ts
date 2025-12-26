@@ -148,6 +148,7 @@ const api = {
       minTopicSize?: number;
       language?: string;
       nGramRange?: [number, number];
+      nrTopics?: number;
     }) => ipcRenderer.invoke('corpus:analyze-topics', options),
   },
 };

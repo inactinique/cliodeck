@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { MessageCircle, FileText, Settings, Folder, BookOpen, FileDown } from 'lucide-react';
+import { MessageCircle, FileText, Settings, Folder, BookOpen, FileDown, Network } from 'lucide-react';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import { BibliographyPanel } from '../Bibliography/BibliographyPanel';
 import { PDFIndexPanel } from '../PDFIndex/PDFIndexPanel';
@@ -7,11 +7,12 @@ import { ChatInterface } from '../Chat/ChatInterface';
 import { ConfigPanel } from '../Config/ConfigPanel';
 import { ProjectPanel } from '../Project/ProjectPanel';
 import { PDFExportModal } from '../Export/PDFExportModal';
+import { CorpusExplorerPanel } from '../Corpus/CorpusExplorerPanel';
 import { logger } from '../../utils/logger';
 import './MainLayout.css';
 
 type LeftPanelView = 'projects' | 'bibliography';
-type RightPanelView = 'chat' | 'pdfIndex' | 'settings';
+type RightPanelView = 'chat' | 'pdfIndex' | 'corpus' | 'settings';
 
 export interface MainLayoutProps {
   leftPanel?: React.ReactNode;
@@ -123,6 +124,13 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
                   <FileText size={20} strokeWidth={1} />
                 </button>
                 <button
+                  className={`panel-tab ${rightView === 'corpus' ? 'active' : ''}`}
+                  onClick={() => handleRightViewChange('corpus')}
+                  title="Corpus Explorer"
+                >
+                  <Network size={20} strokeWidth={1} />
+                </button>
+                <button
                   className={`panel-tab ${rightView === 'settings' ? 'active' : ''}`}
                   onClick={() => handleRightViewChange('settings')}
                   title="Configuration"
@@ -135,6 +143,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
               <div className="panel-content">
                 {rightView === 'chat' && <ChatInterface />}
                 {rightView === 'pdfIndex' && <PDFIndexPanel />}
+                {rightView === 'corpus' && <CorpusExplorerPanel />}
                 {rightView === 'settings' && <ConfigPanel />}
               </div>
             </div>

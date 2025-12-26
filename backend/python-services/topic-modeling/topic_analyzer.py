@@ -22,6 +22,7 @@ class TopicAnalyzer:
     def __init__(
         self,
         min_topic_size: int = 5,
+        nr_topics: int = None,
         language: str = "multilingual",
         n_gram_range: tuple = (1, 3),
     ):
@@ -30,10 +31,12 @@ class TopicAnalyzer:
 
         Args:
             min_topic_size: Taille minimale d'un topic (défaut: 5 documents)
+            nr_topics: Nombre de topics souhaités (None = automatique)
             language: Langue pour les stop words ("french", "english", "multilingual")
             n_gram_range: Plage de n-grammes pour extraction de mots-clés (défaut: 1-3)
         """
         self.min_topic_size = min_topic_size
+        self.nr_topics = nr_topics if nr_topics is not None else "auto"
         self.language = language
         self.n_gram_range = n_gram_range
 
@@ -51,7 +54,7 @@ class TopicAnalyzer:
             embedding_model=None,  # On fournira les embeddings pré-calculés
             vectorizer_model=self.vectorizer,
             min_topic_size=min_topic_size,
-            nr_topics="auto",  # Détection automatique du nombre de topics
+            nr_topics=self.nr_topics,  # Nombre de topics (auto ou fixé)
             calculate_probabilities=False,  # Plus rapide sur CPU
             verbose=True,
         )
