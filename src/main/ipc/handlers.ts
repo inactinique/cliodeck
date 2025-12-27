@@ -663,5 +663,32 @@ export function setupIPCHandlers() {
     }
   });
 
+  ipcMain.handle('corpus:get-topic-timeline', async () => {
+    console.log('📞 IPC Call: corpus:get-topic-timeline');
+    try {
+      const projectPath = projectManager.getCurrentProjectPath();
+      if (!projectPath) {
+        return { success: false, error: 'No project is currently open. Please open or create a project first.' };
+      }
+
+      await pdfService.init(projectPath);
+      const timeline = pdfService.getTopicTimeline();
+
+      if (timeline) {
+        console.log('📤 IPC Response: corpus:get-topic-timeline', {
+          yearCount: timeline.length,
+          yearRange: timeline.length > 0 ? `${timeline[0].year}-${timeline[timeline.length - 1].year}` : 'N/A',
+        });
+        return { success: true, timeline };
+      } else {
+        console.log('📤 IPC Response: corpus:get-topic-timeline - no timeline data');
+        return { success: false, error: 'No topic timeline data found' };
+      }
+    } catch (error: any) {
+      console.error('❌ corpus:get-topic-timeline error:', error);
+      return { success: false, error: error.message };
+    }
+  });
+
   console.log('✅ IPC handlers registered');
 }

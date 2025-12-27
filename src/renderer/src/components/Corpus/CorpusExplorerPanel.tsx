@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import ForceGraph2D from 'react-force-graph-2d';
 import { CollapsibleSection } from '../common/CollapsibleSection';
+import { TopicTimeline } from './TopicTimeline';
 import './CorpusExplorerPanel.css';
 
 interface GraphNode {
@@ -67,6 +68,7 @@ export const CorpusExplorerPanel: React.FC = () => {
   const [graphData, setGraphData] = useState<GraphData | null>(null);
   const [fullGraphData, setFullGraphData] = useState<GraphData | null>(null);
   const [topicAnalysis, setTopicAnalysis] = useState<TopicAnalysisResult | null>(null);
+  const [topicTimeline, setTopicTimeline] = useState<Array<{ year: number; [key: string]: number }> | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadingTopics, setLoadingTopics] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -126,6 +128,17 @@ export const CorpusExplorerPanel: React.FC = () => {
         if (topicsResult.success) {
           setTopicAnalysis(topicsResult);
           console.log('✅ Loaded saved topics:', topicsResult.topics.length);
+
+          // Charger la timeline des topics
+          try {
+            const timelineResult = await window.electron.corpus.getTopicTimeline();
+            if (timelineResult.success) {
+              setTopicTimeline(timelineResult.timeline);
+              console.log('✅ Loaded topic timeline:', timelineResult.timeline.length, 'years');
+            }
+          } catch (timelineErr) {
+            console.log('ℹ️ Could not load topic timeline:', timelineErr);
+          }
         } else {
           console.log('ℹ️ No saved topics found');
         }
@@ -152,6 +165,17 @@ export const CorpusExplorerPanel: React.FC = () => {
 
       if (result.success) {
         setTopicAnalysis(result);
+
+        // Charger la timeline des topics après l'analyse
+        try {
+          const timelineResult = await window.electron.corpus.getTopicTimeline();
+          if (timelineResult.success) {
+            setTopicTimeline(timelineResult.timeline);
+            console.log('✅ Loaded topic timeline:', timelineResult.timeline.length, 'years');
+          }
+        } catch (timelineErr) {
+          console.log('ℹ️ Could not load topic timeline:', timelineErr);
+        }
       } else {
         console.error('Failed to load topics:', result.error);
         alert('Erreur lors de l\'analyse des topics: ' + result.error);
@@ -206,23 +230,37 @@ export const CorpusExplorerPanel: React.FC = () => {
   const exportTopicsAsCSV = () => {
     if (!topicAnalysis) return;
 
-    let csv = 'Topic_ID,Keywords,Num_Documents,Document_IDs\n';
+    let csv = 'Document_ID,Document_Title,Author,Year,Topic_ID,Topic_Keywords\n';
 
-    topicAnalysis.topics.forEach(topic => {
-      const keywords = topic.keywords.join(';');
-      const docIds = (fullGraphData?.nodes || [])
-        .filter(node => topicAnalysis.topicAssignments?.[node.id] === topic.id)
-        .map(node => node.id)
-        .join(';');
+    // Get all document nodes
+    const documentNodes = (fullGraphData?.nodes || []).filter(node => node.type === 'document');
 
-      csv += `${topic.id},"${keywords}",${topic.size},"${docIds}"\n`;
+    documentNodes.forEach(node => {
+      const documentId = node.id;
+      const title = (node.metadata?.title || node.label).replace(/"/g, '""'); // Escape quotes
+      const author = (node.metadata?.author || '').replace(/"/g, '""');
+      const year = node.metadata?.year || '';
+      const topicId = topicAnalysis.topicAssignments?.[documentId] ?? -1; // -1 = outlier
+
+      // Find topic keywords
+      let topicKeywords = '';
+      if (topicId >= 0) {
+        const topic = topicAnalysis.topics.find(t => t.id === topicId);
+        if (topic) {
+          topicKeywords = topic.keywords.join(';');
+        }
+      } else {
+        topicKeywords = 'OUTLIER';
+      }
+
+      csv += `"${documentId}","${title}","${author}","${year}",${topicId},"${topicKeywords}"\n`;
     });
 
     const blob = new Blob([csv], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `topics-export-${new Date().toISOString().split('T')[0]}.csv`;
+    a.download = `topics-by-document-${new Date().toISOString().split('T')[0]}.csv`;
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -266,6 +304,8 @@ export const CorpusExplorerPanel: React.FC = () => {
 
   const exportGraphAsGEXF = () => {
     if (!fullGraphData) return;
+
+    console.log(`📊 Exporting GEXF: ${fullGraphData.nodes.length} nodes, ${fullGraphData.edges.length} edges`);
 
     // Générer le fichier GEXF (format XML pour Gephi)
     let gexf = `<?xml version="1.0" encoding="UTF-8"?>\n`;
@@ -315,7 +355,11 @@ export const CorpusExplorerPanel: React.FC = () => {
     // Arêtes
     gexf += `    <edges>\n`;
     fullGraphData.edges.forEach((edge, index) => {
-      gexf += `      <edge id="${index}" source="${edge.source}" target="${edge.target}">\n`;
+      // Handle case where source/target might be objects (after ForceGraph processing) or strings
+      const sourceId = typeof edge.source === 'object' ? (edge.source as any).id : edge.source;
+      const targetId = typeof edge.target === 'object' ? (edge.target as any).id : edge.target;
+
+      gexf += `      <edge id="${index}" source="${sourceId}" target="${targetId}">\n`;
       gexf += `        <attvalues>\n`;
       gexf += `          <attvalue for="0" value="${edge.type}"/>\n`;
       gexf += `          <attvalue for="1" value="${edge.weight}"/>\n`;
@@ -666,6 +710,17 @@ export const CorpusExplorerPanel: React.FC = () => {
                 </button>
               </div>
             </div>
+
+            {/* Stream graph temporel des topics */}
+            {topicTimeline && topicTimeline.length > 0 && (
+              <div className="topic-timeline-section">
+                <h4 style={{ margin: '10px 0', fontSize: '14px', fontWeight: 500 }}>
+                  Évolution temporelle des topics
+                </h4>
+                <TopicTimeline timelineData={topicTimeline} topics={topicAnalysis.topics} />
+              </div>
+            )}
+
             {(topicAnalysis.topics || []).map((topic) => {
               const topicDocs = getDocumentsForTopic(topic.id);
               const isExpanded = expandedTopic === topic.id;

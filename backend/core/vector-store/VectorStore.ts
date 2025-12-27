@@ -906,6 +906,73 @@ export class VectorStore {
   }
 
   /**
+   * Récupère les données temporelles des topics (pour stream graph)
+   * Retourne le nombre de documents par topic par année
+   */
+  getTopicTimeline(): Array<{ year: number; [topicId: string]: number }> | null {
+    // Récupérer l'analyse actuelle
+    const analysis = this.db.prepare(`
+      SELECT id FROM topic_analyses
+      WHERE is_current = 1
+      ORDER BY analysis_date DESC
+      LIMIT 1
+    `).get() as { id: string } | undefined;
+
+    if (!analysis) {
+      console.log('ℹ️ No topic analysis found for timeline');
+      return null;
+    }
+
+    // Récupérer les assignments avec les années des documents
+    const timelineData = this.db.prepare(`
+      SELECT
+        d.year,
+        ta.topic_id
+      FROM topic_assignments ta
+      JOIN documents d ON ta.document_id = d.id
+      WHERE ta.analysis_id = ? AND d.year IS NOT NULL
+      ORDER BY d.year
+    `).all(analysis.id) as Array<{ year: number; topic_id: number }>;
+
+    if (timelineData.length === 0) {
+      console.log('ℹ️ No timeline data found (documents may not have year metadata)');
+      return null;
+    }
+
+    // Grouper par année
+    const yearMap = new Map<number, Map<number, number>>();
+
+    for (const row of timelineData) {
+      if (!yearMap.has(row.year)) {
+        yearMap.set(row.year, new Map());
+      }
+      const topicMap = yearMap.get(row.year)!;
+      topicMap.set(row.topic_id, (topicMap.get(row.topic_id) || 0) + 1);
+    }
+
+    // Convertir en format pour stream graph
+    const result: Array<{ year: number; [topicId: string]: number }> = [];
+
+    // Trier les années
+    const sortedYears = Array.from(yearMap.keys()).sort((a, b) => a - b);
+
+    for (const year of sortedYears) {
+      const topicCounts = yearMap.get(year)!;
+      const yearData: any = { year };
+
+      // Ajouter les counts pour chaque topic
+      for (const [topicId, count] of topicCounts.entries()) {
+        yearData[`topic_${topicId}`] = count;
+      }
+
+      result.push(yearData);
+    }
+
+    console.log(`✅ Topic timeline computed: ${result.length} years, ${timelineData.length} documents`);
+    return result;
+  }
+
+  /**
    * Supprime toutes les analyses de topics
    */
   deleteAllTopicAnalyses(): void {

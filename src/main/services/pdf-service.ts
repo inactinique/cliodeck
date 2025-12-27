@@ -279,6 +279,16 @@ class PDFService {
   }
 
   /**
+   * Récupère les données temporelles des topics (pour stream graph)
+   */
+  getTopicTimeline() {
+    this.ensureInitialized();
+
+    const result = this.vectorStore!.getTopicTimeline();
+    return result;
+  }
+
+  /**
    * Purge toutes les données de la base vectorielle
    */
   purgeAllData() {

@@ -154,6 +154,7 @@ const api = {
       nrTopics?: number;
     }) => ipcRenderer.invoke('corpus:analyze-topics', options),
     loadTopics: () => ipcRenderer.invoke('corpus:load-topics'),
+    getTopicTimeline: () => ipcRenderer.invoke('corpus:get-topic-timeline'),
   },
 };
 
