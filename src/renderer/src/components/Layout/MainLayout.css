@@ -121,7 +121,7 @@
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
-  padding: 16px;
+  padding: 5px;
 }
 
 .panel-placeholder {

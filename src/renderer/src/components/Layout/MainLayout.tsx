@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { MessageCircle, FileText, Settings, Folder, BookOpen, Network } from 'lucide-react';
+import { MessageCircle, FileText, Folder, BookOpen, Network } from 'lucide-react';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import { BibliographyPanel } from '../Bibliography/BibliographyPanel';
 import { PDFIndexPanel } from '../PDFIndex/PDFIndexPanel';
 import { ChatInterface } from '../Chat/ChatInterface';
-import { ConfigPanel } from '../Config/ConfigPanel';
+import { SettingsModal } from '../Config/SettingsModal';
 import { ProjectPanel } from '../Project/ProjectPanel';
 import { PDFExportModal } from '../Export/PDFExportModal';
 import { CorpusExplorerPanel } from '../Corpus/CorpusExplorerPanel';
@@ -12,7 +12,7 @@ import { logger } from '../../utils/logger';
 import './MainLayout.css';
 
 type LeftPanelView = 'projects' | 'bibliography';
-type RightPanelView = 'chat' | 'pdfIndex' | 'corpus' | 'settings';
+type RightPanelView = 'chat' | 'pdfIndex' | 'corpus';
 
 export interface MainLayoutProps {
   leftPanel?: React.ReactNode;
@@ -28,6 +28,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
   const [leftView, setLeftView] = useState<LeftPanelView>('projects');
   const [rightView, setRightView] = useState<RightPanelView>('chat');
   const [showExportModal, setShowExportModal] = useState(false);
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
 
   const handleLeftViewChange = (view: LeftPanelView) => {
     logger.component('MainLayout', 'Left tab clicked', { view });
@@ -61,9 +62,6 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
         case 'corpus':
           setRightView('corpus');
           break;
-        case 'settings':
-          setRightView('settings');
-          break;
       }
     };
 
@@ -71,12 +69,18 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
       setShowExportModal(true);
     };
 
+    const handleShowSettings = () => {
+      setShowSettingsModal(true);
+    };
+
     window.addEventListener('switch-panel', handleSwitchPanel);
     window.addEventListener('show-pdf-export-dialog', handleShowPDFExport);
+    window.addEventListener('show-settings-modal', handleShowSettings);
 
     return () => {
       window.removeEventListener('switch-panel', handleSwitchPanel);
       window.removeEventListener('show-pdf-export-dialog', handleShowPDFExport);
+      window.removeEventListener('show-settings-modal', handleShowSettings);
     };
   }, []);
 
@@ -127,7 +131,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
 
           <PanelResizeHandle className="resize-handle" />
 
-          {/* Right Panel - Chat RAG / PDF Index / Settings */}
+          {/* Right Panel - Chat RAG / PDF Index / Corpus */}
           <Panel defaultSize={30} minSize={20} maxSize={45}>
             <div className="panel right-panel">
               {/* Panel tabs */}
@@ -153,13 +157,6 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
                 >
                   <Network size={20} strokeWidth={1} />
                 </button>
-                <button
-                  className={`panel-tab ${rightView === 'settings' ? 'active' : ''}`}
-                  onClick={() => handleRightViewChange('settings')}
-                  title="Configuration"
-                >
-                  <Settings size={20} strokeWidth={1} />
-                </button>
               </div>
 
               {/* Panel content */}
@@ -167,7 +164,6 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
                 {rightView === 'chat' && <ChatInterface />}
                 {rightView === 'pdfIndex' && <PDFIndexPanel />}
                 {rightView === 'corpus' && <CorpusExplorerPanel />}
-                {rightView === 'settings' && <ConfigPanel />}
               </div>
             </div>
           </Panel>
@@ -176,6 +172,9 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
 
       {/* PDF Export Modal */}
       <PDFExportModal isOpen={showExportModal} onClose={() => setShowExportModal(false)} />
+
+      {/* Settings Modal */}
+      <SettingsModal isOpen={showSettingsModal} onClose={() => setShowSettingsModal(false)} />
     </div>
   );
 };

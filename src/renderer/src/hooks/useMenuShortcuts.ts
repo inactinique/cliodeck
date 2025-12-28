@@ -162,7 +162,7 @@ export function useMenuShortcuts() {
 
     // Settings
     const handleOpenSettings = () => {
-      window.dispatchEvent(new CustomEvent('switch-panel', { detail: 'settings' }));
+      window.dispatchEvent(new CustomEvent('show-settings-modal'));
     };
 
     // About

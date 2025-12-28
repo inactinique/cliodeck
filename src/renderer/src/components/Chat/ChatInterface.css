@@ -13,7 +13,7 @@
   justify-content: space-between;
   padding: var(--spacing-sm) var(--spacing-lg);
   background-color: #252526;
-  min-height: 50px;
+  min-height: 25px;
 }
 
 .chat-title {
@@ -23,7 +23,7 @@
 }
 
 .chat-icon {
-  font-size: 20px;
+  font-size: 15px;
 }
 
 .chat-title h3 {

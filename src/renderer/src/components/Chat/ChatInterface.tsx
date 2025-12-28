@@ -58,7 +58,6 @@ export const ChatInterface: React.FC = () => {
       <div className="chat-messages">
         {messages.length === 0 ? (
           <div className="chat-empty">
-            <div className="empty-icon">💭</div>
             <h4>Posez une question</h4>
             <p>
               L'assistant recherchera dans vos documents indexés pour vous fournir une réponse

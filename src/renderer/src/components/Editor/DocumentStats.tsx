@@ -26,9 +26,6 @@ export const DocumentStats: React.FC = () => {
     // Count characters (with spaces)
     const charWithSpacesCount = plainText.length;
 
-    // Estimate pages (assuming ~250 words per page)
-    const estimatedPages = Math.ceil(wordCount / 250);
-
     // Count paragraphs (non-empty lines)
     const paragraphs = content.split('\n\n').filter(p => p.trim().length > 0).length;
 
@@ -38,54 +35,35 @@ export const DocumentStats: React.FC = () => {
     // Count footnotes
     const footnotes = (content.match(/\[\^\d+\]/g) || []).length / 2; // Divided by 2 because each footnote appears twice
 
-    // Estimate reading time (average 200 words per minute)
-    const readingTimeMinutes = Math.ceil(wordCount / 200);
-
     return {
       wordCount,
       charCount,
       charWithSpacesCount,
-      estimatedPages,
       paragraphs,
       citations,
       footnotes,
-      readingTimeMinutes,
     };
   }, [content]);
 
   return (
     <div className="document-stats">
       <div className="stat-item">
-        <span className="stat-label">Mots:</span>
-        <span className="stat-value">{stats.wordCount.toLocaleString()}</span>
+        <span className="stat-label">mots: {stats.wordCount.toLocaleString()}</span>
       </div>
       <div className="stat-item">
-        <span className="stat-label">Caractères:</span>
-        <span className="stat-value">{stats.charCount.toLocaleString()}</span>
+        <span className="stat-label">car.: {stats.charCount.toLocaleString()}</span>
       </div>
       <div className="stat-item">
-        <span className="stat-label">Avec espaces:</span>
-        <span className="stat-value">{stats.charWithSpacesCount.toLocaleString()}</span>
+        <span className="stat-label">avec esp.: {stats.charWithSpacesCount.toLocaleString()}</span>
       </div>
       <div className="stat-item">
-        <span className="stat-label">Paragraphes:</span>
-        <span className="stat-value">{stats.paragraphs}</span>
+        <span className="stat-label">par.: {stats.paragraphs}</span>
       </div>
       <div className="stat-item">
-        <span className="stat-label">Pages estimées:</span>
-        <span className="stat-value">{stats.estimatedPages}</span>
+        <span className="stat-label">@: {stats.citations}</span>
       </div>
       <div className="stat-item">
-        <span className="stat-label">Citations:</span>
-        <span className="stat-value">{stats.citations}</span>
-      </div>
-      <div className="stat-item">
-        <span className="stat-label">Notes:</span>
-        <span className="stat-value">{stats.footnotes}</span>
-      </div>
-      <div className="stat-item">
-        <span className="stat-label">Temps de lecture:</span>
-        <span className="stat-value">~{stats.readingTimeMinutes} min</span>
+        <span className="stat-label">notes: {stats.footnotes}</span>
       </div>
     </div>
   );

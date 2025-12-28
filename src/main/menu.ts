@@ -236,13 +236,6 @@ export function createApplicationMenu(mainWindow: BrowserWindow): Menu {
             mainWindow.webContents.send('menu:switch-panel', 'corpus');
           },
         },
-        {
-          label: 'Panneau Settings',
-          accelerator: 'Alt+6',
-          click: () => {
-            mainWindow.webContents.send('menu:switch-panel', 'settings');
-          },
-        },
         { type: 'separator' as const },
         { role: 'reload' as const },
         { role: 'forceReload' as const },

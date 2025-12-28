@@ -40,10 +40,6 @@ interface EditorState {
   insertCitation: (citationKey: string) => void;
   insertFormatting: (type: 'bold' | 'italic' | 'link' | 'citation' | 'table' | 'footnote' | 'blockquote') => void;
 
-  // Document stats
-  showStats: boolean;
-  toggleStats: () => void;
-
   // Citation suggestions
   showSuggestions: boolean;
   toggleSuggestions: () => void;
@@ -69,7 +65,6 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   isDirty: false,
   settings: DEFAULT_SETTINGS,
   showPreview: false,
-  showStats: false,
   showSuggestions: false,
 
   setContent: (content: string) => {
@@ -163,12 +158,6 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   togglePreview: () => {
     set((state) => ({
       showPreview: !state.showPreview,
-    }));
-  },
-
-  toggleStats: () => {
-    set((state) => ({
-      showStats: !state.showStats,
     }));
   },
 

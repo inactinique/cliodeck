@@ -1,5 +1,5 @@
 import React from 'react';
-import { FileText, FolderOpen, Save, Link, BookOpen, Table, Superscript, Quote, BarChart3, CheckCircle, Lightbulb } from 'lucide-react';
+import { FileText, FolderOpen, Save, Link, BookOpen, Table, Superscript, Quote, CheckCircle, Lightbulb } from 'lucide-react';
 // import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import { MarkdownEditor } from './MarkdownEditor';
 // import { MarkdownPreview } from './MarkdownPreview';
@@ -12,7 +12,7 @@ import { logger } from '../../utils/logger';
 import './EditorPanel.css';
 
 export const EditorPanel: React.FC = () => {
-  const { showStats, toggleStats, showSuggestions, toggleSuggestions, loadFile, saveFile, setContent, content, insertFormatting } = useEditorStore();
+  const { showSuggestions, toggleSuggestions, loadFile, saveFile, setContent, content, insertFormatting } = useEditorStore();
   const { citations } = useBibliographyStore();
 
   // Suggestions config - disabled while ContextualSuggestions is disabled
@@ -134,11 +134,6 @@ export const EditorPanel: React.FC = () => {
     insertFormatting('blockquote');
   };
 
-  const handleToggleStats = () => {
-    logger.component('EditorPanel', 'handleToggleStats clicked');
-    toggleStats();
-  };
-
   const handleCheckCitations = () => {
     logger.component('EditorPanel', 'handleCheckCitations clicked');
     // Extract all citations from content
@@ -210,13 +205,6 @@ export const EditorPanel: React.FC = () => {
         </div>
 
         <div className="toolbar-section">
-          <button
-            className={`toolbar-btn ${showStats ? 'active' : ''}`}
-            onClick={handleToggleStats}
-            title="Statistiques du document"
-          >
-            <BarChart3 size={20} strokeWidth={1} />
-          </button>
           <button className="toolbar-btn" onClick={handleCheckCitations} title="Vérifier les citations">
             <CheckCircle size={20} strokeWidth={1} />
           </button>
@@ -242,19 +230,21 @@ export const EditorPanel: React.FC = () => {
         */}
       </div>
 
-      {/* Stats bar (if enabled) */}
-      {showStats && <DocumentStats />}
-
       {/* Editor with optional suggestions panel */}
-      <div className="editor-content" style={{ display: 'flex', height: '100%' }}>
-        <div style={{ flex: showSuggestions ? '1 1 70%' : '1 1 100%', overflow: 'auto' }}>
-          <MarkdownEditor />
-        </div>
-        {showSuggestions && (
-          <div style={{ flex: '0 0 30%', minWidth: '300px', maxWidth: '400px' }}>
-            <CitationSuggestionsPanel />
+      <div className="editor-content" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+        <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
+          <div style={{ flex: showSuggestions ? '1 1 70%' : '1 1 100%', overflow: 'auto' }}>
+            <MarkdownEditor />
           </div>
-        )}
+          {showSuggestions && (
+            <div style={{ flex: '0 0 30%', minWidth: '300px', maxWidth: '400px' }}>
+              <CitationSuggestionsPanel />
+            </div>
+          )}
+        </div>
+
+        {/* Stats bar (always visible at the bottom) */}
+        <DocumentStats />
       </div>
 
       {/* Contextual Suggestions - Disabled (overlay issues)
