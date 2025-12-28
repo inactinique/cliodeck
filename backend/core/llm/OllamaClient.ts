@@ -286,6 +286,13 @@ export class OllamaClient {
       stream: true,
     };
 
+    console.log('🔍 [OLLAMA DEBUG] Calling Ollama API (no sources):', {
+      url,
+      model: this.chatModel,
+      promptLength: fullPrompt.length,
+      contextCount: context.length
+    });
+
     const response = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -293,7 +300,13 @@ export class OllamaClient {
     });
 
     if (!response.ok || !response.body) {
-      throw new Error(`Ollama streaming error: ${response.status}`);
+      console.error('❌ [OLLAMA DEBUG] Ollama API error:', {
+        status: response.status,
+        statusText: response.statusText,
+        url,
+        model: this.chatModel
+      });
+      throw new Error(`Ollama streaming error: ${response.status} - Model: ${this.chatModel}`);
     }
 
     const reader = response.body.getReader();
@@ -345,6 +358,13 @@ export class OllamaClient {
       stream: true,
     };
 
+    console.log('🔍 [OLLAMA DEBUG] Calling Ollama API:', {
+      url,
+      model: this.chatModel,
+      promptLength: fullPrompt.length,
+      sourceCount: sources.length
+    });
+
     const response = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -352,7 +372,13 @@ export class OllamaClient {
     });
 
     if (!response.ok || !response.body) {
-      throw new Error(`Ollama streaming error: ${response.status}`);
+      console.error('❌ [OLLAMA DEBUG] Ollama API error:', {
+        status: response.status,
+        statusText: response.statusText,
+        url,
+        model: this.chatModel
+      });
+      throw new Error(`Ollama streaming error: ${response.status} - Model: ${this.chatModel}`);
     }
 
     const reader = response.body.getReader();
@@ -446,11 +472,28 @@ Voici des extraits pertinents des documents indexés :
 
     prompt += `\nQuestion de l'utilisateur : ${userQuery}
 
-IMPORTANT : Réponds de manière précise et académique en te basant sur les extraits fournis. Lorsque tu utilises une information, cite TOUJOURS la source en utilisant ce format : [Source X] où X est le numéro de la source.
+IMPORTANT : Réponds de manière précise et académique en te basant sur les extraits fournis. Lorsque tu utilises une information d'un extrait, cite TOUJOURS la source de manière explicite.
 
-Par exemple : "Selon l'auteur [Source 1], la question centrale est..."
+Pour chaque citation, utilise le format complet avec l'auteur (ou titre si pas d'auteur), l'année ET la page. Exemples :
+- "Selon Smith (2020, p. 45), la question centrale est..."
+- "Cette approche est confirmée par les recherches récentes (Johnson, 2019, p. 12)"
+- "Comme le note l'auteur (Database Meets AI, 2021, p. 8)..."
 
-Si les extraits ne contiennent pas l'information nécessaire pour répondre à la question, dis-le clairement.`;
+Liste des sources disponibles :`;
+
+    // Ajouter une liste claire des sources à la fin
+    sources.forEach((source, index) => {
+      const doc = source.document;
+      let ref = '';
+      if (doc.author) {
+        ref = `${doc.author}${doc.year ? ` (${doc.year})` : ''}`;
+      } else {
+        ref = `${doc.title}${doc.year ? ` (${doc.year})` : ''}`;
+      }
+      prompt += `\n  - Source ${index + 1}: ${ref}`;
+    });
+
+    prompt += `\n\nSi les extraits ne contiennent pas l'information nécessaire pour répondre à la question, dis-le clairement.`;
 
     return prompt;
   }

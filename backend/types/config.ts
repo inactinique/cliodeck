@@ -58,7 +58,7 @@ export const DEFAULT_CONFIG: AppConfig = {
     summarizer: {
       enabled: true,
       method: 'extractive',
-      maxLength: 250, // ~250 mots = 1 paragraphe
+      maxLength: 750, // ~750 mots = 2-3 paragraphes
       llmModel: 'gemma2:2b', // Pour abstractif si activé
     },
   },

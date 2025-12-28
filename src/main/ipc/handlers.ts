@@ -250,9 +250,21 @@ export function setupIPCHandlers() {
       // Initialiser le service PDF pour ce projet (nécessaire pour le RAG)
       if (options?.context) {
         const projectPath = projectManager.getCurrentProjectPath();
+        console.log('🔍 [RAG DEBUG] Current project path:', projectPath);
+
         if (projectPath) {
+          console.log('🔍 [RAG DEBUG] Initializing PDF service for:', projectPath);
           await pdfService.init(projectPath);
+          console.log('✅ [RAG DEBUG] PDF service initialized successfully');
+
+          // Test search to verify RAG is working
+          const stats = await pdfService.getStatistics();
+          console.log('🔍 [RAG DEBUG] Vector DB statistics:', stats);
+        } else {
+          console.warn('⚠️  [RAG DEBUG] No project path - RAG will not be used');
         }
+      } else {
+        console.log('🔍 [RAG DEBUG] Context not requested - RAG disabled');
       }
 
       const window = BrowserWindow.fromWebContents(event.sender);

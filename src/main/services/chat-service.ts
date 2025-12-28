@@ -98,10 +98,18 @@ class ChatService {
       // Si contexte activé, rechercher dans les documents
       if (options.context) {
         // Use topK from options or let pdfService.search use the config default
+        console.log('🔍 [RAG DEBUG] Searching vector DB with query:', message.substring(0, 100));
         searchResults = await pdfService.search(message, { topK: options.topK });
+        console.log('🔍 [RAG DEBUG] Search results count:', searchResults.length);
 
         if (searchResults.length > 0) {
           console.log(`📚 Using ${searchResults.length} context chunks for RAG`);
+          // Log first result for debugging
+          console.log('🔍 [RAG DEBUG] First result:', {
+            document: searchResults[0].document.title,
+            similarity: searchResults[0].similarity,
+            chunkLength: searchResults[0].chunk.content.length
+          });
 
           // Si graphe activé, récupérer documents liés
           if (options.useGraphContext) {
@@ -159,6 +167,7 @@ class ChatService {
         }
       } else {
         // Utiliser generateResponseStream sans contexte
+        console.warn('⚠️  [RAG DEBUG] No search results - generating response WITHOUT context');
         const generator = ollamaClient.generateResponseStream(message, []);
         this.currentStream = generator;
 

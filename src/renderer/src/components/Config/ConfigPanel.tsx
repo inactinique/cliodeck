@@ -45,12 +45,12 @@ export const ConfigPanel: React.FC = () => {
     topK: 10,
     similarityThreshold: 0.2,
     chunkingConfig: 'cpuOptimized',
-    summaryGeneration: 'disabled',
-    summaryMaxLength: 500,
+    summaryGeneration: 'extractive',
+    summaryMaxLength: 750,
     useGraphContext: false,
     graphSimilarityThreshold: 0.7,
     additionalGraphDocs: 3,
-    includeSummaries: false,
+    includeSummaries: true,
     enableTopicModeling: false,
   });
 
@@ -148,12 +148,12 @@ export const ConfigPanel: React.FC = () => {
         topK: 10,
         similarityThreshold: 0.2,
         chunkingConfig: 'cpuOptimized',
-        summaryGeneration: 'disabled',
-        summaryMaxLength: 500,
+        summaryGeneration: 'extractive',
+        summaryMaxLength: 750,
         useGraphContext: false,
         graphSimilarityThreshold: 0.7,
         additionalGraphDocs: 3,
-        includeSummaries: false,
+        includeSummaries: true,
         enableTopicModeling: false,
       });
       setLLMConfig({
