@@ -6,9 +6,20 @@ import { EditorConfigSection, type EditorConfig } from './EditorConfigSection';
 import { UIConfigSection } from './UIConfigSection';
 import { ActionsSection } from './ActionsSection';
 import { ZoteroConfigSection, type ZoteroConfig } from './ZoteroConfigSection';
-import { SuggestionsConfigSection, type SuggestionsConfig } from './SuggestionsConfigSection';
+// import { SuggestionsConfigSection, type SuggestionsConfig } from './SuggestionsConfigSection';
 import { useEditorStore } from '../../stores/editorStore';
 import './ConfigPanel.css';
+
+// Temporary type definition while SuggestionsConfigSection is disabled
+export interface SuggestionsConfig {
+  enableCitationSuggestions: boolean;
+  citationSuggestionDelay: number;
+  maxCitationSuggestions: number;
+  enableReformulationSuggestions: boolean;
+  reformulationDelay: number;
+  reformulationMinWords: number;
+  showSuggestionsInline: boolean;
+}
 
 export interface RAGConfig {
   // Retrieval configuration
@@ -224,10 +235,12 @@ export const ConfigPanel: React.FC = () => {
       <div className="config-content">
         <UIConfigSection />
 
+        {/* Temporarily disabled for debugging
         <SuggestionsConfigSection
           config={suggestionsConfig}
           onChange={setSuggestionsConfig}
         />
+        */}
 
         <RAGConfigSection
           config={ragConfig}

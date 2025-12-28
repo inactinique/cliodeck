@@ -46,6 +46,44 @@ export const MarkdownEditor: React.FC = () => {
       wordPattern: /(-?\d*\.\d\w*)|([^\`\~\!\@\#\%\^\&\*\(\)\-\=\+\[\{\]\}\\\|\;\:\'\"\,\.\<\>\/\?\s]+)/g,
     });
 
+    // Add keyboard shortcuts for formatting
+    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyB, () => {
+      useEditorStore.getState().insertFormatting('bold');
+    });
+
+    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyI, () => {
+      useEditorStore.getState().insertFormatting('italic');
+    });
+
+    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyL, () => {
+      useEditorStore.getState().insertFormatting('link');
+    });
+
+    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Quote, () => {
+      useEditorStore.getState().insertFormatting('citation');
+    });
+
+    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.KeyT, () => {
+      useEditorStore.getState().insertFormatting('table');
+    });
+
+    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.KeyF, () => {
+      useEditorStore.getState().insertFormatting('footnote');
+    });
+
+    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.KeyQ, () => {
+      useEditorStore.getState().insertFormatting('blockquote');
+    });
+
+    // Preview disabled for now
+    // editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyK, () => {
+    //   useEditorStore.getState().togglePreview();
+    // });
+
+    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.KeyS, () => {
+      useEditorStore.getState().toggleStats();
+    });
+
     // Add custom citation autocomplete
     monaco.languages.registerCompletionItemProvider('markdown', {
       provideCompletionItems: (model, position) => {

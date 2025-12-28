@@ -185,14 +185,15 @@ export function createApplicationMenu(mainWindow: BrowserWindow): Menu {
     {
       label: 'Affichage',
       submenu: [
-        {
-          label: 'Basculer aperçu',
-          accelerator: 'CmdOrCtrl+K',
-          click: () => {
-            mainWindow.webContents.send('menu:toggle-preview');
-          },
-        },
-        { type: 'separator' as const },
+        // Preview disabled for now
+        // {
+        //   label: 'Basculer aperçu',
+        //   accelerator: 'CmdOrCtrl+K',
+        //   click: () => {
+        //     mainWindow.webContents.send('menu:toggle-preview');
+        //   },
+        // },
+        // { type: 'separator' as const },
         {
           label: 'Panneau Projects',
           accelerator: 'Alt+1',

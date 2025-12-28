@@ -1,43 +1,44 @@
-import React, { useState, useEffect } from 'react';
-import { FileText, FolderOpen, Save, Link, BookOpen, Eye, Table, Superscript, Quote, BarChart3, CheckCircle } from 'lucide-react';
-import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
+import React from 'react';
+import { FileText, FolderOpen, Save, Link, BookOpen, Table, Superscript, Quote, BarChart3, CheckCircle } from 'lucide-react';
+// import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import { MarkdownEditor } from './MarkdownEditor';
-import { MarkdownPreview } from './MarkdownPreview';
-import { DocumentStats } from './DocumentStats';
-import { ContextualSuggestions } from './ContextualSuggestions';
+// import { MarkdownPreview } from './MarkdownPreview';
+// import { DocumentStats } from './DocumentStats';
+// import { ContextualSuggestions } from './ContextualSuggestions';
 import { useEditorStore } from '../../stores/editorStore';
 import { useBibliographyStore } from '../../stores/bibliographyStore';
 import { logger } from '../../utils/logger';
 import './EditorPanel.css';
 
 export const EditorPanel: React.FC = () => {
-  const { showPreview, togglePreview, showStats, toggleStats, settings, loadFile, saveFile, setContent, content, insertFormatting } = useEditorStore();
+  const { showStats, toggleStats, loadFile, saveFile, setContent, content, insertFormatting } = useEditorStore();
   const { citations } = useBibliographyStore();
 
-  const [suggestionsConfig, setSuggestionsConfig] = useState({
-    enableCitationSuggestions: true,
-    citationSuggestionDelay: 500,
-    maxCitationSuggestions: 5,
-    enableReformulationSuggestions: false,
-    reformulationDelay: 2000,
-    reformulationMinWords: 10,
-    showSuggestionsInline: true,
-  });
+  // Suggestions config - temporarily disabled
+  // const [suggestionsConfig, setSuggestionsConfig] = useState({
+  //   enableCitationSuggestions: true,
+  //   citationSuggestionDelay: 500,
+  //   maxCitationSuggestions: 5,
+  //   enableReformulationSuggestions: false,
+  //   reformulationDelay: 2000,
+  //   reformulationMinWords: 10,
+  //   showSuggestionsInline: true,
+  // });
 
   // Load suggestions config on mount
-  useEffect(() => {
-    const loadSuggestionsConfig = async () => {
-      try {
-        const config = await window.electron.config.get('suggestions');
-        if (config) {
-          setSuggestionsConfig(config);
-        }
-      } catch (error) {
-        console.error('Failed to load suggestions config:', error);
-      }
-    };
-    loadSuggestionsConfig();
-  }, []);
+  // useEffect(() => {
+  //   const loadSuggestionsConfig = async () => {
+  //     try {
+  //       const config = await window.electron.config.get('suggestions');
+  //       if (config) {
+  //         setSuggestionsConfig(config);
+  //       }
+  //     } catch (error) {
+  //       console.error('Failed to load suggestions config:', error);
+  //     }
+  //   };
+  //   loadSuggestionsConfig();
+  // }, []);
 
   const handleNewFile = () => {
     logger.component('EditorPanel', 'handleNewFile clicked');
@@ -220,6 +221,7 @@ export const EditorPanel: React.FC = () => {
           </button>
         </div>
 
+        {/* Preview button - disabled for now
         <div className="toolbar-section">
           <button
             className={`toolbar-btn ${showPreview ? 'active' : ''}`}
@@ -229,35 +231,22 @@ export const EditorPanel: React.FC = () => {
             <Eye size={20} strokeWidth={1} />
           </button>
         </div>
+        */}
       </div>
 
-      {/* Stats bar (if enabled) */}
-      {showStats && <DocumentStats />}
+      {/* Stats bar (if enabled) - temporarily disabled for debugging */}
+      {/* {showStats && <DocumentStats />} */}
 
-      {/* Editor + Preview */}
+      {/* Editor (Preview disabled for now) */}
       <div className="editor-content">
-        {showPreview ? (
-          <PanelGroup direction="horizontal">
-            <Panel defaultSize={50} minSize={30}>
-              <MarkdownEditor />
-            </Panel>
-
-            <PanelResizeHandle className="editor-resize-handle" />
-
-            <Panel defaultSize={50} minSize={30}>
-              <MarkdownPreview />
-            </Panel>
-          </PanelGroup>
-        ) : (
-          <MarkdownEditor />
-        )}
+        <MarkdownEditor />
       </div>
 
-      {/* Contextual Suggestions */}
-      <ContextualSuggestions
+      {/* Contextual Suggestions - Temporarily disabled due to runtime error */}
+      {/* <ContextualSuggestions
         content={content}
         suggestionsConfig={suggestionsConfig}
-      />
+      /> */}
     </div>
   );
 };
