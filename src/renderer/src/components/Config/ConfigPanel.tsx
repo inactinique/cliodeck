@@ -209,7 +209,7 @@ export const ConfigPanel: React.FC = () => {
           <button
             className="toolbar-btn"
             onClick={handleResetConfig}
-            title="Réinitialiser"
+            title={t('settings.tooltipReset')}
           >
             <RotateCcw size={20} strokeWidth={1} />
           </button>
@@ -217,7 +217,7 @@ export const ConfigPanel: React.FC = () => {
             className="toolbar-btn"
             onClick={handleSaveConfig}
             disabled={isSaving}
-            title={isSaving ? 'Sauvegarde...' : 'Sauvegarder'}
+            title={isSaving ? t('settings.saving') : t('settings.tooltipSave')}
           >
             <Save size={20} strokeWidth={1} />
           </button>

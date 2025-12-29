@@ -14,7 +14,10 @@
     "edit": "Edit",
     "create": "Create",
     "open": "Open",
-    "search": "Search"
+    "search": "Search",
+    "refresh": "Refresh",
+    "test": "Test",
+    "sync": "Sync"
   },
   "settings": {
     "title": "Settings",
@@ -22,7 +25,10 @@
     "saveError": "Error saving configuration",
     "resetConfirm": "Reset configuration to default values?",
     "language": "Language",
-    "selectLanguage": "Select language"
+    "selectLanguage": "Select language",
+    "tooltipSave": "Save",
+    "tooltipReset": "Reset",
+    "saving": "Saving..."
   },
   "editor": {
     "title": "Editor",
@@ -31,13 +37,24 @@
     "minimap": "Show minimap",
     "fontFamily": "Font family",
     "noCitations": "No citations",
-    "importBibliography": "Import your bibliography..."
+    "importBibliography": "Import your bibliography...",
+    "fontSizeHelp": "Text size in the Markdown editor (Monaco Editor)",
+    "currentSize": "Current size: {{size}}px",
+    "appliesToEditor": "Applies only to the main text editor",
+    "wordWrapHelp": "Long lines are automatically wrapped to stay visible",
+    "minimapHelp": "Scrollbar with miniature document preview (like in VS Code)",
+    "fontFamilyHelp": "Choose the font for the code editor",
+    "fontSystem": "System fonts (SF Mono, Monaco, Consolas)",
+    "fontNote": "System fonts are always available. Others require installation on your system."
   },
   "ui": {
     "title": "User interface",
     "density": "Interface density",
     "comfortable": "Comfortable (default)",
-    "compact": "Compact (more visible elements)"
+    "compact": "Compact (more visible elements)",
+    "densityHelp": "Controls spacing and element size",
+    "comfortableDesc": "Generous spacing, easier to read",
+    "compactDesc": "Reduced spacing, more information displayed"
   },
   "bibliography": {
     "title": "Bibliography",
@@ -73,6 +90,63 @@
   },
   "rag": {
     "title": "RAG Configuration",
-    "topK": "Number of chunks (topK)"
+    "topK": "Number of chunks (topK)",
+    "topKHelp": "Number of text passages to retrieve",
+    "similarityThreshold": "Similarity threshold",
+    "similarityThresholdHelp": "Minimum similarity score (0.0 to 1.0)",
+    "chunkingConfig": "Chunking configuration",
+    "chunkingHelp": "Text chunk size",
+    "cpuOptimized": "CPU Optimized (default)",
+    "standard": "Standard",
+    "large": "Large",
+    "summaryGeneration": "Summary generation",
+    "summaryGenerationHelp": "How to generate summaries",
+    "extractive": "Extractive (fast)",
+    "abstractive": "Abstractive (quality)",
+    "disabled": "Disabled",
+    "summaryMaxLength": "Max summary length",
+    "summaryMaxLengthHelp": "Maximum number of words",
+    "useGraphContext": "Use graph context",
+    "graphSimilarityThreshold": "Graph similarity threshold",
+    "additionalGraphDocs": "Additional graph documents",
+    "includeSummaries": "Include summaries in RAG",
+    "enableTopicModeling": "Enable topic modeling"
+  },
+  "llm": {
+    "title": "LLM Configuration",
+    "backend": "Backend",
+    "backendHelp": "LLM service to use",
+    "ollamaURL": "Ollama URL",
+    "ollamaURLHelp": "Ollama server address",
+    "embeddingModel": "Embedding model",
+    "embeddingModelHelp": "Model for vector embeddings",
+    "chatModel": "Chat model",
+    "chatModelHelp": "Model for text generation",
+    "availableModels": "Available models",
+    "refreshModels": "Refresh models",
+    "testConnection": "Test connection",
+    "connectionSuccess": "Connection successful!",
+    "connectionError": "Connection error"
+  },
+  "zotero": {
+    "title": "Zotero Configuration",
+    "userId": "User ID",
+    "userIdHelp": "Your Zotero user ID",
+    "apiKey": "API Key",
+    "apiKeyHelp": "Your Zotero API key",
+    "autoSync": "Auto-sync",
+    "testConnection": "Test connection",
+    "connectionSuccess": "Zotero connection successful!",
+    "connectionError": "Unable to connect to Zotero"
+  },
+  "suggestions": {
+    "title": "Suggestions",
+    "enableCitations": "Enable citation suggestions",
+    "citationDelay": "Suggestion delay (ms)",
+    "maxCitations": "Max number of suggestions",
+    "enableReformulation": "Enable reformulation suggestions",
+    "reformulationDelay": "Reformulation delay (ms)",
+    "reformulationMinWords": "Minimum words",
+    "showInline": "Show inline suggestions"
   }
 }

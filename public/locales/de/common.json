@@ -14,7 +14,10 @@
     "edit": "Bearbeiten",
     "create": "Erstellen",
     "open": "Öffnen",
-    "search": "Suchen"
+    "search": "Suchen",
+    "refresh": "Aktualisieren",
+    "test": "Testen",
+    "sync": "Synchronisieren"
   },
   "settings": {
     "title": "Einstellungen",
@@ -22,7 +25,10 @@
     "saveError": "Fehler beim Speichern",
     "resetConfirm": "Konfiguration auf Standardwerte zurücksetzen?",
     "language": "Sprache",
-    "selectLanguage": "Sprache auswählen"
+    "selectLanguage": "Sprache auswählen",
+    "tooltipSave": "Speichern",
+    "tooltipReset": "Zurücksetzen",
+    "saving": "Wird gespeichert..."
   },
   "editor": {
     "title": "Editor",
@@ -31,13 +37,24 @@
     "minimap": "Minimap anzeigen",
     "fontFamily": "Schriftart",
     "noCitations": "Keine Zitate",
-    "importBibliography": "Ihre Bibliographie importieren..."
+    "importBibliography": "Ihre Bibliographie importieren...",
+    "fontSizeHelp": "Textgröße im Markdown-Editor (Monaco Editor)",
+    "currentSize": "Aktuelle Größe: {{size}}px",
+    "appliesToEditor": "Gilt nur für den Haupttexteditor",
+    "wordWrapHelp": "Lange Zeilen werden automatisch umgebrochen",
+    "minimapHelp": "Scrollleiste mit Miniaturvorschau des Dokuments (wie in VS Code)",
+    "fontFamilyHelp": "Wählen Sie die Schriftart für den Code-Editor",
+    "fontSystem": "Systemschriftarten (SF Mono, Monaco, Consolas)",
+    "fontNote": "Systemschriftarten sind immer verfügbar. Andere müssen auf Ihrem System installiert sein."
   },
   "ui": {
     "title": "Benutzeroberfläche",
     "density": "Oberflächendichte",
     "comfortable": "Komfortabel (Standard)",
-    "compact": "Kompakt (mehr sichtbare Elemente)"
+    "compact": "Kompakt (mehr sichtbare Elemente)",
+    "densityHelp": "Steuert Abstände und Elementgröße",
+    "comfortableDesc": "Großzügiger Abstand, leichter zu lesen",
+    "compactDesc": "Reduzierter Abstand, mehr Informationen angezeigt"
   },
   "bibliography": {
     "title": "Bibliographie",
@@ -73,6 +90,63 @@
   },
   "rag": {
     "title": "RAG-Konfiguration",
-    "topK": "Anzahl der Chunks (topK)"
+    "topK": "Anzahl der Chunks (topK)",
+    "topKHelp": "Anzahl der abzurufenden Textpassagen",
+    "similarityThreshold": "Ähnlichkeitsschwelle",
+    "similarityThresholdHelp": "Minimaler Ähnlichkeitswert (0.0 bis 1.0)",
+    "chunkingConfig": "Chunking-Konfiguration",
+    "chunkingHelp": "Textchunk-Größe",
+    "cpuOptimized": "CPU-optimiert (Standard)",
+    "standard": "Standard",
+    "large": "Groß",
+    "summaryGeneration": "Zusammenfassungsgenerierung",
+    "summaryGenerationHelp": "Wie Zusammenfassungen generiert werden",
+    "extractive": "Extraktiv (schnell)",
+    "abstractive": "Abstraktiv (Qualität)",
+    "disabled": "Deaktiviert",
+    "summaryMaxLength": "Max. Zusammenfassungslänge",
+    "summaryMaxLengthHelp": "Maximale Anzahl von Wörtern",
+    "useGraphContext": "Graphkontext verwenden",
+    "graphSimilarityThreshold": "Graph-Ähnlichkeitsschwelle",
+    "additionalGraphDocs": "Zusätzliche Graph-Dokumente",
+    "includeSummaries": "Zusammenfassungen in RAG einbeziehen",
+    "enableTopicModeling": "Themenmodellierung aktivieren"
+  },
+  "llm": {
+    "title": "LLM-Konfiguration",
+    "backend": "Backend",
+    "backendHelp": "Zu verwendender LLM-Dienst",
+    "ollamaURL": "Ollama-URL",
+    "ollamaURLHelp": "Ollama-Serveradresse",
+    "embeddingModel": "Embedding-Modell",
+    "embeddingModelHelp": "Modell für Vektor-Embeddings",
+    "chatModel": "Chat-Modell",
+    "chatModelHelp": "Modell für Textgenerierung",
+    "availableModels": "Verfügbare Modelle",
+    "refreshModels": "Modelle aktualisieren",
+    "testConnection": "Verbindung testen",
+    "connectionSuccess": "Verbindung erfolgreich!",
+    "connectionError": "Verbindungsfehler"
+  },
+  "zotero": {
+    "title": "Zotero-Konfiguration",
+    "userId": "Benutzer-ID",
+    "userIdHelp": "Ihre Zotero-Benutzer-ID",
+    "apiKey": "API-Schlüssel",
+    "apiKeyHelp": "Ihr Zotero-API-Schlüssel",
+    "autoSync": "Auto-Sync",
+    "testConnection": "Verbindung testen",
+    "connectionSuccess": "Zotero-Verbindung erfolgreich!",
+    "connectionError": "Verbindung zu Zotero nicht möglich"
+  },
+  "suggestions": {
+    "title": "Vorschläge",
+    "enableCitations": "Zitatvorschläge aktivieren",
+    "citationDelay": "Vorschlagsverzögerung (ms)",
+    "maxCitations": "Max. Anzahl von Vorschlägen",
+    "enableReformulation": "Umformulierungsvorschläge aktivieren",
+    "reformulationDelay": "Umformulierungsverzögerung (ms)",
+    "reformulationMinWords": "Minimale Wörter",
+    "showInline": "Inline-Vorschläge anzeigen"
   }
 }

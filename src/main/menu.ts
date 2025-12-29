@@ -63,14 +63,14 @@ export function createApplicationMenu(mainWindow: BrowserWindow): Menu {
         },
         { type: 'separator' as const },
         {
-          label: 'Nouveau projet',
+          label: t('newProject'),
           accelerator: 'CmdOrCtrl+Shift+N',
           click: () => {
             mainWindow.webContents.send('menu:new-project');
           },
         },
         {
-          label: 'Ouvrir projet',
+          label: t('openProject'),
           accelerator: 'CmdOrCtrl+Shift+O',
           click: () => {
             mainWindow.webContents.send('menu:open-project');
@@ -78,7 +78,7 @@ export function createApplicationMenu(mainWindow: BrowserWindow): Menu {
         },
         { type: 'separator' as const },
         {
-          label: 'Exporter PDF',
+          label: t('exportPDF'),
           accelerator: 'CmdOrCtrl+E',
           click: () => {
             mainWindow.webContents.send('menu:export-pdf');
@@ -103,7 +103,7 @@ export function createApplicationMenu(mainWindow: BrowserWindow): Menu {
 
     // Edit Menu
     {
-      label: 'Édition',
+      label: t('edit'),
       submenu: [
         { role: 'undo' as const },
         { role: 'redo' as const },
@@ -115,35 +115,35 @@ export function createApplicationMenu(mainWindow: BrowserWindow): Menu {
         { role: 'selectAll' as const },
         { type: 'separator' as const },
         {
-          label: 'Gras',
+          label: t('bold'),
           accelerator: 'CmdOrCtrl+B',
           click: () => {
             mainWindow.webContents.send('menu:format-bold');
           },
         },
         {
-          label: 'Italique',
+          label: t('italic'),
           accelerator: 'CmdOrCtrl+I',
           click: () => {
             mainWindow.webContents.send('menu:format-italic');
           },
         },
         {
-          label: 'Insérer lien',
+          label: t('insertLink'),
           accelerator: 'CmdOrCtrl+L',
           click: () => {
             mainWindow.webContents.send('menu:insert-link');
           },
         },
         {
-          label: 'Insérer citation',
+          label: t('insertCitation'),
           accelerator: 'CmdOrCtrl+\'',
           click: () => {
             mainWindow.webContents.send('menu:insert-citation');
           },
         },
         {
-          label: 'Insérer tableau',
+          label: t('insertTable'),
           accelerator: 'CmdOrCtrl+Shift+T',
           click: () => {
             mainWindow.webContents.send('menu:insert-table');
@@ -151,14 +151,14 @@ export function createApplicationMenu(mainWindow: BrowserWindow): Menu {
         },
         { type: 'separator' as const },
         {
-          label: 'Note de bas de page',
+          label: t('insertFootnote'),
           accelerator: 'CmdOrCtrl+Shift+F',
           click: () => {
             mainWindow.webContents.send('menu:insert-footnote');
           },
         },
         {
-          label: 'Bloc citation',
+          label: t('insertBlockquote'),
           accelerator: 'CmdOrCtrl+Shift+Q',
           click: () => {
             mainWindow.webContents.send('menu:insert-blockquote');
@@ -166,21 +166,21 @@ export function createApplicationMenu(mainWindow: BrowserWindow): Menu {
         },
         { type: 'separator' as const },
         {
-          label: 'Statistiques du document',
+          label: t('documentStats'),
           accelerator: 'CmdOrCtrl+Shift+S',
           click: () => {
             mainWindow.webContents.send('menu:toggle-stats');
           },
         },
         {
-          label: 'Suggestions de citations',
+          label: t('citationSuggestions'),
           accelerator: 'CmdOrCtrl+Shift+L',
           click: () => {
             mainWindow.webContents.send('menu:toggle-suggestions');
           },
         },
         {
-          label: 'Vérifier les citations',
+          label: t('checkCitations'),
           accelerator: 'CmdOrCtrl+Shift+C',
           click: () => {
             mainWindow.webContents.send('menu:check-citations');
@@ -191,7 +191,7 @@ export function createApplicationMenu(mainWindow: BrowserWindow): Menu {
 
     // View Menu
     {
-      label: 'Affichage',
+      label: t('view'),
       submenu: [
         // Preview disabled
         // {
@@ -203,35 +203,35 @@ export function createApplicationMenu(mainWindow: BrowserWindow): Menu {
         // },
         // { type: 'separator' as const },
         {
-          label: 'Panneau Projects',
+          label: t('panelProjects'),
           accelerator: 'Alt+1',
           click: () => {
             mainWindow.webContents.send('menu:switch-panel', 'projects');
           },
         },
         {
-          label: 'Panneau Bibliography',
+          label: t('panelBibliography'),
           accelerator: 'Alt+2',
           click: () => {
             mainWindow.webContents.send('menu:switch-panel', 'bibliography');
           },
         },
         {
-          label: 'Panneau Chat',
+          label: t('panelChat'),
           accelerator: 'Alt+3',
           click: () => {
             mainWindow.webContents.send('menu:switch-panel', 'chat');
           },
         },
         {
-          label: 'Panneau PDFs',
+          label: t('panelPDFs'),
           accelerator: 'Alt+4',
           click: () => {
             mainWindow.webContents.send('menu:switch-panel', 'pdfs');
           },
         },
         {
-          label: 'Panneau Corpus',
+          label: t('panelCorpus'),
           accelerator: 'Alt+5',
           click: () => {
             mainWindow.webContents.send('menu:switch-panel', 'corpus');
@@ -252,17 +252,17 @@ export function createApplicationMenu(mainWindow: BrowserWindow): Menu {
 
     // Bibliography Menu
     {
-      label: 'Bibliographie',
+      label: t('bibliography'),
       submenu: [
         {
-          label: 'Importer fichier BibTeX',
+          label: t('importBibTeX'),
           accelerator: 'CmdOrCtrl+Shift+B',
           click: () => {
             mainWindow.webContents.send('menu:import-bibtex');
           },
         },
         {
-          label: 'Rechercher citations',
+          label: t('searchCitations'),
           accelerator: 'CmdOrCtrl+F',
           click: () => {
             mainWindow.webContents.send('menu:search-citations');
@@ -270,7 +270,7 @@ export function createApplicationMenu(mainWindow: BrowserWindow): Menu {
         },
         { type: 'separator' as const },
         {
-          label: 'Connecter Zotero',
+          label: t('connectZotero'),
           click: () => {
             mainWindow.webContents.send('menu:connect-zotero');
           },
@@ -280,7 +280,7 @@ export function createApplicationMenu(mainWindow: BrowserWindow): Menu {
 
     // Window Menu
     {
-      label: 'Fenêtre',
+      label: t('window'),
       submenu: [
         { role: 'minimize' as const },
         { role: 'zoom' as const },
@@ -297,17 +297,17 @@ export function createApplicationMenu(mainWindow: BrowserWindow): Menu {
 
     // Help Menu
     {
-      label: 'Aide',
+      label: t('help'),
       submenu: [
         {
-          label: 'Documentation',
+          label: t('documentation'),
           click: async () => {
             const { shell } = await import('electron');
             await shell.openExternal('https://github.com/yourusername/mdfocus-electron');
           },
         },
         {
-          label: 'Signaler un problème',
+          label: t('reportIssue'),
           click: async () => {
             const { shell } = await import('electron');
             await shell.openExternal('https://github.com/yourusername/mdfocus-electron/issues');
@@ -315,7 +315,7 @@ export function createApplicationMenu(mainWindow: BrowserWindow): Menu {
         },
         { type: 'separator' as const },
         {
-          label: 'À propos de mdFocus',
+          label: t('about'),
           click: () => {
             mainWindow.webContents.send('menu:about');
           },

@@ -14,7 +14,10 @@
     "edit": "Éditer",
     "create": "Créer",
     "open": "Ouvrir",
-    "search": "Rechercher"
+    "search": "Rechercher",
+    "refresh": "Rafraîchir",
+    "test": "Tester",
+    "sync": "Synchroniser"
   },
   "settings": {
     "title": "Paramètres",
@@ -22,22 +25,36 @@
     "saveError": "Erreur lors de la sauvegarde",
     "resetConfirm": "Réinitialiser la configuration aux valeurs par défaut ?",
     "language": "Langue",
-    "selectLanguage": "Sélectionner la langue"
+    "selectLanguage": "Sélectionner la langue",
+    "tooltipSave": "Sauvegarder",
+    "tooltipReset": "Réinitialiser",
+    "saving": "Sauvegarde..."
   },
   "editor": {
     "title": "Éditeur",
     "fontSize": "Taille de police",
+    "fontSizeHelp": "Taille du texte dans l'éditeur Markdown (Monaco Editor)",
+    "currentSize": "Taille actuelle: {{size}}px",
+    "appliesToEditor": "S'applique uniquement à l'éditeur de texte principal",
     "wordWrap": "Retour à la ligne automatique",
+    "wordWrapHelp": "Les longues lignes sont automatiquement coupées pour rester visibles",
     "minimap": "Afficher la minimap",
+    "minimapHelp": "Barre de défilement avec aperçu miniature du document (comme dans VS Code)",
     "fontFamily": "Police de caractères",
+    "fontFamilyHelp": "Choisissez la police pour l'éditeur de code",
+    "fontSystem": "Polices système (SF Mono, Monaco, Consolas)",
+    "fontNote": "Les polices système sont toujours disponibles. Les autres nécessitent d'être installées sur votre système.",
     "noCitations": "Aucune citation",
     "importBibliography": "Importez votre bibliographie..."
   },
   "ui": {
     "title": "Interface utilisateur",
     "density": "Densité de l'interface",
+    "densityHelp": "Contrôle l'espacement et la taille des éléments",
     "comfortable": "Confortable (par défaut)",
-    "compact": "Compact (plus d'éléments visibles)"
+    "comfortableDesc": "Espacement généreux, plus facile à lire",
+    "compact": "Compact (plus d'éléments visibles)",
+    "compactDesc": "Espacement réduit, plus d'informations affichées"
   },
   "bibliography": {
     "title": "Bibliographie",
@@ -47,7 +64,9 @@
     "sortBy": "Trier par:",
     "author": "Auteur",
     "year": "Année",
-    "titleField": "Titre"
+    "titleField": "Titre",
+    "noCitations": "Aucune citation disponible",
+    "importPrompt": "Importez un fichier BibTeX pour commencer"
   },
   "project": {
     "title": "Projet",
@@ -73,6 +92,63 @@
   },
   "rag": {
     "title": "Configuration RAG",
-    "topK": "Nombre de chunks (topK)"
+    "topK": "Nombre de chunks (topK)",
+    "topKHelp": "Nombre de passages de texte à récupérer",
+    "similarityThreshold": "Seuil de similarité",
+    "similarityThresholdHelp": "Score minimum de similarité (0.0 à 1.0)",
+    "chunkingConfig": "Configuration chunking",
+    "chunkingHelp": "Taille des chunks de texte",
+    "cpuOptimized": "Optimisé CPU (par défaut)",
+    "standard": "Standard",
+    "large": "Large",
+    "summaryGeneration": "Génération de résumés",
+    "summaryGenerationHelp": "Comment générer les résumés",
+    "extractive": "Extractif (rapide)",
+    "abstractive": "Abstractif (qualité)",
+    "disabled": "Désactivé",
+    "summaryMaxLength": "Longueur max résumé",
+    "summaryMaxLengthHelp": "Nombre maximum de mots",
+    "useGraphContext": "Utiliser contexte graphe",
+    "graphSimilarityThreshold": "Seuil similarité graphe",
+    "additionalGraphDocs": "Documents graphe additionnels",
+    "includeSummaries": "Inclure résumés dans RAG",
+    "enableTopicModeling": "Activer modélisation thématique"
+  },
+  "llm": {
+    "title": "Configuration LLM",
+    "backend": "Backend",
+    "backendHelp": "Service LLM à utiliser",
+    "ollamaURL": "URL Ollama",
+    "ollamaURLHelp": "Adresse du serveur Ollama",
+    "embeddingModel": "Modèle d'embedding",
+    "embeddingModelHelp": "Modèle pour les embeddings vectoriels",
+    "chatModel": "Modèle de chat",
+    "chatModelHelp": "Modèle pour la génération de texte",
+    "availableModels": "Modèles disponibles",
+    "refreshModels": "Rafraîchir les modèles",
+    "testConnection": "Tester la connexion",
+    "connectionSuccess": "Connexion réussie !",
+    "connectionError": "Erreur de connexion"
+  },
+  "zotero": {
+    "title": "Configuration Zotero",
+    "userId": "ID utilisateur",
+    "userIdHelp": "Votre identifiant utilisateur Zotero",
+    "apiKey": "Clé API",
+    "apiKeyHelp": "Votre clé API Zotero",
+    "autoSync": "Synchronisation automatique",
+    "testConnection": "Tester la connexion",
+    "connectionSuccess": "Connexion Zotero réussie !",
+    "connectionError": "Impossible de se connecter à Zotero"
+  },
+  "suggestions": {
+    "title": "Suggestions",
+    "enableCitations": "Activer suggestions de citations",
+    "citationDelay": "Délai suggestions (ms)",
+    "maxCitations": "Nombre max de suggestions",
+    "enableReformulation": "Activer suggestions de reformulation",
+    "reformulationDelay": "Délai reformulation (ms)",
+    "reformulationMinWords": "Mots minimum",
+    "showInline": "Afficher suggestions en ligne"
   }
 }
