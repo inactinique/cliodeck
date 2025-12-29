@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { FileText, FolderOpen, Save, Link, BookOpen, Table, Superscript, Quote, CheckCircle, Lightbulb } from 'lucide-react';
 // import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import { MarkdownEditor } from './MarkdownEditor';
@@ -12,6 +13,7 @@ import { logger } from '../../utils/logger';
 import './EditorPanel.css';
 
 export const EditorPanel: React.FC = () => {
+  const { t } = useTranslation('common');
   const { showSuggestions, toggleSuggestions, loadFile, saveFile, setContent, content, insertFormatting } = useEditorStore();
   const { citations } = useBibliographyStore();
 
@@ -43,7 +45,7 @@ export const EditorPanel: React.FC = () => {
 
   const handleNewFile = () => {
     logger.component('EditorPanel', 'handleNewFile clicked');
-    if (window.confirm('Créer un nouveau fichier ? Les modifications non sauvegardées seront perdues.')) {
+    if (window.confirm(t('toolbar.newFileConfirm'))) {
       setContent('');
       logger.component('EditorPanel', 'New file created');
     }
@@ -55,8 +57,8 @@ export const EditorPanel: React.FC = () => {
       const result = await window.electron.dialog.openFile({
         properties: ['openFile'],
         filters: [
-          { name: 'Markdown', extensions: ['md', 'markdown'] },
-          { name: 'Tous les fichiers', extensions: ['*'] },
+          { name: t('toolbar.markdown'), extensions: ['md', 'markdown'] },
+          { name: t('project.allFiles'), extensions: ['*'] },
         ],
       });
 
@@ -67,7 +69,7 @@ export const EditorPanel: React.FC = () => {
       }
     } catch (error) {
       logger.error('EditorPanel', error);
-      alert('Erreur lors de l\'ouverture du fichier');
+      alert(t('toolbar.openError'));
     }
   };
 
@@ -82,8 +84,8 @@ export const EditorPanel: React.FC = () => {
         logger.component('EditorPanel', 'No file path, showing save dialog');
         const result = await window.electron.dialog.saveFile({
           filters: [
-            { name: 'Markdown', extensions: ['md'] },
-            { name: 'Tous les fichiers', extensions: ['*'] },
+            { name: t('toolbar.markdown'), extensions: ['md'] },
+            { name: t('project.allFiles'), extensions: ['*'] },
           ],
         });
 
@@ -94,7 +96,7 @@ export const EditorPanel: React.FC = () => {
         }
       } else {
         logger.error('EditorPanel', error);
-        alert('Erreur lors de la sauvegarde du fichier');
+        alert(t('toolbar.saveError'));
       }
     }
   };
@@ -166,52 +168,52 @@ export const EditorPanel: React.FC = () => {
       {/* Toolbar */}
       <div className="editor-toolbar">
         <div className="toolbar-section">
-          <button className="toolbar-btn" onClick={handleNewFile} title="Nouveau fichier">
+          <button className="toolbar-btn" onClick={handleNewFile} title={t('toolbar.newFile')}>
             <FileText size={20} strokeWidth={1} />
           </button>
-          <button className="toolbar-btn" onClick={handleOpenFile} title="Ouvrir">
+          <button className="toolbar-btn" onClick={handleOpenFile} title={t('toolbar.open')}>
             <FolderOpen size={20} strokeWidth={1} />
           </button>
-          <button className="toolbar-btn" onClick={handleSaveFile} title="Enregistrer">
+          <button className="toolbar-btn" onClick={handleSaveFile} title={t('toolbar.save')}>
             <Save size={20} strokeWidth={1} />
           </button>
         </div>
 
         <div className="toolbar-section">
-          <button className="toolbar-btn" onClick={handleBold} title="Gras (Ctrl+B)">
+          <button className="toolbar-btn" onClick={handleBold} title={t('toolbar.bold')}>
             <strong>B</strong>
           </button>
-          <button className="toolbar-btn" onClick={handleItalic} title="Italique (Ctrl+I)">
+          <button className="toolbar-btn" onClick={handleItalic} title={t('toolbar.italic')}>
             <em>I</em>
           </button>
-          <button className="toolbar-btn" onClick={handleLink} title="Lien (Ctrl+L)">
+          <button className="toolbar-btn" onClick={handleLink} title={t('toolbar.link')}>
             <Link size={20} strokeWidth={1} />
           </button>
-          <button className="toolbar-btn" onClick={handleCitation} title="Citation (Ctrl+')">
+          <button className="toolbar-btn" onClick={handleCitation} title={t('toolbar.citation')}>
             <BookOpen size={20} strokeWidth={1} />
           </button>
-          <button className="toolbar-btn" onClick={handleTable} title="Insérer un tableau (Ctrl+Shift+T)">
+          <button className="toolbar-btn" onClick={handleTable} title={t('toolbar.table')}>
             <Table size={20} strokeWidth={1} />
           </button>
         </div>
 
         <div className="toolbar-section">
-          <button className="toolbar-btn" onClick={handleFootnote} title="Note de bas de page (Ctrl+Shift+F)">
+          <button className="toolbar-btn" onClick={handleFootnote} title={t('toolbar.footnote')}>
             <Superscript size={20} strokeWidth={1} />
           </button>
-          <button className="toolbar-btn" onClick={handleBlockQuote} title="Bloc citation">
+          <button className="toolbar-btn" onClick={handleBlockQuote} title={t('toolbar.blockquote')}>
             <Quote size={20} strokeWidth={1} />
           </button>
         </div>
 
         <div className="toolbar-section">
-          <button className="toolbar-btn" onClick={handleCheckCitations} title="Vérifier les citations">
+          <button className="toolbar-btn" onClick={handleCheckCitations} title={t('toolbar.checkCitations')}>
             <CheckCircle size={20} strokeWidth={1} />
           </button>
           <button
             className={`toolbar-btn ${showSuggestions ? 'active' : ''}`}
             onClick={toggleSuggestions}
-            title="Suggestions de citations"
+            title={t('toolbar.citation')}
           >
             <Lightbulb size={20} strokeWidth={1} />
           </button>

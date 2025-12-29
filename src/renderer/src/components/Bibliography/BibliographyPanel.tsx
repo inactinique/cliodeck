@@ -111,12 +111,12 @@ export const BibliographyPanel: React.FC = () => {
       </CollapsibleSection>
 
       {/* Citation List */}
-      <CollapsibleSection title="Citations" defaultExpanded={true}>
+      <CollapsibleSection title={t('bibliography.title')} defaultExpanded={true}>
         <div className="bibliography-content">
           {filteredCitations.length === 0 ? (
             <div className="bibliography-empty">
-              <h4>Aucune citation</h4>
-              <p>Importez un fichier BibTeX pour commencer</p>
+              <h4>{t('bibliography.noCitations')}</h4>
+              <p>{t('bibliography.importPrompt')}</p>
             </div>
           ) : (
             <CitationList citations={filteredCitations} />
