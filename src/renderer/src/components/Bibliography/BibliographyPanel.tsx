@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Plus } from 'lucide-react';
 import { useBibliographyStore } from '../../stores/bibliographyStore';
 import { useProjectStore } from '../../stores/projectStore';
@@ -9,6 +10,7 @@ import { ZoteroImport } from './ZoteroImport';
 import './BibliographyPanel.css';
 
 export const BibliographyPanel: React.FC = () => {
+  const { t } = useTranslation('common');
   const currentProject = useProjectStore((state) => state.currentProject);
   const {
     filteredCitations,
@@ -63,7 +65,7 @@ export const BibliographyPanel: React.FC = () => {
     <div className="bibliography-panel">
       {/* Header */}
       <div className="bibliography-header">
-        <button className="toolbar-btn" onClick={handleImportBibTeX} title="Importer fichier BibTeX">
+        <button className="toolbar-btn" onClick={handleImportBibTeX} title={t('bibliography.import')}>
           <Plus size={20} strokeWidth={1} />
         </button>
       </div>
@@ -72,31 +74,31 @@ export const BibliographyPanel: React.FC = () => {
       <ZoteroImport />
 
       {/* Search & Filters */}
-      <CollapsibleSection title="Recherche et filtres" defaultExpanded={true}>
+      <CollapsibleSection title={t('bibliography.searchAndFilters')} defaultExpanded={true}>
         <div className="bibliography-controls">
           <div className="search-box">
             <span className="search-icon">🔍</span>
             <input
               type="text"
               className="search-input"
-              placeholder="Rechercher auteur, titre, année..."
+              placeholder={t('bibliography.searchPlaceholder')}
               value={searchQuery}
               onChange={(e) => searchCitations(e.target.value)}
             />
           </div>
 
           <div className="sort-controls">
-            <label className="sort-label">Trier par:</label>
+            <label className="sort-label">{t('bibliography.sortBy')}</label>
             <select
               className="sort-select"
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as 'author' | 'year' | 'title')}
             >
-              <option value="author">Auteur</option>
-              <option value="year">Année</option>
-              <option value="title">Titre</option>
+              <option value="author">{t('bibliography.author')}</option>
+              <option value="year">{t('bibliography.year')}</option>
+              <option value="title">{t('bibliography.titleField')}</option>
             </select>
-            <button className="sort-order-btn" onClick={toggleSortOrder} title="Ordre de tri">
+            <button className="sort-order-btn" onClick={toggleSortOrder} title={t('bibliography.sortBy')}>
               {sortOrder === 'asc' ? '↑' : '↓'}
             </button>
           </div>

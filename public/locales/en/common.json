@@ -70,7 +70,37 @@
     "title": "Project",
     "fillAllFields": "Please fill all fields",
     "createError": "Error creating project",
-    "openError": "Error opening project"
+    "openError": "Error opening project",
+    "newProject": "New project",
+    "openProject": "Open a project",
+    "closeProject": "Close project",
+    "currentProject": "Current project",
+    "recentProjects": "Recent projects",
+    "noProjectOpen": "No project open",
+    "createOrOpen": "Create a new project or open an existing one",
+    "createNewProject": "Create a new project",
+    "projectType": "Project type",
+    "projectName": "Project name",
+    "projectLocation": "Location",
+    "notesFolder": "Notes folder",
+    "notesFolderHelp": "Select an existing folder containing your Markdown files",
+    "creating": "Creating...",
+    "projectFiles": "Project files",
+    "appearance": "Appearance",
+    "removeFromRecent": "Remove from recent projects",
+    "dialogTitle": "mdFocus Project",
+    "allFiles": "All files",
+    "name": "Name",
+    "type": "Type",
+    "path": "Path",
+    "createdAt": "Created on",
+    "types": {
+      "article": "Article",
+      "book": "Book",
+      "presentation": "Presentation",
+      "notes": "Notes",
+      "notesExisting": "Notes (existing folder)"
+    }
   },
   "export": {
     "pdf": {

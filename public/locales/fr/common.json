@@ -72,7 +72,37 @@
     "title": "Projet",
     "fillAllFields": "Veuillez remplir tous les champs",
     "createError": "Erreur lors de la création du projet",
-    "openError": "Erreur lors de l'ouverture du projet"
+    "openError": "Erreur lors de l'ouverture du projet",
+    "newProject": "Nouveau projet",
+    "openProject": "Ouvrir un projet",
+    "closeProject": "Fermer le projet",
+    "currentProject": "Projet actuel",
+    "recentProjects": "Projets récents",
+    "noProjectOpen": "Aucun projet ouvert",
+    "createOrOpen": "Créez un nouveau projet ou ouvrez un projet existant",
+    "createNewProject": "Créer un nouveau projet",
+    "projectType": "Type de projet",
+    "projectName": "Nom du projet",
+    "projectLocation": "Emplacement",
+    "notesFolder": "Dossier de notes",
+    "notesFolderHelp": "Sélectionnez un dossier existant contenant vos fichiers Markdown",
+    "creating": "Création...",
+    "projectFiles": "Fichiers du projet",
+    "appearance": "Apparence",
+    "removeFromRecent": "Retirer des projets récents",
+    "dialogTitle": "Projet MDFocus",
+    "allFiles": "Tous les fichiers",
+    "name": "Nom",
+    "type": "Type",
+    "path": "Chemin",
+    "createdAt": "Créé le",
+    "types": {
+      "article": "Article",
+      "book": "Livre",
+      "presentation": "Présentation",
+      "notes": "Notes",
+      "notesExisting": "Notes (dossier existant)"
+    }
   },
   "export": {
     "pdf": {
