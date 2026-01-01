@@ -32,6 +32,14 @@ interface OllamaGenerateRequest {
   model: string;
   prompt: string;
   stream: boolean;
+  options?: {
+    temperature?: number;
+    top_p?: number;
+    top_k?: number;
+    repeat_penalty?: number;
+    seed?: number;
+    num_predict?: number;
+  };
 }
 
 interface OllamaGenerateResponse {
@@ -40,6 +48,32 @@ interface OllamaGenerateResponse {
 }
 
 // MARK: - OllamaClient
+
+// Presets de génération pour différents cas d'usage
+export const GENERATION_PRESETS = {
+  // Pour recherche académique (RECOMMANDÉ pour cohérence)
+  academic: {
+    temperature: 0.1,      // Quasi-déterministe
+    top_p: 0.85,          // Réduit la variance
+    top_k: 40,            // Limite les choix
+    repeat_penalty: 1.1,  // Évite les répétitions
+    seed: 42,             // Reproductible
+  },
+
+  // Pour brainstorming/créatif
+  creative: {
+    temperature: 0.8,
+    top_p: 0.95,
+    top_k: 80,
+    repeat_penalty: 1.0,
+  },
+
+  // Déterminisme absolu (debug)
+  deterministic: {
+    temperature: 0.0,     // Toujours exactement la même réponse
+    seed: 12345,
+  }
+};
 
 export class OllamaClient {
   private baseURL: string;
@@ -284,13 +318,15 @@ export class OllamaClient {
       model: this.chatModel,
       prompt: fullPrompt,
       stream: true,
+      options: GENERATION_PRESETS.academic, // Mode académique par défaut
     };
 
     console.log('🔍 [OLLAMA DEBUG] Calling Ollama API (no sources):', {
       url,
       model: this.chatModel,
       promptLength: fullPrompt.length,
-      contextCount: context.length
+      contextCount: context.length,
+      generationParams: request.options,
     });
 
     const response = await fetch(url, {
@@ -356,13 +392,15 @@ export class OllamaClient {
       model: this.chatModel,
       prompt: fullPrompt,
       stream: true,
+      options: GENERATION_PRESETS.academic, // Mode académique par défaut
     };
 
     console.log('🔍 [OLLAMA DEBUG] Calling Ollama API:', {
       url,
       model: this.chatModel,
       promptLength: fullPrompt.length,
-      sourceCount: sources.length
+      sourceCount: sources.length,
+      generationParams: request.options,
     });
 
     const response = await fetch(url, {

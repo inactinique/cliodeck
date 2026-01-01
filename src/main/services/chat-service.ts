@@ -12,6 +12,17 @@ interface EnrichedRAGOptions {
   window?: BrowserWindow;         // Fenêtre pour streaming
 }
 
+// Fonction utilitaire pour hasher une chaîne (identifier les questions identiques)
+function hashString(str: string): string {
+  let hash = 0;
+  const normalized = str.toLowerCase().trim();
+  for (let i = 0; i < normalized.length; i++) {
+    hash = ((hash << 5) - hash) + normalized.charCodeAt(i);
+    hash |= 0; // Convert to 32bit integer
+  }
+  return hash.toString(16);
+}
+
 class ChatService {
   private currentStream: any = null;
 
@@ -84,6 +95,9 @@ class ChatService {
     message: string,
     options: EnrichedRAGOptions = {}
   ): Promise<string> {
+    const startTime = Date.now();
+    const queryHash = hashString(message);
+
     try {
       // Obtenir le client Ollama
       const ollamaClient = pdfService.getOllamaClient();
@@ -97,10 +111,29 @@ class ChatService {
 
       // Si contexte activé, rechercher dans les documents
       if (options.context) {
-        // Use topK from options or let pdfService.search use the config default
-        console.log('🔍 [RAG DEBUG] Searching vector DB with query:', message.substring(0, 100));
+        const searchStart = Date.now();
+
+        console.log('🔍 [RAG DETAILED DEBUG] Starting RAG search:', {
+          query: message.substring(0, 100) + (message.length > 100 ? '...' : ''),
+          queryLength: message.length,
+          queryHash: queryHash,
+          topK: options.topK,
+          useGraphContext: options.useGraphContext,
+          includeSummaries: options.includeSummaries,
+          timestamp: new Date().toISOString(),
+        });
+
         searchResults = await pdfService.search(message, { topK: options.topK });
-        console.log('🔍 [RAG DEBUG] Search results count:', searchResults.length);
+        const searchDuration = Date.now() - searchStart;
+
+        console.log('🔍 [RAG DETAILED DEBUG] Search completed:', {
+          queryHash: queryHash,
+          resultsCount: searchResults.length,
+          searchDuration: `${searchDuration}ms`,
+          topSimilarities: searchResults.slice(0, 5).map(r => r.similarity.toFixed(4)),
+          chunkIds: searchResults.slice(0, 3).map(r => r.chunk.id),
+          documentTitles: searchResults.slice(0, 3).map(r => r.document.title),
+        });
 
         if (searchResults.length > 0) {
           console.log(`📚 Using ${searchResults.length} context chunks for RAG`);
@@ -154,6 +187,13 @@ class ChatService {
 
       // Stream la réponse avec contexte RAG si disponible
       if (searchResults.length > 0) {
+        console.log('✅ [RAG DETAILED DEBUG] Generating response WITH context:', {
+          queryHash: queryHash,
+          contextsUsed: searchResults.length,
+          avgSimilarity: (searchResults.reduce((sum, r) => sum + r.similarity, 0) / searchResults.length).toFixed(4),
+          mode: 'RAG_WITH_SOURCES',
+        });
+
         // Utiliser generateResponseStreamWithSources pour RAG
         const generator = ollamaClient.generateResponseStreamWithSources(message, searchResults);
         this.currentStream = generator;
@@ -166,8 +206,16 @@ class ChatService {
           }
         }
       } else {
-        // Utiliser generateResponseStream sans contexte
-        console.warn('⚠️  [RAG DEBUG] No search results - generating response WITHOUT context');
+        console.warn('⚠️  [RAG DETAILED DEBUG] No search results - generating response WITHOUT context');
+        console.warn('⚠️  [RAG DETAILED DEBUG] Fallback mode details:', {
+          queryHash: queryHash,
+          query: message.substring(0, 100),
+          contextRequested: options.context,
+          topK: options.topK,
+          mode: 'FALLBACK_NO_CONTEXT',
+          warning: 'This response will be GENERIC and NOT based on your documents!',
+        });
+
         const generator = ollamaClient.generateResponseStream(message, []);
         this.currentStream = generator;
 
@@ -180,10 +228,23 @@ class ChatService {
         }
       }
 
-      console.log(`✅ Chat response generated (${fullResponse.length} chars)`);
+      const totalDuration = Date.now() - startTime;
+
+      console.log('✅ [RAG DETAILED DEBUG] Chat response completed:', {
+        queryHash: queryHash,
+        responseLength: fullResponse.length,
+        totalDuration: `${totalDuration}ms`,
+        ragUsed: searchResults.length > 0,
+        timestamp: new Date().toISOString(),
+      });
+
       return fullResponse;
     } catch (error) {
-      console.error('❌ Chat error:', error);
+      console.error('❌ [RAG DETAILED DEBUG] Chat error:', {
+        queryHash: queryHash,
+        error: error.message,
+        stack: error.stack,
+      });
       throw error;
     }
   }

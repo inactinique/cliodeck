@@ -86,19 +86,60 @@ class PDFService {
   async search(query: string, options?: any) {
     this.ensureInitialized();
 
+    const searchStart = Date.now();
+
     // Generate embedding for the query using Ollama
+    console.log('🔍 [PDF-SERVICE DEBUG] Generating embedding for query:', {
+      queryLength: query.length,
+      queryPreview: query.substring(0, 50) + (query.length > 50 ? '...' : ''),
+    });
+
     const queryEmbedding = await this.ollamaClient!.generateEmbedding(query);
+    const embeddingDuration = Date.now() - searchStart;
+
+    console.log('🔍 [PDF-SERVICE DEBUG] Embedding generated:', {
+      embeddingDimensions: queryEmbedding.length,
+      embeddingDuration: `${embeddingDuration}ms`,
+      embeddingPreview: Array.from(queryEmbedding.slice(0, 5)).map(v => v.toFixed(4)),
+    });
 
     const ragConfig = configManager.getRAGConfig();
+    const topK = options?.topK || ragConfig.topK;
+
+    console.log('🔍 [PDF-SERVICE DEBUG] Searching vector store:', {
+      topK: topK,
+      documentIdsFilter: options?.documentIds?.length || 'none',
+    });
+
+    const vectorSearchStart = Date.now();
     const results = this.vectorStore!.search(
       queryEmbedding,
-      options?.topK || ragConfig.topK,
+      topK,
       options?.documentIds
     );
+    const vectorSearchDuration = Date.now() - vectorSearchStart;
 
     // Filter by similarity threshold
     const threshold = options?.threshold || ragConfig.similarityThreshold;
-    return results.filter(r => r.similarity >= threshold);
+    const filteredResults = results.filter(r => r.similarity >= threshold);
+
+    console.log('🔍 [PDF-SERVICE DEBUG] Search results:', {
+      totalResults: results.length,
+      filteredResults: filteredResults.length,
+      threshold: threshold,
+      vectorSearchDuration: `${vectorSearchDuration}ms`,
+      allSimilarities: results.map(r => r.similarity.toFixed(4)),
+      filteredSimilarities: filteredResults.map(r => r.similarity.toFixed(4)),
+      belowThresholdCount: results.length - filteredResults.length,
+    });
+
+    if (filteredResults.length === 0 && results.length > 0) {
+      console.warn('⚠️  [PDF-SERVICE DEBUG] All results filtered out by threshold!');
+      console.warn('⚠️  [PDF-SERVICE DEBUG] Consider lowering threshold from', threshold);
+      console.warn('⚠️  [PDF-SERVICE DEBUG] Best similarity was:', results[0]?.similarity.toFixed(4));
+    }
+
+    return filteredResults;
   }
 
   async getAllDocuments() {
