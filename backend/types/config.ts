@@ -42,6 +42,7 @@ export interface AppConfig {
   zotero?: ZoteroConfig;
   editor: EditorConfig;
   recentProjects: string[];
+  language?: 'fr' | 'en' | 'de';
 }
 
 export const DEFAULT_CONFIG: AppConfig = {
@@ -69,4 +70,5 @@ export const DEFAULT_CONFIG: AppConfig = {
     showMinimap: true,
   },
   recentProjects: [],
+  language: 'fr',
 };

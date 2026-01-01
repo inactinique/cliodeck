@@ -8,10 +8,10 @@
 :root {
   /* Comfortable mode (default) */
   --spacing-xs: 0.25rem;
-  --spacing-sm: 0.5rem;
-  --spacing-md: 0.75rem;
-  --spacing-lg: 1rem;
-  --spacing-xl: 1.5rem;
+  --spacing-sm: 0.25rem;
+  --spacing-md: 0.40rem;
+  --spacing-lg: 0.5rem;
+  --spacing-xl: 0.75rem;
 
   --item-padding-vertical: 0.5rem;
   --item-padding-horizontal: 0.75rem;

@@ -1,4 +1,4 @@
-import { app, BrowserWindow } from 'electron';
+import { app, BrowserWindow, ipcMain } from 'electron';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { existsSync } from 'fs';
@@ -6,6 +6,7 @@ import { setupIPCHandlers } from './ipc/handlers.js';
 import { configManager } from './services/config-manager.js';
 import { pdfService } from './services/pdf-service.js';
 import { setupApplicationMenu } from './menu.js';
+import { loadMenuTranslations, setLanguage } from './i18n.js';
 
 // Obtenir __dirname en ES modules
 const __filename = fileURLToPath(import.meta.url);
@@ -55,6 +56,23 @@ app.whenReady().then(async () => {
   console.log('🔧 Initializing configManager...');
   await configManager.init();
   console.log('✅ configManager initialized');
+
+  // Charger les traductions des menus
+  loadMenuTranslations();
+
+  // Charger la langue depuis la configuration
+  const savedLanguage = configManager.get('language');
+  if (savedLanguage && ['fr', 'en', 'de'].includes(savedLanguage)) {
+    setLanguage(savedLanguage);
+  }
+
+  // Écouter les changements de langue pour mettre à jour le menu
+  ipcMain.on('language-changed', (_event, language: 'fr' | 'en' | 'de') => {
+    setLanguage(language);
+    if (mainWindow) {
+      setupApplicationMenu(mainWindow);
+    }
+  });
 
   // Note: pdfService is now project-scoped and initialized on-demand
   // via IPC handlers when a project is loaded (not at app startup)

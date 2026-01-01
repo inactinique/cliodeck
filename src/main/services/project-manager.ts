@@ -13,7 +13,6 @@ interface Project {
   createdAt: string;
   updatedAt: string;
   lastOpenedAt?: string;
-  content?: string;
   bibliography?: string;
   bibliographySource?: {
     type: 'file' | 'zotero';
@@ -70,7 +69,6 @@ export class ProjectManager {
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       lastOpenedAt: new Date().toISOString(),
-      content: data.content || '',
     };
 
     // For notes type, don't create project.json, just remember the folder
@@ -194,12 +192,6 @@ N'oubliez pas de mentionner les perspectives futures.
 
       // Update lastOpenedAt
       project.lastOpenedAt = new Date().toISOString();
-
-      // Load markdown content
-      const mdFile = path.join(path.dirname(projectPath), 'document.md');
-      if (existsSync(mdFile)) {
-        project.content = await readFile(mdFile, 'utf-8');
-      }
 
       // Load bibliography if configured
       console.log('🔍 Checking for bibliography source:', project.bibliographySource);

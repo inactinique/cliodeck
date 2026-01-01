@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { RotateCcw, Save } from 'lucide-react';
 import { RAGConfigSection } from './RAGConfigSection';
 import { LLMConfigSection } from './LLMConfigSection';
 import { EditorConfigSection, type EditorConfig } from './EditorConfigSection';
 import { UIConfigSection } from './UIConfigSection';
+import { LanguageConfigSection } from './LanguageConfigSection';
 import { ActionsSection } from './ActionsSection';
 import { ZoteroConfigSection, type ZoteroConfig } from './ZoteroConfigSection';
+import { SuggestionsConfigSection, type SuggestionsConfig } from './SuggestionsConfigSection';
 import { useEditorStore } from '../../stores/editorStore';
 import './ConfigPanel.css';
 
@@ -39,6 +42,7 @@ export interface LLMConfig {
 }
 
 export const ConfigPanel: React.FC = () => {
+  const { t } = useTranslation('common');
   const { settings: editorSettings, updateSettings } = useEditorStore();
 
   const [ragConfig, setRagConfig] = useState<RAGConfig>({
@@ -74,6 +78,16 @@ export const ConfigPanel: React.FC = () => {
     autoSync: false,
   });
 
+  const [suggestionsConfig, setSuggestionsConfig] = useState<SuggestionsConfig>({
+    enableCitationSuggestions: true,
+    citationSuggestionDelay: 500,
+    maxCitationSuggestions: 5,
+    enableReformulationSuggestions: false,
+    reformulationDelay: 2000,
+    reformulationMinWords: 10,
+    showSuggestionsInline: true,
+  });
+
   const [availableModels, setAvailableModels] = useState<string[]>([]);
   const [isSaving, setIsSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState('');
@@ -99,11 +113,13 @@ export const ConfigPanel: React.FC = () => {
       const llm = await window.electron.config.get('llm');
       const editor = await window.electron.config.get('editor');
       const zotero = await window.electron.config.get('zotero');
+      const suggestions = await window.electron.config.get('suggestions');
 
       if (rag) setRagConfig(rag);
       if (llm) setLLMConfig(llm);
       if (editor) setEditorConfig(editor);
       if (zotero) setZoteroConfig(zotero);
+      if (suggestions) setSuggestionsConfig(suggestions);
     } catch (error) {
       console.error('Failed to load config:', error);
     }
@@ -118,6 +134,7 @@ export const ConfigPanel: React.FC = () => {
       await window.electron.config.set('llm', llmConfig);
       await window.electron.config.set('editor', editorConfig);
       await window.electron.config.set('zotero', zoteroConfig);
+      await window.electron.config.set('suggestions', suggestionsConfig);
 
       // Update editorStore with new settings
       updateSettings({
@@ -127,18 +144,18 @@ export const ConfigPanel: React.FC = () => {
         fontFamily: editorConfig.fontFamily,
       });
 
-      setSaveMessage('✅ Configuration sauvegardée');
+      setSaveMessage('✅ ' + t('settings.saved'));
       setTimeout(() => setSaveMessage(''), 3000);
     } catch (error) {
       console.error('Failed to save config:', error);
-      setSaveMessage('❌ Erreur lors de la sauvegarde');
+      setSaveMessage('❌ ' + t('settings.saveError'));
     } finally {
       setIsSaving(false);
     }
   };
 
   const handleResetConfig = async () => {
-    if (!window.confirm('Réinitialiser la configuration aux valeurs par défaut ?')) {
+    if (!window.confirm(t('settings.resetConfirm'))) {
       return;
     }
 
@@ -168,6 +185,15 @@ export const ConfigPanel: React.FC = () => {
         showMinimap: true,
         fontFamily: 'system',
       });
+      setSuggestionsConfig({
+        enableCitationSuggestions: true,
+        citationSuggestionDelay: 500,
+        maxCitationSuggestions: 5,
+        enableReformulationSuggestions: false,
+        reformulationDelay: 2000,
+        reformulationMinWords: 10,
+        showSuggestionsInline: true,
+      });
 
       await handleSaveConfig();
     } catch (error) {
@@ -183,7 +209,7 @@ export const ConfigPanel: React.FC = () => {
           <button
             className="toolbar-btn"
             onClick={handleResetConfig}
-            title="Réinitialiser"
+            title={t('settings.tooltipReset')}
           >
             <RotateCcw size={20} strokeWidth={1} />
           </button>
@@ -191,7 +217,7 @@ export const ConfigPanel: React.FC = () => {
             className="toolbar-btn"
             onClick={handleSaveConfig}
             disabled={isSaving}
-            title={isSaving ? 'Sauvegarde...' : 'Sauvegarder'}
+            title={isSaving ? t('settings.saving') : t('settings.tooltipSave')}
           >
             <Save size={20} strokeWidth={1} />
           </button>
@@ -200,6 +226,13 @@ export const ConfigPanel: React.FC = () => {
 
       <div className="config-content">
         <UIConfigSection />
+
+        <LanguageConfigSection />
+
+        <SuggestionsConfigSection
+          config={suggestionsConfig}
+          onChange={setSuggestionsConfig}
+        />
 
         <RAGConfigSection
           config={ragConfig}

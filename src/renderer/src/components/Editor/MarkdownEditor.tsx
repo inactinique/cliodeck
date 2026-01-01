@@ -2,10 +2,12 @@ import React, { useRef, useEffect } from 'react';
 import Editor, { OnMount } from '@monaco-editor/react';
 import type { editor } from 'monaco-editor';
 import { useEditorStore } from '../../stores/editorStore';
+import { useBibliographyStore } from '../../stores/bibliographyStore';
 import './MarkdownEditor.css';
 
 export const MarkdownEditor: React.FC = () => {
   const { content, setContent, settings } = useEditorStore();
+  const { citations } = useBibliographyStore();
   const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null);
 
   // Listen for insert text commands from bibliography
@@ -44,6 +46,48 @@ export const MarkdownEditor: React.FC = () => {
       wordPattern: /(-?\d*\.\d\w*)|([^\`\~\!\@\#\%\^\&\*\(\)\-\=\+\[\{\]\}\\\|\;\:\'\"\,\.\<\>\/\?\s]+)/g,
     });
 
+    // Add keyboard shortcuts for formatting
+    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyB, () => {
+      useEditorStore.getState().insertFormatting('bold');
+    });
+
+    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyI, () => {
+      useEditorStore.getState().insertFormatting('italic');
+    });
+
+    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyL, () => {
+      useEditorStore.getState().insertFormatting('link');
+    });
+
+    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Quote, () => {
+      useEditorStore.getState().insertFormatting('citation');
+    });
+
+    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.KeyT, () => {
+      useEditorStore.getState().insertFormatting('table');
+    });
+
+    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.KeyF, () => {
+      useEditorStore.getState().insertFormatting('footnote');
+    });
+
+    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.KeyQ, () => {
+      useEditorStore.getState().insertFormatting('blockquote');
+    });
+
+    // Preview disabled
+    // editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyK, () => {
+    //   useEditorStore.getState().togglePreview();
+    // });
+
+    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.KeyS, () => {
+      useEditorStore.getState().toggleStats();
+    });
+
+    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.KeyL, () => {
+      useEditorStore.getState().toggleSuggestions();
+    });
+
     // Add custom citation autocomplete
     monaco.languages.registerCompletionItemProvider('markdown', {
       provideCompletionItems: (model, position) => {
@@ -64,17 +108,43 @@ export const MarkdownEditor: React.FC = () => {
         });
 
         if (textUntilPosition.endsWith('[@')) {
-          // TODO: Get citations from bibliography store
+          // Get citations from bibliography store (using getState for non-React context)
+          const currentCitations = useBibliographyStore.getState().citations;
+
+          if (currentCitations.length === 0) {
+            return {
+              suggestions: [
+                {
+                  label: 'Aucune citation',
+                  kind: monaco.languages.CompletionItemKind.Text,
+                  insertText: '',
+                  range: range,
+                  documentation: 'Importez votre bibliographie depuis le panneau Bibliographie',
+                },
+              ],
+            };
+          }
+
+          const citationSuggestions = currentCitations.map(citation => {
+            const documentationText = [
+              `${citation.author} (${citation.year})`,
+              citation.title,
+              citation.journal || citation.publisher || citation.booktitle || '',
+            ].filter(Boolean).join('\n');
+
+            return {
+              label: `@${citation.id}`,
+              kind: monaco.languages.CompletionItemKind.Reference,
+              insertText: `${citation.id}]`,
+              range: range,
+              documentation: documentationText,
+              detail: citation.shortTitle || citation.title,
+              sortText: `${citation.author}_${citation.year}`,
+            };
+          });
+
           return {
-            suggestions: [
-              {
-                label: '@author2023',
-                kind: monaco.languages.CompletionItemKind.Reference,
-                insertText: 'author2023]',
-                range: range,
-                documentation: 'Author (2023) - Title',
-              },
-            ],
+            suggestions: citationSuggestions,
           };
         }
 

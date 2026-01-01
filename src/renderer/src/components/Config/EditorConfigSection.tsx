@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { CollapsibleSection } from '../common/CollapsibleSection';
 
 export interface EditorConfig {
@@ -14,19 +15,20 @@ interface EditorConfigSectionProps {
 }
 
 export const EditorConfigSection: React.FC<EditorConfigSectionProps> = ({ config, onChange }) => {
+  const { t } = useTranslation('common');
 
   const handleFieldChange = (field: keyof EditorConfig, value: any) => {
     onChange({ ...config, [field]: value });
   };
 
   return (
-    <CollapsibleSection title="Configuration Éditeur" defaultExpanded={false}>
+    <CollapsibleSection title={t('editor.title')} defaultExpanded={false}>
       <div className="config-section">
         <div className="config-section-content">
           {/* Font Size */}
           <div className="config-field">
             <label className="config-label">
-              Taille de police
+              {t('editor.fontSize')}
               <span className="config-help">
                 Taille du texte dans l'éditeur Markdown (Monaco Editor)
               </span>
@@ -65,7 +67,7 @@ export const EditorConfigSection: React.FC<EditorConfigSectionProps> = ({ config
                 onChange={(e) => handleFieldChange('wordWrap', e.target.checked)}
                 style={{ marginRight: '8px' }}
               />
-              Retour à la ligne automatique
+              {t('editor.wordWrap')}
               <span className="config-help">
                 Les longues lignes sont automatiquement coupées pour rester visibles
               </span>
@@ -81,7 +83,7 @@ export const EditorConfigSection: React.FC<EditorConfigSectionProps> = ({ config
                 onChange={(e) => handleFieldChange('showMinimap', e.target.checked)}
                 style={{ marginRight: '8px' }}
               />
-              Afficher la minimap
+              {t('editor.minimap')}
               <span className="config-help">
                 Barre de défilement avec aperçu miniature du document (comme dans VS Code)
               </span>
@@ -91,7 +93,7 @@ export const EditorConfigSection: React.FC<EditorConfigSectionProps> = ({ config
           {/* Font Family */}
           <div className="config-field">
             <label className="config-label">
-              Police de caractères
+              {t('editor.fontFamily')}
               <span className="config-help">
                 Choisissez la police pour l'éditeur de code
               </span>

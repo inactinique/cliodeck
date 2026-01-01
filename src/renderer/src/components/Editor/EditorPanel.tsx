@@ -1,18 +1,51 @@
 import React from 'react';
-import { FileText, FolderOpen, Save, Link, BookOpen, Eye, Table } from 'lucide-react';
-import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
+import { useTranslation } from 'react-i18next';
+import { FileText, FolderOpen, Save, Link, BookOpen, Table, Superscript, Quote, CheckCircle, Lightbulb } from 'lucide-react';
+// import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import { MarkdownEditor } from './MarkdownEditor';
-import { MarkdownPreview } from './MarkdownPreview';
+// import { MarkdownPreview } from './MarkdownPreview';
+import { DocumentStats } from './DocumentStats';
+import { CitationSuggestionsPanel } from './CitationSuggestionsPanel';
+// import { ContextualSuggestions } from './ContextualSuggestions';
 import { useEditorStore } from '../../stores/editorStore';
+import { useBibliographyStore } from '../../stores/bibliographyStore';
 import { logger } from '../../utils/logger';
 import './EditorPanel.css';
 
 export const EditorPanel: React.FC = () => {
-  const { showPreview, togglePreview, settings, loadFile, saveFile, setContent } = useEditorStore();
+  const { t } = useTranslation('common');
+  const { showSuggestions, toggleSuggestions, loadFile, saveFile, setContent, content, insertFormatting } = useEditorStore();
+  const { citations } = useBibliographyStore();
+
+  // Suggestions config - disabled while ContextualSuggestions is disabled
+  // const [suggestionsConfig, setSuggestionsConfig] = React.useState({
+  //   enableCitationSuggestions: true,
+  //   citationSuggestionDelay: 500,
+  //   maxCitationSuggestions: 5,
+  //   enableReformulationSuggestions: false,
+  //   reformulationDelay: 2000,
+  //   reformulationMinWords: 10,
+  //   showSuggestionsInline: true,
+  // });
+
+  // Load suggestions config on mount
+  // React.useEffect(() => {
+  //   const loadSuggestionsConfig = async () => {
+  //     try {
+  //       const config = await window.electron.config.get('suggestions');
+  //       if (config) {
+  //         setSuggestionsConfig(config);
+  //       }
+  //     } catch (error) {
+  //       console.error('Failed to load suggestions config:', error);
+  //     }
+  //   };
+  //   loadSuggestionsConfig();
+  // }, []);
 
   const handleNewFile = () => {
     logger.component('EditorPanel', 'handleNewFile clicked');
-    if (window.confirm('Créer un nouveau fichier ? Les modifications non sauvegardées seront perdues.')) {
+    if (window.confirm(t('toolbar.newFileConfirm'))) {
       setContent('');
       logger.component('EditorPanel', 'New file created');
     }
@@ -24,8 +57,8 @@ export const EditorPanel: React.FC = () => {
       const result = await window.electron.dialog.openFile({
         properties: ['openFile'],
         filters: [
-          { name: 'Markdown', extensions: ['md', 'markdown'] },
-          { name: 'Tous les fichiers', extensions: ['*'] },
+          { name: t('toolbar.markdown'), extensions: ['md', 'markdown'] },
+          { name: t('project.allFiles'), extensions: ['*'] },
         ],
       });
 
@@ -36,7 +69,7 @@ export const EditorPanel: React.FC = () => {
       }
     } catch (error) {
       logger.error('EditorPanel', error);
-      alert('Erreur lors de l\'ouverture du fichier');
+      alert(t('toolbar.openError'));
     }
   };
 
@@ -51,8 +84,8 @@ export const EditorPanel: React.FC = () => {
         logger.component('EditorPanel', 'No file path, showing save dialog');
         const result = await window.electron.dialog.saveFile({
           filters: [
-            { name: 'Markdown', extensions: ['md'] },
-            { name: 'Tous les fichiers', extensions: ['*'] },
+            { name: t('toolbar.markdown'), extensions: ['md'] },
+            { name: t('project.allFiles'), extensions: ['*'] },
           ],
         });
 
@@ -63,40 +96,71 @@ export const EditorPanel: React.FC = () => {
         }
       } else {
         logger.error('EditorPanel', error);
-        alert('Erreur lors de la sauvegarde du fichier');
+        alert(t('toolbar.saveError'));
       }
     }
   };
 
   const handleBold = () => {
     logger.component('EditorPanel', 'handleBold clicked');
-    useEditorStore.getState().insertText('**texte en gras**');
+    insertFormatting('bold');
   };
 
   const handleItalic = () => {
     logger.component('EditorPanel', 'handleItalic clicked');
-    useEditorStore.getState().insertText('*texte en italique*');
+    insertFormatting('italic');
   };
 
   const handleLink = () => {
     logger.component('EditorPanel', 'handleLink clicked');
-    useEditorStore.getState().insertText('[texte du lien](url)');
+    insertFormatting('link');
   };
 
   const handleCitation = () => {
     logger.component('EditorPanel', 'handleCitation clicked');
-    useEditorStore.getState().insertText('[@citationKey]');
+    insertFormatting('citation');
   };
 
   const handleTable = () => {
     logger.component('EditorPanel', 'handleTable clicked');
-    const tableTemplate = `
-| Colonne 1 | Colonne 2 | Colonne 3 |
-|-----------|-----------|-----------|
-| Cellule 1 | Cellule 2 | Cellule 3 |
-| Cellule 4 | Cellule 5 | Cellule 6 |
-`;
-    useEditorStore.getState().insertText(tableTemplate);
+    insertFormatting('table');
+  };
+
+  const handleFootnote = () => {
+    logger.component('EditorPanel', 'handleFootnote clicked');
+    insertFormatting('footnote');
+  };
+
+  const handleBlockQuote = () => {
+    logger.component('EditorPanel', 'handleBlockQuote clicked');
+    insertFormatting('blockquote');
+  };
+
+  const handleCheckCitations = () => {
+    logger.component('EditorPanel', 'handleCheckCitations clicked');
+    // Extract all citations from content
+    const citationMatches = content.match(/\[@([^\]]+)\]/g) || [];
+    const citedKeys = citationMatches.map(match => match.replace(/\[@|]/g, ''));
+
+    // Get all available citation keys
+    const availableKeys = citations.map(c => c.id);
+
+    // Find missing citations
+    const missingCitations = citedKeys.filter(key => !availableKeys.includes(key));
+    const duplicateCitations = citedKeys.filter((key, index) => citedKeys.indexOf(key) !== index);
+
+    if (missingCitations.length === 0 && duplicateCitations.length === 0) {
+      alert('✅ Toutes les citations sont valides !');
+    } else {
+      let message = '';
+      if (missingCitations.length > 0) {
+        message += `❌ Citations manquantes dans la bibliographie:\n${missingCitations.join(', ')}\n\n`;
+      }
+      if (duplicateCitations.length > 0) {
+        message += `⚠️ Citations en double:\n${[...new Set(duplicateCitations)].join(', ')}`;
+      }
+      alert(message);
+    }
   };
 
   return (
@@ -104,35 +168,58 @@ export const EditorPanel: React.FC = () => {
       {/* Toolbar */}
       <div className="editor-toolbar">
         <div className="toolbar-section">
-          <button className="toolbar-btn" onClick={handleNewFile} title="Nouveau fichier">
+          <button className="toolbar-btn" onClick={handleNewFile} title={t('toolbar.newFile')}>
             <FileText size={20} strokeWidth={1} />
           </button>
-          <button className="toolbar-btn" onClick={handleOpenFile} title="Ouvrir">
+          <button className="toolbar-btn" onClick={handleOpenFile} title={t('toolbar.open')}>
             <FolderOpen size={20} strokeWidth={1} />
           </button>
-          <button className="toolbar-btn" onClick={handleSaveFile} title="Enregistrer">
+          <button className="toolbar-btn" onClick={handleSaveFile} title={t('toolbar.save')}>
             <Save size={20} strokeWidth={1} />
           </button>
         </div>
 
         <div className="toolbar-section">
-          <button className="toolbar-btn" onClick={handleBold} title="Gras">
+          <button className="toolbar-btn" onClick={handleBold} title={t('toolbar.bold')}>
             <strong>B</strong>
           </button>
-          <button className="toolbar-btn" onClick={handleItalic} title="Italique">
+          <button className="toolbar-btn" onClick={handleItalic} title={t('toolbar.italic')}>
             <em>I</em>
           </button>
-          <button className="toolbar-btn" onClick={handleLink} title="Lien">
+          <button className="toolbar-btn" onClick={handleLink} title={t('toolbar.link')}>
             <Link size={20} strokeWidth={1} />
           </button>
-          <button className="toolbar-btn" onClick={handleCitation} title="Citation">
+          <button className="toolbar-btn" onClick={handleCitation} title={t('toolbar.citation')}>
             <BookOpen size={20} strokeWidth={1} />
           </button>
-          <button className="toolbar-btn" onClick={handleTable} title="Insérer un tableau">
+          <button className="toolbar-btn" onClick={handleTable} title={t('toolbar.table')}>
             <Table size={20} strokeWidth={1} />
           </button>
         </div>
 
+        <div className="toolbar-section">
+          <button className="toolbar-btn" onClick={handleFootnote} title={t('toolbar.footnote')}>
+            <Superscript size={20} strokeWidth={1} />
+          </button>
+          <button className="toolbar-btn" onClick={handleBlockQuote} title={t('toolbar.blockquote')}>
+            <Quote size={20} strokeWidth={1} />
+          </button>
+        </div>
+
+        <div className="toolbar-section">
+          <button className="toolbar-btn" onClick={handleCheckCitations} title={t('toolbar.checkCitations')}>
+            <CheckCircle size={20} strokeWidth={1} />
+          </button>
+          <button
+            className={`toolbar-btn ${showSuggestions ? 'active' : ''}`}
+            onClick={toggleSuggestions}
+            title={t('toolbar.citation')}
+          >
+            <Lightbulb size={20} strokeWidth={1} />
+          </button>
+        </div>
+
+        {/* Preview button - disabled
         <div className="toolbar-section">
           <button
             className={`toolbar-btn ${showPreview ? 'active' : ''}`}
@@ -142,26 +229,32 @@ export const EditorPanel: React.FC = () => {
             <Eye size={20} strokeWidth={1} />
           </button>
         </div>
+        */}
       </div>
 
-      {/* Editor + Preview */}
-      <div className="editor-content">
-        {showPreview ? (
-          <PanelGroup direction="horizontal">
-            <Panel defaultSize={50} minSize={30}>
-              <MarkdownEditor />
-            </Panel>
+      {/* Editor with optional suggestions panel */}
+      <div className="editor-content" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+        <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
+          <div style={{ flex: showSuggestions ? '1 1 70%' : '1 1 100%', overflow: 'auto' }}>
+            <MarkdownEditor />
+          </div>
+          {showSuggestions && (
+            <div style={{ flex: '0 0 30%', minWidth: '300px', maxWidth: '400px' }}>
+              <CitationSuggestionsPanel />
+            </div>
+          )}
+        </div>
 
-            <PanelResizeHandle className="editor-resize-handle" />
-
-            <Panel defaultSize={50} minSize={30}>
-              <MarkdownPreview />
-            </Panel>
-          </PanelGroup>
-        ) : (
-          <MarkdownEditor />
-        )}
+        {/* Stats bar (always visible at the bottom) */}
+        <DocumentStats />
       </div>
+
+      {/* Contextual Suggestions - Disabled (overlay issues)
+      <ContextualSuggestions
+        content={content}
+        suggestionsConfig={suggestionsConfig}
+      />
+      */}
     </div>
   );
 };

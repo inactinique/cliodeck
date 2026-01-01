@@ -1,4 +1,5 @@
 import React, { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { marked } from 'marked';
 import { ChatMessage } from '../../stores/chatStore';
 import { SourceCard } from './SourceCard';
@@ -10,6 +11,7 @@ interface MessageBubbleProps {
 }
 
 export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isStreaming = false }) => {
+  const { t } = useTranslation('common');
   const isUser = message.role === 'user';
 
   // Parse markdown for assistant messages
@@ -38,7 +40,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isStreami
     <div className={`message-bubble ${isUser ? 'user' : 'assistant'}`}>
       <div className="message-header">
         <span className="message-avatar">{isUser ? '👤' : '🤖'}</span>
-        <span className="message-role">{isUser ? 'Vous' : 'Assistant'}</span>
+        <span className="message-role">{isUser ? t('chat.you') : t('chat.assistant')}</span>
         <span className="message-time">{formatTime(message.timestamp)}</span>
         {isStreaming && <span className="streaming-indicator">●</span>}
       </div>
@@ -59,7 +61,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isStreami
         <div className="message-sources">
           <div className="sources-header">
             <span className="sources-icon">📚</span>
-            <span className="sources-title">Sources ({message.sources.length})</span>
+            <span className="sources-title">{t('chat.sources')} ({message.sources.length})</span>
           </div>
           <div className="sources-list">
             {message.sources.map((source, index) => (

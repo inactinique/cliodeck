@@ -115,13 +115,29 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
       }
 
       // Load document.md into editor if it's not a notes project
-      if (project.type !== 'notes' && project.content) {
+      if (project.type !== 'notes') {
         try {
           const { useEditorStore } = await import('./editorStore');
-          useEditorStore.getState().setContent(project.content);
-          console.log('📝 Document loaded into editor');
+
+          // Construct path to document.md
+          const documentPath = `${project.path}/document.md`;
+
+          // Use loadFile instead of setContent to track file path
+          await useEditorStore.getState().loadFile(documentPath);
+          console.log('📝 Document loaded into editor with path tracking');
         } catch (error) {
           console.error('Failed to load document into editor:', error);
+
+          // If document.md doesn't exist, create it
+          try {
+            const { useEditorStore } = await import('./editorStore');
+            const documentPath = `${project.path}/document.md`;
+            await window.electron.fs.writeFile(documentPath, `# ${project.name}\n`);
+            await useEditorStore.getState().loadFile(documentPath);
+            console.log('📝 Created and loaded document.md');
+          } catch (createError) {
+            console.error('Failed to create document.md:', createError);
+          }
         }
       }
 

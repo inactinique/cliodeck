@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { FilePlus, FolderOpen, X, FileDown } from 'lucide-react';
 import { useProjectStore } from '../../stores/projectStore';
 import { useEditorStore } from '../../stores/editorStore';
@@ -9,6 +10,7 @@ import { BeamerConfig } from './BeamerConfig';
 import './ProjectPanel.css';
 
 export const ProjectPanel: React.FC = () => {
+  const { t } = useTranslation('common');
   const {
     currentProject,
     recentProjects,
@@ -38,7 +40,7 @@ export const ProjectPanel: React.FC = () => {
       : newProjectName;
 
     if ((newProjectType !== 'notes' && !newProjectName) || !newProjectPath) {
-      alert('Veuillez remplir tous les champs');
+      alert(t('project.fillAllFields'));
       return;
     }
 
@@ -51,7 +53,7 @@ export const ProjectPanel: React.FC = () => {
       setNewProjectType('article');
     } catch (error: any) {
       console.error('Failed to create project:', error);
-      alert('Erreur lors de la création du projet: ' + error.message);
+      alert(t('project.createError') + ': ' + error.message);
     } finally {
       setIsCreating(false);
     }
@@ -62,8 +64,8 @@ export const ProjectPanel: React.FC = () => {
       const result = await window.electron.dialog.openFile({
         properties: ['openFile'],
         filters: [
-          { name: 'Projet MDFocus', extensions: ['json'] },
-          { name: 'Tous les fichiers', extensions: ['*'] },
+          { name: t('project.dialogTitle'), extensions: ['json'] },
+          { name: t('project.allFiles'), extensions: ['*'] },
         ],
       });
 
@@ -72,7 +74,7 @@ export const ProjectPanel: React.FC = () => {
       }
     } catch (error: any) {
       console.error('Failed to open project:', error);
-      alert('Erreur lors de l\'ouverture du projet: ' + error.message);
+      alert(t('project.openError') + ': ' + error.message);
     }
   };
 
@@ -101,7 +103,7 @@ export const ProjectPanel: React.FC = () => {
       await loadProject(projectPath);
     } catch (error: any) {
       console.error('Failed to load recent project:', error);
-      alert('Erreur lors de l\'ouverture du projet: ' + error.message);
+      alert(t('project.openError') + ': ' + error.message);
     }
   };
 
@@ -122,13 +124,13 @@ export const ProjectPanel: React.FC = () => {
   const getProjectTypeName = (type: string) => {
     switch (type) {
       case 'article':
-        return 'Article';
+        return t('project.types.article');
       case 'book':
-        return 'Livre';
+        return t('project.types.book');
       case 'presentation':
-        return 'Présentation';
+        return t('project.types.presentation');
       case 'notes':
-        return 'Notes';
+        return t('project.types.notes');
       default:
         return type;
     }
@@ -149,10 +151,10 @@ export const ProjectPanel: React.FC = () => {
         {/* Action Buttons */}
         <div className="project-actions">
           <div className="project-actions-left">
-            <button className="toolbar-btn" onClick={() => setShowCreateModal(true)} title="Nouveau projet">
+            <button className="toolbar-btn" onClick={() => setShowCreateModal(true)} title={t("project.newProject")}>
               <FilePlus size={20} strokeWidth={1} />
             </button>
-            <button className="toolbar-btn" onClick={handleOpenProject} title="Ouvrir un projet">
+            <button className="toolbar-btn" onClick={handleOpenProject} title={t("project.openProject")}>
               <FolderOpen size={20} strokeWidth={1} />
             </button>
           </div>
@@ -171,26 +173,26 @@ export const ProjectPanel: React.FC = () => {
         {/* Current Project Info */}
         {currentProject ? (
           <div className="current-project-info">
-            <CollapsibleSection title="Projet actuel" defaultExpanded={true}>
+            <CollapsibleSection title={t('project.currentProject')} defaultExpanded={true}>
               <div className="project-meta">
                 <div className="project-meta-row">
-                  <span className="project-meta-label">Nom:</span>
+                  <span className="project-meta-label">{t('project.name')}:</span>
                   <span>{currentProject.name}</span>
                 </div>
                 <div className="project-meta-row">
-                  <span className="project-meta-label">Type:</span>
+                  <span className="project-meta-label">{t('project.type')}:</span>
                   <span className="project-type-badge">
                     {getProjectTypeName(currentProject.type)}
                   </span>
                 </div>
                 <div className="project-meta-row">
-                  <span className="project-meta-label">Chemin:</span>
+                  <span className="project-meta-label">{t('project.path')}:</span>
                   <span title={currentProject.path} style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {currentProject.path}
                   </span>
                 </div>
                 <div className="project-meta-row">
-                  <span className="project-meta-label">Créé le:</span>
+                  <span className="project-meta-label">{t('project.createdAt')}:</span>
                   <span>{new Date(currentProject.createdAt).toLocaleDateString('fr-FR')}</span>
                 </div>
               </div>
@@ -198,14 +200,14 @@ export const ProjectPanel: React.FC = () => {
 
             {/* File Tree for Notes projects */}
             {currentProject.type === 'notes' && (
-              <CollapsibleSection title="Fichiers" defaultExpanded={true}>
+              <CollapsibleSection title={t('project.projectFiles')} defaultExpanded={true}>
                 <FileTree rootPath={currentProject.path} onFileSelect={handleFileSelect} />
               </CollapsibleSection>
             )}
 
             {/* File list for Article and Book projects */}
             {(currentProject.type === 'article' || currentProject.type === 'book') && (
-              <CollapsibleSection title="Fichiers du projet" defaultExpanded={true}>
+              <CollapsibleSection title={t('project.projectFiles')} defaultExpanded={true}>
                 <div className="project-files-list">
                   <div
                     className="project-file-item"
@@ -226,7 +228,7 @@ export const ProjectPanel: React.FC = () => {
             {/* File list for Presentation projects */}
             {currentProject.type === 'presentation' && (
               <>
-                <CollapsibleSection title="Fichiers du projet" defaultExpanded={true}>
+                <CollapsibleSection title={t('project.projectFiles')} defaultExpanded={true}>
                   <div className="project-files-list">
                     <div
                       className="project-file-item"
@@ -237,7 +239,7 @@ export const ProjectPanel: React.FC = () => {
                   </div>
                 </CollapsibleSection>
 
-                <CollapsibleSection title="Apparence" defaultExpanded={true}>
+                <CollapsibleSection title={t('project.appearance')} defaultExpanded={true}>
                   <BeamerConfig projectPath={currentProject.path} />
                 </CollapsibleSection>
               </>
@@ -248,19 +250,19 @@ export const ProjectPanel: React.FC = () => {
               onClick={closeProject}
               style={{ marginTop: '1rem', width: '100%' }}
             >
-              Fermer le projet
+              {t('project.closeProject')}
             </button>
           </div>
         ) : (
           <div className="empty-state">
-            <p>Aucun projet ouvert</p>
-            <p>Créez un nouveau projet ou ouvrez un projet existant</p>
+            <p>{t('project.noProjectOpen')}</p>
+            <p>{t('project.createOrOpen')}</p>
           </div>
         )}
 
         {/* Recent Projects */}
         {recentProjects.length > 0 && (
-          <CollapsibleSection title="Projets récents" defaultExpanded={false}>
+          <CollapsibleSection title={t('project.recentProjects')} defaultExpanded={false}>
             <div className="recent-projects-list">
               {recentProjects.map((project) => (
                 <div
@@ -282,7 +284,7 @@ export const ProjectPanel: React.FC = () => {
                       e.stopPropagation();
                       handleRemoveRecentProject(project);
                     }}
-                    title="Retirer des projets récents"
+                    title={t('project.removeFromRecent')}
                   >
                     <X size={16} />
                   </button>
@@ -297,24 +299,24 @@ export const ProjectPanel: React.FC = () => {
       {showCreateModal && (
         <div className="create-project-modal" onClick={() => setShowCreateModal(false)}>
           <div className="create-project-content" onClick={(e) => e.stopPropagation()}>
-            <h3>Créer un nouveau projet</h3>
+            <h3>{t('project.createNewProject')}</h3>
 
             <div className="form-field">
-              <label>Type de projet</label>
+              <label>{t('project.projectType')}</label>
               <select
                 value={newProjectType}
                 onChange={(e) => setNewProjectType(e.target.value as any)}
               >
-                <option value="article">Article</option>
-                <option value="book">Livre</option>
-                <option value="presentation">Présentation</option>
-                <option value="notes">Notes (dossier existant)</option>
+                <option value="article">{t('project.types.article')}</option>
+                <option value="book">{t('project.types.book')}</option>
+                <option value="presentation">{t('project.types.presentation')}</option>
+                <option value="notes">{t('project.types.notesExisting')}</option>
               </select>
             </div>
 
             {newProjectType !== 'notes' && (
               <div className="form-field">
-                <label>Nom du projet</label>
+                <label>{t('project.projectName')}</label>
                 <input
                   type="text"
                   value={newProjectName}
@@ -326,7 +328,7 @@ export const ProjectPanel: React.FC = () => {
             )}
 
             <div className="form-field">
-              <label>{newProjectType === 'notes' ? 'Dossier de notes' : 'Emplacement'}</label>
+              <label>{newProjectType === 'notes' ? t('project.notesFolder') : t('project.projectLocation')}</label>
               <div className="path-selector">
                 <input
                   type="text"
@@ -335,11 +337,11 @@ export const ProjectPanel: React.FC = () => {
                   placeholder={newProjectType === 'notes' ? '/chemin/vers/mes-notes' : '/chemin/vers/dossier'}
                   readOnly
                 />
-                <button onClick={handleSelectPath}>Parcourir</button>
+                <button onClick={handleSelectPath}>{t('actions.browse')}</button>
               </div>
               {newProjectType === 'notes' && (
                 <small style={{ display: 'block', marginTop: '0.5rem', color: '#888', fontSize: '0.75rem' }}>
-                  Sélectionnez un dossier existant contenant vos fichiers Markdown
+                  {t('project.notesFolderHelp')}
                 </small>
               )}
             </div>
@@ -350,14 +352,14 @@ export const ProjectPanel: React.FC = () => {
                 onClick={() => setShowCreateModal(false)}
                 disabled={isCreating}
               >
-                Annuler
+                {t('actions.cancel')}
               </button>
               <button
                 className="btn-submit"
                 onClick={handleCreateProject}
                 disabled={isCreating || (newProjectType !== 'notes' && !newProjectName) || !newProjectPath}
               >
-                {isCreating ? 'Création...' : 'Créer'}
+                {isCreating ? t('project.creating') : t('actions.create')}
               </button>
             </div>
           </div>

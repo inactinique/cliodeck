@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Trash2 } from 'lucide-react';
 import { useChatStore } from '../../stores/chatStore';
 import { MessageList } from './MessageList';
@@ -7,6 +8,7 @@ import './ChatInterface.css';
 import { logger } from '../../utils/logger';
 
 export const ChatInterface: React.FC = () => {
+  const { t } = useTranslation('common');
   const { messages, isProcessing, sendMessage, cancelGeneration, clearChat } = useChatStore();
   const [inputValue, setInputValue] = useState('');
 
@@ -35,7 +37,7 @@ export const ChatInterface: React.FC = () => {
 
   const handleClear = () => {
     logger.component('ChatInterface', 'handleClear called');
-    if (window.confirm('Effacer tout l\'historique de conversation ?')) {
+    if (window.confirm(t('chat.clearConfirm'))) {
       clearChat();
     }
   };
@@ -47,7 +49,7 @@ export const ChatInterface: React.FC = () => {
         <button
           className="toolbar-btn"
           onClick={handleClear}
-          title="Effacer l'historique"
+          title={t('chat.clearHistory')}
           disabled={messages.length === 0}
         >
           <Trash2 size={20} strokeWidth={1} />
@@ -58,8 +60,7 @@ export const ChatInterface: React.FC = () => {
       <div className="chat-messages">
         {messages.length === 0 ? (
           <div className="chat-empty">
-            <div className="empty-icon">💭</div>
-            <h4>Posez une question</h4>
+            <h4>{t('chat.askQuestion')}</h4>
             <p>
               L'assistant recherchera dans vos documents indexés pour vous fournir une réponse
               avec sources.

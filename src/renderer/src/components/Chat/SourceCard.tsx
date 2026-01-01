@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ChatSource } from '../../stores/chatStore';
 import './SourceCard.css';
 
@@ -8,6 +9,7 @@ interface SourceCardProps {
 }
 
 export const SourceCard: React.FC<SourceCardProps> = ({ source, index }) => {
+  const { t } = useTranslation('common');
   const [isExpanded, setIsExpanded] = useState(false);
 
   const handleOpenPDF = () => {
@@ -29,11 +31,11 @@ export const SourceCard: React.FC<SourceCardProps> = ({ source, index }) => {
   return (
     <div className="source-card">
       <div className="source-header" onClick={() => setIsExpanded(!isExpanded)}>
-        <div className="source-index">Source {index}</div>
+        <div className="source-index">{t('chat.source')} {index}</div>
         <div className="source-info">
           <div className="source-title">{formatReference()}</div>
           <div className="source-meta">
-            Page {source.pageNumber} • Similarité {formatSimilarity()}
+            {t('chat.page')} {source.pageNumber} • {t('chat.similarity')} {formatSimilarity()}
           </div>
         </div>
         <button className="source-expand-btn">
@@ -44,12 +46,12 @@ export const SourceCard: React.FC<SourceCardProps> = ({ source, index }) => {
       {isExpanded && (
         <div className="source-content">
           <div className="source-excerpt">
-            <div className="excerpt-label">Extrait:</div>
+            <div className="excerpt-label">{t('chat.excerpt')}</div>
             <p className="excerpt-text">{source.chunkContent}</p>
           </div>
           <div className="source-actions">
             <button className="source-action-btn" onClick={handleOpenPDF}>
-              📄 Ouvrir le PDF
+              📄 {t('chat.openPDF')}
             </button>
           </div>
         </div>

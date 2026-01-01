@@ -38,7 +38,11 @@ interface EditorState {
 
   insertText: (text: string) => void;
   insertCitation: (citationKey: string) => void;
-  insertFormatting: (type: 'bold' | 'italic' | 'link' | 'citation' | 'table') => void;
+  insertFormatting: (type: 'bold' | 'italic' | 'link' | 'citation' | 'table' | 'footnote' | 'blockquote') => void;
+
+  // Citation suggestions
+  showSuggestions: boolean;
+  toggleSuggestions: () => void;
 }
 
 // MARK: - Default settings
@@ -61,6 +65,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   isDirty: false,
   settings: DEFAULT_SETTINGS,
   showPreview: false,
+  showSuggestions: false,
 
   setContent: (content: string) => {
     set({
@@ -156,6 +161,12 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     }));
   },
 
+  toggleSuggestions: () => {
+    set((state) => ({
+      showSuggestions: !state.showSuggestions,
+    }));
+  },
+
   insertText: (text: string) => {
     set((state) => ({
       content: state.content + text,
@@ -181,7 +192,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     });
   },
 
-  insertFormatting: (type: 'bold' | 'italic' | 'link' | 'citation' | 'table') => {
+  insertFormatting: (type: 'bold' | 'italic' | 'link' | 'citation' | 'table' | 'footnote' | 'blockquote') => {
     logger.store('Editor', 'insertFormatting called', { type });
     const { content } = get();
     let textToInsert = '';
@@ -201,6 +212,15 @@ export const useEditorStore = create<EditorState>((set, get) => ({
         break;
       case 'table':
         textToInsert = '\n| Colonne 1 | Colonne 2 |\n|-----------|----------|\n| Cellule 1 | Cellule 2 |\n';
+        break;
+      case 'footnote':
+        // Count existing footnotes to get the next number
+        const footnoteMatches = content.match(/\[\^(\d+)\]/g) || [];
+        const nextNumber = footnoteMatches.length + 1;
+        textToInsert = `[^${nextNumber}]`;
+        break;
+      case 'blockquote':
+        textToInsert = '\n> Citation ou bloc de texte important\n> Continuation de la citation\n';
         break;
     }
 

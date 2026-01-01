@@ -1,4 +1,5 @@
 import React, { useRef, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import './MessageInput.css';
 
 interface MessageInputProps {
@@ -16,6 +17,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({
   onCancel,
   isProcessing,
 }) => {
+  const { t } = useTranslation('common');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // Auto-resize textarea
@@ -41,7 +43,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({
         <textarea
           ref={textareaRef}
           className="input-textarea"
-          placeholder="Posez une question sur vos documents..."
+          placeholder={t('chat.placeholder')}
           value={value}
           onChange={(e) => onChange(e.target.value)}
           onKeyDown={handleKeyDown}
@@ -50,7 +52,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({
         />
         <div className="input-actions">
           {isProcessing ? (
-            <button className="input-btn cancel-btn" onClick={onCancel} title="Annuler">
+            <button className="input-btn cancel-btn" onClick={onCancel} title={t('chat.cancel')}>
               ⏹️
             </button>
           ) : (
@@ -58,7 +60,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({
               className="input-btn send-btn"
               onClick={onSend}
               disabled={!value.trim()}
-              title="Envoyer (Enter)"
+              title={t('chat.send')}
             >
               ➤
             </button>
@@ -66,7 +68,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({
         </div>
       </div>
       <div className="input-hint">
-        {isProcessing ? 'Génération en cours...' : 'Shift + Enter pour nouvelle ligne'}
+        {isProcessing ? t('chat.generating') : t('chat.newLineHint')}
       </div>
     </div>
   );
