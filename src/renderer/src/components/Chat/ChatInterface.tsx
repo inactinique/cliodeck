@@ -4,6 +4,7 @@ import { Trash2 } from 'lucide-react';
 import { useChatStore } from '../../stores/chatStore';
 import { MessageList } from './MessageList';
 import { MessageInput } from './MessageInput';
+import { HelperTooltip } from '../Methodology/HelperTooltip';
 import './ChatInterface.css';
 import { logger } from '../../utils/logger';
 
@@ -42,10 +43,21 @@ export const ChatInterface: React.FC = () => {
     }
   };
 
+  const handleLearnMore = () => {
+    window.dispatchEvent(new CustomEvent('show-methodology-modal', { detail: { feature: 'chat' } }));
+  };
+
   return (
     <div className="chat-interface">
       {/* Header */}
       <div className="chat-header">
+        <div className="chat-title">
+          <h3>Assistant IA</h3>
+          <HelperTooltip
+            content="L'assistant utilise RAG pour rechercher dans vos PDFs indexés et répondre avec des sources précises."
+            onLearnMore={handleLearnMore}
+          />
+        </div>
         <button
           className="toolbar-btn"
           onClick={handleClear}

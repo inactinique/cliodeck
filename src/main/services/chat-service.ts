@@ -1,6 +1,8 @@
 // @ts-nocheck
 import { pdfService } from './pdf-service.js';
 import { BrowserWindow } from 'electron';
+import { historyService } from './history-service.js';
+import { ContextCompressor } from '../../../backend/core/rag/ContextCompressor.js';
 
 // Options enrichies pour le RAG
 interface EnrichedRAGOptions {
@@ -25,6 +27,7 @@ function hashString(str: string): string {
 
 class ChatService {
   private currentStream: any = null;
+  private compressor: ContextCompressor = new ContextCompressor();
 
   /**
    * Convertit les résultats de recherche en utilisant les résumés au lieu des chunks
@@ -185,6 +188,46 @@ class ChatService {
         }
       }
 
+      // Apply intelligent compression to context chunks
+      if (searchResults.length > 0) {
+        const preCompressionSize = searchResults.reduce((sum, r) => sum + r.chunk.content.length, 0);
+        console.log(`🗜️  [COMPRESSION] Pre-compression context size: ${preCompressionSize} chars (${searchResults.length} chunks)`);
+
+        // Convert search results to compressor format
+        const chunksForCompression = searchResults.map(r => ({
+          content: r.chunk.content,
+          documentId: r.document.id,
+          documentTitle: r.document.title,
+          pageNumber: r.chunk.pageNumber,
+          similarity: r.similarity,
+        }));
+
+        // Compress with 20k char target
+        const compressionResult = this.compressor.compress(chunksForCompression, message, 20000);
+
+        // Convert back to search result format
+        searchResults = compressionResult.chunks.map(chunk => ({
+          document: {
+            id: chunk.documentId,
+            title: chunk.documentTitle,
+          },
+          chunk: {
+            content: chunk.content,
+            pageNumber: chunk.pageNumber,
+          },
+          similarity: chunk.similarity,
+        }));
+
+        console.log(`✅ [COMPRESSION] Final stats:`, {
+          strategy: compressionResult.stats.strategy,
+          originalChunks: compressionResult.stats.originalChunks,
+          compressedChunks: compressionResult.stats.compressedChunks,
+          originalSize: compressionResult.stats.originalSize,
+          compressedSize: compressionResult.stats.compressedSize,
+          reduction: `${compressionResult.stats.reductionPercent.toFixed(1)}%`,
+        });
+      }
+
       // Récupérer le contexte du projet
       const projectContext = pdfService.getProjectContext();
 
@@ -241,6 +284,69 @@ class ChatService {
         ragUsed: searchResults.length > 0,
         timestamp: new Date().toISOString(),
       });
+
+      // Log chat messages and AI operation to history
+      const hm = historyService.getHistoryManager();
+      if (hm) {
+        // Log user message
+        hm.logChatMessage({
+          role: 'user',
+          content: message,
+        });
+
+        // Log assistant response with sources
+        const sources =
+          searchResults.length > 0
+            ? searchResults.map((r) => ({
+                documentId: r.document.id,
+                documentTitle: r.document.title,
+                author: r.document.author,
+                year: r.document.year,
+                pageNumber: r.chunk.pageNumber,
+                similarity: r.similarity,
+                isRelatedDoc: r.isRelatedDoc || false,
+              }))
+            : undefined;
+
+        hm.logChatMessage({
+          role: 'assistant',
+          content: fullResponse,
+          sources,
+        });
+
+        // Log RAG operation if context was used
+        if (options.context && searchResults.length > 0) {
+          const ollamaClient = pdfService.getOllamaClient();
+
+          hm.logAIOperation({
+            operationType: 'rag_query',
+            durationMs: totalDuration,
+            inputText: message,
+            inputMetadata: {
+              topK: options.topK,
+              useGraphContext: options.useGraphContext || false,
+              includeSummaries: options.includeSummaries || false,
+              sourcesFound: searchResults.length,
+              relatedDocumentsFound: relatedDocuments.length,
+            },
+            modelName: ollamaClient?.chatModel || 'unknown',
+            modelParameters: {
+              temperature: 0.1,
+              // Add other parameters if accessible
+            },
+            outputText: fullResponse,
+            outputMetadata: {
+              sources: sources || [],
+              responseLength: fullResponse.length,
+            },
+            success: true,
+          });
+
+          console.log(
+            `📝 Logged RAG query: ${searchResults.length} sources, ${totalDuration}ms`
+          );
+        }
+      }
 
       return fullResponse;
     } catch (error) {

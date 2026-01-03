@@ -333,6 +333,7 @@ export class OllamaClient {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(request),
+      signal: AbortSignal.timeout(300000), // 5 minute timeout for LLM generation
     });
 
     if (!response.ok || !response.body) {
@@ -408,6 +409,7 @@ export class OllamaClient {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(request),
+      signal: AbortSignal.timeout(300000), // 5 minute timeout for LLM generation
     });
 
     if (!response.ok || !response.body) {

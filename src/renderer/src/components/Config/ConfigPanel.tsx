@@ -115,7 +115,22 @@ export const ConfigPanel: React.FC = () => {
       const zotero = await window.electron.config.get('zotero');
       const suggestions = await window.electron.config.get('suggestions');
 
-      if (rag) setRagConfig(rag);
+      // Merge with defaults to ensure all properties exist
+      if (rag) {
+        setRagConfig({
+          topK: 10,
+          similarityThreshold: 0.2,
+          chunkingConfig: 'cpuOptimized',
+          summaryGeneration: 'extractive',
+          summaryMaxLength: 750,
+          useGraphContext: false,
+          graphSimilarityThreshold: 0.7,
+          additionalGraphDocs: 3,
+          includeSummaries: true,
+          enableTopicModeling: false,
+          ...rag, // Override with saved values
+        });
+      }
       if (llm) setLLMConfig(llm);
       if (editor) setEditorConfig(editor);
       if (zotero) setZoteroConfig(zotero);

@@ -4,6 +4,7 @@ import { PDFList } from './PDFList';
 import { IndexingProgress } from './IndexingProgress';
 import { CollapsibleSection } from '../common/CollapsibleSection';
 import { useProjectStore } from '../../stores/projectStore';
+import { HelperTooltip } from '../Methodology/HelperTooltip';
 import './PDFIndexPanel.css';
 
 interface PDFDocument {
@@ -187,10 +188,21 @@ export const PDFIndexPanel: React.FC = () => {
     }
   };
 
+  const handleLearnMore = () => {
+    window.dispatchEvent(new CustomEvent('show-methodology-modal', { detail: { feature: 'pdfIndex' } }));
+  };
+
   return (
     <div className="pdf-index-panel">
       {/* Header */}
       <div className="pdf-header">
+        <div className="header-title">
+          <h3>PDFs Indexés</h3>
+          <HelperTooltip
+            content="Indexation vectorielle de vos PDFs pour recherche sémantique. Vérifiez toujours la qualité de l'extraction de texte."
+            onLearnMore={handleLearnMore}
+          />
+        </div>
         <button className="toolbar-btn" onClick={handleAddPDF} title="Ajouter PDF">
           <Plus size={20} strokeWidth={1} />
         </button>

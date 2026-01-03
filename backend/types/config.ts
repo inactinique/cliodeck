@@ -20,7 +20,22 @@ export interface RAGConfig {
   topK: number;
   similarityThreshold: number;
   chunkingConfig: 'cpuOptimized' | 'standard' | 'large';
-  summarizer: SummarizerConfig;
+  summarizer?: SummarizerConfig; // Legacy, kept for backwards compatibility
+
+  // Summary generation
+  summaryGeneration?: 'extractive' | 'abstractive' | 'disabled';
+  summaryMaxLength?: number;
+
+  // Graph context
+  useGraphContext?: boolean;
+  graphSimilarityThreshold?: number;
+  additionalGraphDocs?: number;
+
+  // RAG enrichment
+  includeSummaries?: boolean; // Use summaries in RAG instead of chunks
+
+  // Topic modeling
+  enableTopicModeling?: boolean;
 }
 
 export interface ZoteroConfig {

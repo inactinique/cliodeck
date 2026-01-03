@@ -157,6 +157,26 @@ const api = {
     getTopicTimeline: () => ipcRenderer.invoke('corpus:get-topic-timeline'),
   },
 
+  // History / Journal
+  history: {
+    getSessions: () => ipcRenderer.invoke('history:get-sessions'),
+    getEvents: (sessionId: string) => ipcRenderer.invoke('history:get-events', sessionId),
+    getChatHistory: (sessionId: string) =>
+      ipcRenderer.invoke('history:get-chat-history', sessionId),
+    getAIOperations: (sessionId: string) =>
+      ipcRenderer.invoke('history:get-ai-operations', sessionId),
+    exportReport: (sessionId: string, format: 'markdown' | 'json' | 'latex') =>
+      ipcRenderer.invoke('history:export-report', sessionId, format),
+    getStatistics: () => ipcRenderer.invoke('history:get-statistics'),
+    searchEvents: (filters: {
+      sessionId?: string;
+      eventType?: string;
+      startDate?: Date;
+      endDate?: Date;
+      limit?: number;
+    }) => ipcRenderer.invoke('history:search-events', filters),
+  },
+
   // IPC Renderer for menu shortcuts
   ipcRenderer: {
     on: (channel: string, listener: (...args: any[]) => void) => {

@@ -64,12 +64,6 @@ class PDFService {
       throw new Error('PDF Service requires a project path');
     }
 
-    // Si déjà initialisé pour ce projet, ne rien faire
-    if (this.currentProjectPath === projectPath && this.vectorStore) {
-      console.log('✅ PDF Service already initialized for this project');
-      return;
-    }
-
     // Fermer la base précédente si elle existe
     if (this.vectorStore) {
       this.vectorStore.close();
@@ -79,7 +73,7 @@ class PDFService {
       const config = configManager.getLLMConfig();
       const ragConfig = configManager.getRAGConfig();
 
-      // Initialiser Ollama client
+      // Initialiser Ollama client avec la config actuelle
       this.ollamaClient = new OllamaClient(
         config.ollamaURL,
         config.ollamaChatModel,
@@ -103,6 +97,8 @@ class PDFService {
       console.log(`   Project: ${projectPath}`);
       console.log(`   VectorStore DB: ${this.vectorStore.projectPath}/.mdfocus/vectors.db`);
       console.log(`   Ollama URL: ${config.ollamaURL}`);
+      console.log(`   Chat Model: ${config.ollamaChatModel}`);
+      console.log(`   Embedding Model: ${config.ollamaEmbeddingModel}`);
     } catch (error) {
       console.error('❌ Failed to initialize PDF Service:', error);
       throw error;

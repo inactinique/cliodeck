@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import ForceGraph2D from 'react-force-graph-2d';
 import { CollapsibleSection } from '../common/CollapsibleSection';
 import { TopicTimeline } from './TopicTimeline';
+import { HelperTooltip } from '../Methodology/HelperTooltip';
 import './CorpusExplorerPanel.css';
 
 interface GraphNode {
@@ -551,8 +552,23 @@ export const CorpusExplorerPanel: React.FC = () => {
     );
   }
 
+  const handleLearnMore = () => {
+    window.dispatchEvent(new CustomEvent('show-methodology-modal', { detail: { feature: 'corpus' } }));
+  };
+
   return (
     <div className="corpus-explorer-panel">
+      {/* Header */}
+      <div className="corpus-header">
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <h3>Exploration de Corpus</h3>
+          <HelperTooltip
+            content="Topic modeling et analyse thématique. Nécessite un corpus d'au moins 15-20 documents pour être pertinent."
+            onLearnMore={handleLearnMore}
+          />
+        </div>
+      </div>
+
       {/* Filtres */}
       <CollapsibleSection title="Filtres" defaultExpanded={false}>
         <div className="filters-container">
