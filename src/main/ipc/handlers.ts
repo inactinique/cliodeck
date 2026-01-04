@@ -46,6 +46,48 @@ export function setupIPCHandlers() {
     return { success: true };
   });
 
+  ipcMain.handle('config:get-all', () => {
+    console.log('📞 IPC Call: config:get-all');
+    const result = configManager.getAll();
+    console.log('📤 IPC Response: config:get-all');
+    return result;
+  });
+
+  // Ollama handlers
+  ipcMain.handle('ollama:list-models', async () => {
+    console.log('📞 IPC Call: ollama:list-models');
+    try {
+      const ollamaClient = pdfService.getOllamaClient();
+      if (!ollamaClient) {
+        throw new Error('Ollama client not initialized - load a project first');
+      }
+
+      const models = await ollamaClient.listAvailableModels();
+      console.log('📤 IPC Response: ollama:list-models', { count: models.length });
+      return { success: true, models };
+    } catch (error: any) {
+      console.error('❌ ollama:list-models error:', error);
+      return { success: false, error: error.message };
+    }
+  });
+
+  ipcMain.handle('ollama:check-availability', async () => {
+    console.log('📞 IPC Call: ollama:check-availability');
+    try {
+      const ollamaClient = pdfService.getOllamaClient();
+      if (!ollamaClient) {
+        return { success: true, available: false };
+      }
+
+      const available = await ollamaClient.isAvailable();
+      console.log('📤 IPC Response: ollama:check-availability', { available });
+      return { success: true, available };
+    } catch (error: any) {
+      console.error('❌ ollama:check-availability error:', error);
+      return { success: false, error: error.message, available: false };
+    }
+  });
+
   // Project handlers
   ipcMain.handle('project:get-recent', () => {
     console.log('📞 IPC Call: project:get-recent');
@@ -339,6 +381,13 @@ export function setupIPCHandlers() {
         useGraphContext: ragConfig.useGraphContext || false,
         additionalGraphDocs: ragConfig.additionalGraphDocs || 3,
         window,
+        // Per-query parameters (from RAG settings panel)
+        model: options?.model, // Chat model override
+        timeout: options?.timeout, // Timeout override
+        temperature: options?.temperature,
+        top_p: options?.top_p,
+        top_k: options?.top_k,
+        repeat_penalty: options?.repeat_penalty,
       };
 
       console.log('🔍 [RAG DEBUG] Enriched options:', enrichedOptions);

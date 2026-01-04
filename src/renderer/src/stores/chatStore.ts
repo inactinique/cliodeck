@@ -91,6 +91,10 @@ export const useChatStore = create<ChatState>((set, get) => ({
     set({ isProcessing: true });
 
     try {
+      // Get RAG query parameters from store
+      const { useRAGQueryStore } = await import('./ragQueryStore');
+      const ragParams = useRAGQueryStore.getState().params;
+
       // Setup stream listener
       let streamedContent = '';
       logger.store('Chat', 'Setting up stream listener');
@@ -100,10 +104,11 @@ export const useChatStore = create<ChatState>((set, get) => ({
         set({ currentStreamingMessage: streamedContent });
       });
 
-      // Call IPC to send chat message with context enabled
-      logger.ipc('chat.send', { query, context: true });
+      // Call IPC to send chat message with context enabled and RAG parameters
+      logger.ipc('chat.send', { query, context: true, ragParams });
       const result = await window.electron.chat.send(query, {
         context: true,
+        ...ragParams, // Spread RAG parameters (model, topK, timeout, temperature, etc.)
       });
       logger.ipc('chat.send response', result);
 

@@ -12,6 +12,14 @@ interface EnrichedRAGOptions {
   topK?: number;                  // Nombre de résultats de recherche
   additionalGraphDocs?: number;   // Nombre de documents liés à inclure
   window?: BrowserWindow;         // Fenêtre pour streaming
+
+  // Per-query parameters
+  model?: string;                 // Override chat model
+  timeout?: number;               // Timeout in milliseconds
+  temperature?: number;           // LLM temperature
+  top_p?: number;                 // LLM top_p
+  top_k?: number;                 // LLM top_k
+  repeat_penalty?: number;        // LLM repeat penalty
 }
 
 // Fonction utilitaire pour hasher une chaîne (identifier les questions identiques)
@@ -31,10 +39,12 @@ class ChatService {
 
   /**
    * Convertit les résultats de recherche en utilisant les résumés au lieu des chunks
+   * Si les résumés ne sont pas disponibles, retourne les chunks originaux
    */
   private convertChunksToSummaries(searchResults: any[]): any[] {
     const summaryResults: any[] = [];
     const seenDocuments = new Set<string>();
+    let summariesFound = 0;
 
     for (const result of searchResults) {
       const docId = result.document.id;
@@ -46,6 +56,7 @@ class ChatService {
 
       if (result.document.summary) {
         seenDocuments.add(docId);
+        summariesFound++;
         summaryResults.push({
           document: result.document,
           chunk: {
@@ -57,6 +68,14 @@ class ChatService {
       }
     }
 
+    // Fallback: if no summaries available, return original chunks
+    if (summaryResults.length === 0 && searchResults.length > 0) {
+      console.warn('⚠️  No document summaries found. Falling back to original chunks.');
+      console.warn('⚠️  To use summaries, re-index your documents with summary generation enabled.');
+      return searchResults;
+    }
+
+    console.log(`📝 Using summaries: ${summariesFound} documents with summaries found`);
     return summaryResults;
   }
 
@@ -239,10 +258,27 @@ class ChatService {
           avgSimilarity: (searchResults.reduce((sum, r) => sum + r.similarity, 0) / searchResults.length).toFixed(4),
           mode: 'RAG_WITH_SOURCES',
           projectContextLoaded: !!projectContext,
+          model: options.model || ollamaClient.chatModel,
+          timeout: options.timeout || 600000,
         });
 
+        // Build generation options
+        const generationOptions = {
+          temperature: options.temperature,
+          top_p: options.top_p,
+          top_k: options.top_k,
+          repeat_penalty: options.repeat_penalty,
+        };
+
         // Utiliser generateResponseStreamWithSources pour RAG
-        const generator = ollamaClient.generateResponseStreamWithSources(message, searchResults, projectContext);
+        const generator = ollamaClient.generateResponseStreamWithSources(
+          message,
+          searchResults,
+          projectContext,
+          options.model,      // Model override
+          options.timeout,    // Timeout override
+          generationOptions   // Generation parameters
+        );
         this.currentStream = generator;
 
         for await (const chunk of generator) {
@@ -263,7 +299,21 @@ class ChatService {
           warning: 'This response will be GENERIC and NOT based on your documents!',
         });
 
-        const generator = ollamaClient.generateResponseStream(message, []);
+        // Build generation options
+        const generationOptions = {
+          temperature: options.temperature,
+          top_p: options.top_p,
+          top_k: options.top_k,
+          repeat_penalty: options.repeat_penalty,
+        };
+
+        const generator = ollamaClient.generateResponseStream(
+          message,
+          [],
+          options.model,      // Model override
+          options.timeout,    // Timeout override
+          generationOptions   // Generation parameters
+        );
         this.currentStream = generator;
 
         for await (const chunk of generator) {
@@ -288,10 +338,24 @@ class ChatService {
       // Log chat messages and AI operation to history
       const hm = historyService.getHistoryManager();
       if (hm) {
-        // Log user message
+        // Build query params for history
+        const queryParams = {
+          model: options.model || pdfService.getOllamaClient()?.chatModel || 'unknown',
+          topK: options.topK,
+          timeout: options.timeout || 600000,
+          temperature: options.temperature,
+          top_p: options.top_p,
+          top_k: options.top_k,
+          repeat_penalty: options.repeat_penalty,
+          useGraphContext: options.useGraphContext || false,
+          includeSummaries: options.includeSummaries || false,
+        };
+
+        // Log user message with query params
         hm.logChatMessage({
           role: 'user',
           content: message,
+          queryParams,
         });
 
         // Log assistant response with sources
@@ -312,6 +376,7 @@ class ChatService {
           role: 'assistant',
           content: fullResponse,
           sources,
+          queryParams,
         });
 
         // Log RAG operation if context was used

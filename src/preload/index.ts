@@ -64,6 +64,13 @@ const api = {
   config: {
     get: (key: string) => ipcRenderer.invoke('config:get', key),
     set: (key: string, value: any) => ipcRenderer.invoke('config:set', key, value),
+    getAll: () => ipcRenderer.invoke('config:get-all'),
+  },
+
+  // Ollama
+  ollama: {
+    listModels: () => ipcRenderer.invoke('ollama:list-models'),
+    checkAvailability: () => ipcRenderer.invoke('ollama:check-availability'),
   },
 
   // Dialogs

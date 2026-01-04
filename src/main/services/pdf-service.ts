@@ -83,12 +83,27 @@ class PDFService {
       // Initialiser VectorStore pour ce projet spécifique
       this.vectorStore = new VectorStore(projectPath);
 
+      // Convertir le nouveau format de config en ancien format pour le summarizer
+      // Support pour compatibilité ascendante et descendante
+      const summarizerConfig = ragConfig.summarizer || {
+        enabled: ragConfig.summaryGeneration !== 'disabled' && ragConfig.summaryGeneration !== undefined,
+        method: ragConfig.summaryGeneration === 'abstractive' ? 'abstractive' : 'extractive',
+        maxLength: ragConfig.summaryMaxLength || 750,
+        llmModel: config.ollamaChatModel
+      };
+
+      console.log('📝 [PDF-SERVICE] Summarizer config:', {
+        enabled: summarizerConfig.enabled,
+        method: summarizerConfig.method,
+        maxLength: summarizerConfig.maxLength
+      });
+
       // Initialiser PDFIndexer avec configuration du summarizer
       this.pdfIndexer = new PDFIndexer(
         this.vectorStore,
         this.ollamaClient,
         ragConfig.chunkingConfig,
-        ragConfig.summarizer
+        summarizerConfig
       );
 
       this.currentProjectPath = projectPath;

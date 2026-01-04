@@ -309,21 +309,32 @@ export class OllamaClient {
 
   // MARK: - Génération de réponse (streaming)
 
-  async *generateResponseStream(prompt: string, context: string[]): AsyncGenerator<string> {
+  async *generateResponseStream(
+    prompt: string,
+    context: string[],
+    modelOverride?: string,
+    timeoutOverride?: number,
+    generationOptions?: Partial<typeof GENERATION_PRESETS.academic>
+  ): AsyncGenerator<string> {
     const url = `${this.baseURL}/api/generate`;
 
     const fullPrompt = this.buildPrompt(prompt, context);
 
+    const model = modelOverride || this.chatModel;
+    const timeout = timeoutOverride || 600000;
+    const options = { ...GENERATION_PRESETS.academic, ...generationOptions };
+
     const request: OllamaGenerateRequest = {
-      model: this.chatModel,
+      model,
       prompt: fullPrompt,
       stream: true,
-      options: GENERATION_PRESETS.academic, // Mode académique par défaut
+      options,
     };
 
     console.log('🔍 [OLLAMA DEBUG] Calling Ollama API (no sources):', {
       url,
-      model: this.chatModel,
+      model,
+      timeout: `${timeout / 1000}s`,
       promptLength: fullPrompt.length,
       contextCount: context.length,
       generationParams: request.options,
@@ -333,7 +344,7 @@ export class OllamaClient {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(request),
-      signal: AbortSignal.timeout(300000), // 5 minute timeout for LLM generation
+      signal: AbortSignal.timeout(timeout),
     });
 
     if (!response.ok || !response.body) {
@@ -341,9 +352,9 @@ export class OllamaClient {
         status: response.status,
         statusText: response.statusText,
         url,
-        model: this.chatModel
+        model
       });
-      throw new Error(`Ollama streaming error: ${response.status} - Model: ${this.chatModel}`);
+      throw new Error(`Ollama streaming error: ${response.status} - Model: ${model}`);
     }
 
     const reader = response.body.getReader();
@@ -384,22 +395,30 @@ export class OllamaClient {
   async *generateResponseStreamWithSources(
     prompt: string,
     sources: SearchResult[],
-    projectContext?: string
+    projectContext?: string,
+    modelOverride?: string,
+    timeoutOverride?: number,
+    generationOptions?: Partial<typeof GENERATION_PRESETS.academic>
   ): AsyncGenerator<string> {
     const url = `${this.baseURL}/api/generate`;
 
     const fullPrompt = this.buildPromptWithSources(prompt, sources, projectContext);
 
+    const model = modelOverride || this.chatModel;
+    const timeout = timeoutOverride || 600000;
+    const options = { ...GENERATION_PRESETS.academic, ...generationOptions };
+
     const request: OllamaGenerateRequest = {
-      model: this.chatModel,
+      model,
       prompt: fullPrompt,
       stream: true,
-      options: GENERATION_PRESETS.academic, // Mode académique par défaut
+      options,
     };
 
     console.log('🔍 [OLLAMA DEBUG] Calling Ollama API:', {
       url,
-      model: this.chatModel,
+      model,
+      timeout: `${timeout / 1000}s`,
       promptLength: fullPrompt.length,
       sourceCount: sources.length,
       generationParams: request.options,
@@ -409,7 +428,7 @@ export class OllamaClient {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(request),
-      signal: AbortSignal.timeout(300000), // 5 minute timeout for LLM generation
+      signal: AbortSignal.timeout(timeout),
     });
 
     if (!response.ok || !response.body) {
@@ -417,9 +436,9 @@ export class OllamaClient {
         status: response.status,
         statusText: response.statusText,
         url,
-        model: this.chatModel
+        model
       });
-      throw new Error(`Ollama streaming error: ${response.status} - Model: ${this.chatModel}`);
+      throw new Error(`Ollama streaming error: ${response.status} - Model: ${model}`);
     }
 
     const reader = response.body.getReader();

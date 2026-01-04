@@ -4,6 +4,7 @@ import { Trash2 } from 'lucide-react';
 import { useChatStore } from '../../stores/chatStore';
 import { MessageList } from './MessageList';
 import { MessageInput } from './MessageInput';
+import { RAGSettingsPanel } from './RAGSettingsPanel';
 import { HelperTooltip } from '../Methodology/HelperTooltip';
 import './ChatInterface.css';
 import { logger } from '../../utils/logger';
@@ -91,6 +92,9 @@ export const ChatInterface: React.FC = () => {
         onCancel={handleCancel}
         isProcessing={isProcessing}
       />
+
+      {/* RAG Settings Panel */}
+      <RAGSettingsPanel />
     </div>
   );
 };
