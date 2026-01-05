@@ -26,14 +26,14 @@
 .refresh-btn {
   background: transparent;
   border: 1px solid var(--border-color);
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   padding: 6px;
   cursor: pointer;
   color: var(--text-secondary);
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s;
+  transition: all var(--transition-normal);
 }
 
 .refresh-btn:hover:not(:disabled) {
@@ -92,9 +92,9 @@
 .suggestion-card {
   background: var(--bg-primary);
   border: 1px solid var(--border-color);
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   padding: 12px;
-  transition: all 0.2s;
+  transition: all var(--transition-normal);
 }
 
 .suggestion-card:hover {
@@ -145,13 +145,13 @@
   width: 100%;
   padding: 6px 12px;
   background: var(--accent);
-  color: white;
+  color: var(--text-primary);
   border: none;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   font-size: 12px;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all var(--transition-normal);
 }
 
 .suggestion-insert-btn:hover {

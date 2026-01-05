@@ -5,7 +5,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.7);
+  background-color: var(--overlay-bg);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -14,15 +14,15 @@
 
 /* Modal Container */
 .methodology-modal {
-  background-color: #1e1e1e;
-  border-radius: 8px;
+  background-color: var(--bg-app);
+  border-radius: var(--radius-md);
   width: 90%;
   max-width: 1000px;
   height: 85vh;
   display: flex;
   flex-direction: column;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
-  border: 1px solid #3e3e42;
+  border: 1px solid var(--border-color);
 }
 
 /* Header */
@@ -31,16 +31,16 @@
   justify-content: space-between;
   align-items: center;
   padding: 1rem 1.5rem;
-  background-color: #252526;
-  border-bottom: 1px solid #3e3e42;
-  border-radius: 8px 8px 0 0;
+  background-color: var(--bg-panel);
+  border-bottom: 1px solid var(--border-color);
+  border-radius: var(--radius-md) 8px 0 0;
 }
 
 .modal-title {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  color: #cccccc;
+  color: var(--text-secondary);
 }
 
 .modal-title h2 {
@@ -52,15 +52,15 @@
 .close-btn {
   background: none;
   border: none;
-  color: #cccccc;
+  color: var(--text-secondary);
   cursor: pointer;
   padding: 0.5rem;
-  border-radius: 4px;
-  transition: background-color 0.2s;
+  border-radius: var(--radius-sm);
+  transition: background-color var(--transition-normal);
 }
 
 .close-btn:hover {
-  background-color: #2a2d2e;
+  background-color: var(--bg-card-hover);
 }
 
 /* Navigation */
@@ -68,28 +68,28 @@
   display: flex;
   gap: 0.5rem;
   padding: 0.75rem 1.5rem;
-  background-color: #252526;
-  border-bottom: 1px solid #3e3e42;
+  background-color: var(--bg-panel);
+  border-bottom: 1px solid var(--border-color);
 }
 
 .modal-nav button {
   background: transparent;
   border: none;
   padding: 0.5rem 1rem;
-  color: #cccccc;
+  color: var(--text-secondary);
   font-size: 0.9rem;
   cursor: pointer;
   border-bottom: 2px solid transparent;
-  transition: all 0.2s;
+  transition: all var(--transition-normal);
 }
 
 .modal-nav button:hover {
-  background-color: #2a2d2e;
+  background-color: var(--bg-card-hover);
 }
 
 .modal-nav button.active {
-  border-bottom-color: #007acc;
-  color: #007acc;
+  border-bottom-color: var(--color-accent);
+  color: var(--color-accent);
 }
 
 /* Search Bar */
@@ -98,23 +98,23 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.75rem 1.5rem;
-  background-color: #252526;
-  border-bottom: 1px solid #3e3e42;
+  background-color: var(--bg-panel);
+  border-bottom: 1px solid var(--border-color);
 }
 
 .search-bar input {
   flex: 1;
-  background-color: #1e1e1e;
-  border: 1px solid #3e3e42;
-  color: #cccccc;
+  background-color: var(--bg-app);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
   padding: 0.5rem;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   font-size: 0.9rem;
 }
 
 .search-bar input:focus {
   outline: none;
-  border-color: #007acc;
+  border-color: var(--color-accent);
 }
 
 /* Content */
@@ -126,12 +126,12 @@
 
 /* Overview */
 .overview h2 {
-  color: #cccccc;
+  color: var(--text-secondary);
   margin-top: 0;
 }
 
 .overview .intro {
-  color: #d4d4d4;
+  color: var(--text-secondary);
   line-height: 1.6;
   margin-bottom: 1.5rem;
 }
@@ -142,17 +142,17 @@
   padding: 1rem;
   background-color: #1a2733;
   border: 1px solid #1a4d6f;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   margin-bottom: 2rem;
-  color: #d4d4d4;
+  color: var(--text-secondary);
 }
 
 .alert-box strong {
-  color: #cccccc;
+  color: var(--text-secondary);
 }
 
 .overview h3 {
-  color: #cccccc;
+  color: var(--text-secondary);
   margin-top: 2rem;
   margin-bottom: 1rem;
 }
@@ -164,27 +164,27 @@
 }
 
 .feature-card {
-  background-color: #252526;
-  border: 1px solid #3e3e42;
-  border-radius: 6px;
+  background-color: var(--bg-panel);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
   padding: 1rem;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all var(--transition-normal);
 }
 
 .feature-card:hover {
-  background-color: #2a2d2e;
-  border-color: #007acc;
+  background-color: var(--bg-card-hover);
+  border-color: var(--color-accent);
 }
 
 .feature-card h4 {
-  color: #cccccc;
+  color: var(--text-secondary);
   margin: 0 0 0.5rem 0;
   font-size: 1rem;
 }
 
 .feature-card p {
-  color: #858585;
+  color: var(--text-tertiary);
   margin: 0;
   font-size: 0.85rem;
   line-height: 1.4;
@@ -203,7 +203,7 @@
 }
 
 .feature-sidebar h3 {
-  color: #cccccc;
+  color: var(--text-secondary);
   font-size: 0.9rem;
   margin: 0 0 0.75rem 0;
 }
@@ -214,22 +214,22 @@
   text-align: left;
   background: transparent;
   border: none;
-  color: #cccccc;
+  color: var(--text-secondary);
   padding: 0.5rem 0.75rem;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   cursor: pointer;
   margin-bottom: 0.25rem;
   font-size: 0.85rem;
-  transition: background-color 0.2s;
+  transition: background-color var(--transition-normal);
 }
 
 .feature-sidebar button:hover {
-  background-color: #2a2d2e;
+  background-color: var(--bg-card-hover);
 }
 
 .feature-sidebar button.active {
-  background-color: #094771;
-  color: #ffffff;
+  background-color: var(--color-accent-active);
+  color: var(--text-primary);
 }
 
 .feature-content {
@@ -239,13 +239,13 @@
 
 /* Feature Detail */
 .feature-detail h2 {
-  color: #cccccc;
+  color: var(--text-secondary);
   margin-top: 0;
   margin-bottom: 0.5rem;
 }
 
 .feature-description {
-  color: #d4d4d4;
+  color: var(--text-secondary);
   margin-bottom: 2rem;
   line-height: 1.6;
 }
@@ -255,7 +255,7 @@
 }
 
 .detail-section h3 {
-  color: #cccccc;
+  color: var(--text-secondary);
   font-size: 1rem;
   margin-bottom: 0.75rem;
 }
@@ -263,7 +263,7 @@
 .detail-section ul {
   margin: 0;
   padding-left: 1.5rem;
-  color: #d4d4d4;
+  color: var(--text-secondary);
 }
 
 .detail-section li {
@@ -272,13 +272,13 @@
 }
 
 .limitations-list li {
-  color: #f48771;
+  color: var(--color-warning);
 }
 
 .academic-context {
   background-color: #1a2733;
   border: 1px solid #1a4d6f;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   padding: 1rem;
 }
 
@@ -287,51 +287,51 @@
 }
 
 .academic-context p {
-  color: #d4d4d4;
+  color: var(--text-secondary);
   line-height: 1.6;
   margin: 0;
 }
 
 /* FAQ View */
 .faq-view h2 {
-  color: #cccccc;
+  color: var(--text-secondary);
   margin-top: 0;
   margin-bottom: 1.5rem;
 }
 
 .faq-item {
-  background-color: #252526;
-  border: 1px solid #3e3e42;
-  border-radius: 6px;
+  background-color: var(--bg-panel);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
   padding: 1rem;
   margin-bottom: 1rem;
 }
 
 .faq-item h4 {
-  color: #cccccc;
+  color: var(--text-secondary);
   margin: 0 0 0.75rem 0;
   font-size: 1rem;
 }
 
 .faq-item p {
-  color: #d4d4d4;
+  color: var(--text-secondary);
   margin: 0 0 0.75rem 0;
   line-height: 1.6;
 }
 
 .faq-category {
   display: inline-block;
-  background-color: #094771;
-  color: #ffffff;
+  background-color: var(--color-accent-active);
+  color: var(--text-primary);
   padding: 0.25rem 0.75rem;
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
   font-size: 0.75rem;
   font-weight: 500;
 }
 
 /* Glossary View */
 .glossary-view h2 {
-  color: #cccccc;
+  color: var(--text-secondary);
   margin-top: 0;
   margin-bottom: 1.5rem;
 }
@@ -339,7 +339,7 @@
 .glossary-item {
   margin-bottom: 1.5rem;
   padding-bottom: 1rem;
-  border-bottom: 1px solid #3e3e42;
+  border-bottom: 1px solid var(--border-color);
 }
 
 .glossary-item:last-child {
@@ -347,21 +347,21 @@
 }
 
 .glossary-item dt {
-  color: #007acc;
+  color: var(--color-accent);
   font-weight: 600;
   font-size: 1rem;
   margin-bottom: 0.5rem;
 }
 
 .glossary-item dd {
-  color: #d4d4d4;
+  color: var(--text-secondary);
   margin: 0;
   line-height: 1.6;
 }
 
 /* No Results */
 .no-results {
-  color: #858585;
+  color: var(--text-tertiary);
   text-align: center;
   padding: 2rem;
 }
@@ -374,13 +374,13 @@
 
 .modal-content::-webkit-scrollbar-track,
 .feature-content::-webkit-scrollbar-track {
-  background: #1e1e1e;
+  background: var(--bg-app);
 }
 
 .modal-content::-webkit-scrollbar-thumb,
 .feature-content::-webkit-scrollbar-thumb {
-  background: #3e3e42;
-  border-radius: 4px;
+  background: var(--border-color);
+  border-radius: var(--radius-sm);
 }
 
 .modal-content::-webkit-scrollbar-thumb:hover,

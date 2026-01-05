@@ -188,20 +188,61 @@ class TopicAnalyzer:
             - topic_assignments: Mapping document_id -> topic_id
             - outliers: Liste des document_ids considérés comme outliers (topic -1)
         """
-        if len(embeddings) < self.min_topic_size:
+        # Valider le nombre minimum de documents
+        # Pour BERTopic + HDBSCAN, on a besoin d'au moins 2-3 fois min_topic_size
+        min_required = max(self.min_topic_size * 2, 10)
+        if len(embeddings) < min_required:
             raise ValueError(
                 f"Not enough documents ({len(embeddings)}). "
-                f"Minimum required: {self.min_topic_size}"
+                f"For reliable topic modeling with min_topic_size={self.min_topic_size}, "
+                f"you need at least {min_required} documents. "
+                f"Consider reducing min_topic_size or adding more documents."
             )
 
         print(f"Analyzing {len(embeddings)} documents...")
+        print(f"Embeddings shape: {embeddings.shape}")
+        print(f"Embeddings dtype: {embeddings.dtype}")
+        print(f"Number of documents: {len(documents)}")
 
-        # Fit BERTopic sur les embeddings pré-calculés
-        topics, probs = self.model.fit_transform(documents, embeddings)
+        # Vérifier qu'il n'y a pas de NaN dans les embeddings
+        if np.isnan(embeddings).any():
+            raise ValueError("Embeddings contain NaN values")
 
-        print(f"Found {len(set(topics)) - 1} topics (excluding outliers)")
+        # Vérifier qu'il n'y a pas d'infini dans les embeddings
+        if np.isinf(embeddings).any():
+            raise ValueError("Embeddings contain infinite values")
+
+        try:
+            # Fit BERTopic sur les embeddings pré-calculés
+            topics, probs = self.model.fit_transform(documents, embeddings)
+
+            # Vérifier que nous avons trouvé au moins un topic
+            unique_topics = set(topics)
+            num_topics = len(unique_topics) - (1 if -1 in unique_topics else 0)
+
+            print(f"Found {num_topics} topics (excluding outliers)")
+
+            if num_topics == 0:
+                raise ValueError(
+                    "No topics found. All documents are outliers. "
+                    "This usually means:\n"
+                    "1. The corpus is too small\n"
+                    "2. The min_topic_size is too large\n"
+                    "3. The documents are too similar or too different\n"
+                    f"Try reducing min_topic_size (current: {self.min_topic_size}) "
+                    f"or adding more diverse documents."
+                )
+        except Exception as e:
+            print(f"BERTopic fit_transform failed: {str(e)}")
+            print(f"Error type: {type(e).__name__}")
+            import traceback
+            traceback.print_exc()
+            raise
 
         # Construire la réponse
+        num_outliers = topics.count(-1)
+        num_documents_in_topics = len(documents) - num_outliers
+
         result = {
             "topics": [],
             "topic_assignments": {},
@@ -209,9 +250,12 @@ class TopicAnalyzer:
             "statistics": {
                 "total_documents": len(documents),
                 "num_topics": len(set(topics)) - 1,  # -1 pour exclure le topic outlier
-                "num_outliers": topics.count(-1),
+                "num_outliers": num_outliers,
+                "num_documents_in_topics": num_documents_in_topics,
             },
         }
+
+        print(f"📊 Documents in topics: {num_documents_in_topics}/{len(documents)} ({num_outliers} outliers)")
 
         # Pour chaque topic trouvé
         topic_info = self.model.get_topic_info()

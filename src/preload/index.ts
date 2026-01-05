@@ -162,6 +162,9 @@ const api = {
     }) => ipcRenderer.invoke('corpus:analyze-topics', options),
     loadTopics: () => ipcRenderer.invoke('corpus:load-topics'),
     getTopicTimeline: () => ipcRenderer.invoke('corpus:get-topic-timeline'),
+    getTextStatistics: (options?: {
+      topN?: number;
+    }) => ipcRenderer.invoke('corpus:get-text-statistics', options),
   },
 
   // History / Journal

@@ -1,7 +1,7 @@
 .message-list {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: var(--spacing-md);
 }
 
 /* Typing Indicator */
@@ -9,9 +9,9 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 12px 16px;
-  background-color: #2d2d2d;
-  border-radius: 12px;
+  padding: var(--spacing-md);
+  background-color: var(--bg-card);
+  border-radius: var(--radius-lg);
   width: fit-content;
   max-width: 80%;
 }
@@ -19,8 +19,8 @@
 .typing-dot {
   width: 8px;
   height: 8px;
-  background-color: #888;
-  border-radius: 50%;
+  background-color: var(--text-tertiary);
+  border-radius: var(--radius-round);
   animation: typing 1.4s infinite;
 }
 

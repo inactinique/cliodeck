@@ -1,7 +1,7 @@
 .presentation-config {
-  background-color: #252526;
-  border: 1px solid #3e3e42;
-  border-radius: 8px;
+  background-color: var(--bg-panel);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
   padding: var(--spacing-lg);
   margin-bottom: var(--spacing-md);
 }
@@ -11,12 +11,12 @@
   align-items: center;
   gap: var(--spacing-sm);
   margin-bottom: var(--spacing-lg);
-  color: #ccc;
+  color: var(--text-secondary);
 }
 
 .config-header h4 {
   margin: 0;
-  font-size: 0.95rem;
+  font-size: var(--font-size-base);
   font-weight: 600;
 }
 
@@ -33,31 +33,31 @@
   margin-bottom: var(--spacing-sm);
   font-size: var(--font-size-sm);
   font-weight: 600;
-  color: #ccc;
+  color: var(--text-secondary);
 }
 
 .config-section select,
 .config-section input[type="number"] {
   width: 100%;
-  padding: 0.5rem 0.75rem;
-  background-color: #1e1e1e;
-  color: #ccc;
-  border: 1px solid #3e3e42;
-  border-radius: 4px;
+  padding: var(--spacing-sm) var(--spacing-md);
+  background-color: var(--bg-app);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
   font-size: var(--font-size-sm);
-  transition: all 0.2s;
+  transition: all var(--transition-normal);
 }
 
 .config-section select:hover,
 .config-section input[type="number"]:hover {
-  border-color: #007acc;
+  border-color: var(--color-accent);
 }
 
 .config-section select:focus,
 .config-section input[type="number"]:focus {
   outline: none;
-  border-color: #007acc;
-  box-shadow: 0 0 0 2px rgba(0, 122, 204, 0.1);
+  border-color: var(--color-accent);
+  box-shadow: var(--shadow-focus);
 }
 
 .config-section select:disabled,
@@ -72,7 +72,7 @@
   gap: var(--spacing-sm);
   cursor: pointer;
   font-size: var(--font-size-sm);
-  color: #ccc;
+  color: var(--text-secondary);
   user-select: none;
 }
 
@@ -80,7 +80,7 @@
   width: 16px;
   height: 16px;
   cursor: pointer;
-  accent-color: #007acc;
+  accent-color: var(--color-accent);
 }
 
 .checkbox-label input[type="checkbox"]:disabled {
@@ -94,28 +94,19 @@
 
 .config-hint {
   display: block;
-  margin-top: 0.25rem;
-  font-size: 0.75rem;
-  color: #888;
+  margin-top: var(--spacing-xs);
+  font-size: 11px;
+  color: var(--text-tertiary);
   font-style: italic;
 }
 
 .config-saving {
   margin-top: var(--spacing-md);
-  padding: 0.5rem;
-  background-color: #007acc;
-  color: white;
+  padding: var(--spacing-sm);
+  background-color: var(--color-accent);
+  color: var(--text-primary);
   text-align: center;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   font-size: var(--font-size-sm);
   animation: pulse 1s infinite;
-}
-
-@keyframes pulse {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.7;
-  }
 }

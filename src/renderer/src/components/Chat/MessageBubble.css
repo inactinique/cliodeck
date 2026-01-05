@@ -1,9 +1,9 @@
 .message-bubble {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--spacing-sm);
   max-width: 85%;
-  animation: messageSlideIn 0.3s ease-out;
+  animation: slideIn var(--transition-slow) ease-out;
 }
 
 .message-bubble.user {
@@ -14,71 +14,50 @@
   align-self: flex-start;
 }
 
-@keyframes messageSlideIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
 /* Message Header */
 .message-header {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 12px;
-  color: #888;
+  gap: var(--spacing-sm);
+  font-size: var(--font-size-xs);
+  color: var(--text-tertiary);
 }
 
 .message-avatar {
-  font-size: 16px;
+  font-size: var(--icon-sm);
 }
 
 .message-role {
   font-weight: 600;
-  color: #cccccc;
+  color: var(--text-secondary);
 }
 
 .message-time {
   font-size: 11px;
-  color: #666;
+  color: var(--text-disabled);
 }
 
 .streaming-indicator {
-  color: #007acc;
-  font-size: 16px;
+  color: var(--color-accent);
+  font-size: var(--icon-sm);
   animation: pulse 1.5s infinite;
-}
-
-@keyframes pulse {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.3;
-  }
 }
 
 /* Message Content */
 .message-content {
-  padding: 12px 16px;
-  border-radius: 12px;
+  padding: var(--spacing-md) var(--spacing-lg);
+  border-radius: var(--radius-xl);
   line-height: 1.5;
 }
 
 .message-bubble.user .message-content {
-  background-color: #007acc;
-  color: #ffffff;
+  background-color: var(--color-accent);
+  color: var(--text-primary);
 }
 
 .message-bubble.assistant .message-content {
-  background-color: #2d2d2d;
-  color: #d4d4d4;
+  background-color: var(--bg-card);
+  color: var(--text-secondary);
 }
 
 .message-content p {
@@ -88,7 +67,7 @@
 
 /* Markdown Styling (Assistant) */
 .message-markdown {
-  font-size: 14px;
+  font-size: var(--font-size-base);
 }
 
 .message-markdown p {
@@ -114,18 +93,18 @@
 }
 
 .message-markdown code {
-  background-color: #1e1e1e;
+  background-color: var(--code-inline-bg);
   padding: 2px 4px;
   border-radius: 3px;
   font-family: 'Fira Code', 'Consolas', monospace;
   font-size: 0.9em;
-  color: #ce9178;
+  color: var(--code-text);
 }
 
 .message-markdown pre {
-  background-color: #1e1e1e;
-  padding: 12px;
-  border-radius: 6px;
+  background-color: var(--code-bg);
+  padding: var(--spacing-md);
+  border-radius: var(--radius-md);
   overflow-x: auto;
   margin: 0.5em 0;
 }
@@ -133,11 +112,11 @@
 .message-markdown pre code {
   background: none;
   padding: 0;
-  color: #d4d4d4;
+  color: var(--text-secondary);
 }
 
 .message-markdown a {
-  color: #4ec9b0;
+  color: var(--color-success);
   text-decoration: none;
 }
 
@@ -147,47 +126,47 @@
 
 .message-markdown strong {
   font-weight: 600;
-  color: #ffffff;
+  color: var(--text-primary);
 }
 
 .message-markdown em {
   font-style: italic;
-  color: #cccccc;
+  color: var(--text-secondary);
 }
 
 .message-markdown blockquote {
-  border-left: 3px solid #007acc;
-  padding-left: 12px;
+  border-left: 3px solid var(--color-accent);
+  padding-left: var(--spacing-md);
   margin: 0.5em 0;
-  color: #b0b0b0;
+  color: var(--text-secondary);
   font-style: italic;
 }
 
 /* Sources Section */
 .message-sources {
-  margin-top: 8px;
-  padding: 12px;
-  background-color: #252526;
-  border-radius: 8px;
-  border: 1px solid #3e3e42;
+  margin-top: var(--spacing-sm);
+  padding: var(--spacing-md);
+  background-color: var(--bg-panel);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-color);
 }
 
 .sources-header {
   display: flex;
   align-items: center;
   gap: 6px;
-  margin-bottom: 8px;
-  font-size: 12px;
+  margin-bottom: var(--spacing-sm);
+  font-size: var(--font-size-xs);
   font-weight: 600;
-  color: #cccccc;
+  color: var(--text-secondary);
 }
 
 .sources-icon {
-  font-size: 14px;
+  font-size: var(--icon-xs);
 }
 
 .sources-list {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--spacing-sm);
 }

@@ -36,6 +36,7 @@ export interface TopicAnalysisResult {
     totalDocuments: number;
     numTopics: number;
     numOutliers: number;
+    numDocumentsInTopics: number;
   };
 }
 
@@ -59,6 +60,7 @@ interface AnalyzeResponse {
     total_documents: number;
     num_topics: number;
     num_outliers: number;
+    num_documents_in_topics: number;
   };
 }
 
@@ -464,8 +466,32 @@ export class TopicModelingService {
       });
 
       if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Topic analysis failed: ${response.status} - ${errorText}`);
+        let errorText = await response.text();
+        let errorMessage = errorText;
+        try {
+          // Essayer de parser le JSON pour obtenir plus de détails
+          const errorJson = JSON.parse(errorText);
+          if (errorJson.detail) {
+            // Si detail est une string, l'utiliser directement
+            if (typeof errorJson.detail === 'string') {
+              errorMessage = errorJson.detail;
+            } else {
+              // Si c'est un objet/array, le formater
+              errorMessage = JSON.stringify(errorJson.detail, null, 2);
+            }
+          } else if (Array.isArray(errorJson)) {
+            // FastAPI peut retourner un array d'erreurs de validation
+            errorMessage = errorJson.map(err => err.msg || JSON.stringify(err)).join(', ');
+          }
+        } catch (e) {
+          // Si ce n'est pas du JSON, utiliser le texte brut
+        }
+        console.error(`❌ Topic analysis HTTP error:`, {
+          status: response.status,
+          statusText: response.statusText,
+          errorText: errorText
+        });
+        throw new Error(`Topic analysis failed (${response.status}): ${errorMessage}`);
       }
 
       // Parser la réponse
@@ -479,10 +505,15 @@ export class TopicModelingService {
           totalDocuments: data.statistics.total_documents,
           numTopics: data.statistics.num_topics,
           numOutliers: data.statistics.num_outliers,
+          numDocumentsInTopics: data.statistics.num_documents_in_topics,
         },
       };
 
-      console.log(`✅ Topic analysis complete: ${result.statistics.numTopics} topics found`);
+      console.log(
+        `✅ Topic analysis complete: ${result.statistics.numTopics} topics found ` +
+        `(${result.statistics.numDocumentsInTopics}/${result.statistics.totalDocuments} documents, ` +
+        `${result.statistics.numOutliers} outliers)`
+      );
 
       return result;
     } catch (error) {

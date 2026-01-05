@@ -862,6 +862,30 @@ export function setupIPCHandlers() {
     }
   });
 
+  // Textometrics handlers
+  ipcMain.handle('corpus:get-text-statistics', async (_event, options?: any) => {
+    console.log('📞 IPC Call: corpus:get-text-statistics', options);
+    try {
+      const projectPath = projectManager.getCurrentProjectPath();
+      if (!projectPath) {
+        return { success: false, error: 'No project is currently open. Please open or create a project first.' };
+      }
+
+      await pdfService.init(projectPath);
+      const statistics = await pdfService.getTextStatistics(options);
+
+      console.log('📤 IPC Response: corpus:get-text-statistics', {
+        totalWords: statistics.totalWords,
+        vocabularySize: statistics.vocabularySize,
+        topWordsCount: statistics.topWords?.length || 0,
+      });
+      return { success: true, statistics };
+    } catch (error: any) {
+      console.error('❌ corpus:get-text-statistics error:', error);
+      return { success: false, error: error.message };
+    }
+  });
+
   // History handlers
   ipcMain.handle('history:get-sessions', async () => {
     console.log('📞 IPC Call: history:get-sessions');

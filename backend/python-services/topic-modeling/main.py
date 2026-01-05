@@ -199,15 +199,21 @@ async def analyze_topics(request: AnalyzeRequest):
         )
 
     except ValueError as e:
+        print(f"ValueError during topic analysis: {str(e)}")
+        import traceback
+        traceback.print_exc()
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Invalid request: {str(e)}"
         )
     except Exception as e:
         print(f"Error during topic analysis: {str(e)}")
+        print(f"Error type: {type(e).__name__}")
+        import traceback
+        traceback.print_exc()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Topic analysis failed: {str(e)}"
+            detail=f"Topic analysis failed: {type(e).__name__}: {str(e)}"
         )
 
 

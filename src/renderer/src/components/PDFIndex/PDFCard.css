@@ -1,28 +1,28 @@
 .pdf-card {
-  background-color: #2d2d2d;
-  border: 1px solid #3e3e42;
-  border-radius: 6px;
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
   overflow: hidden;
-  transition: background-color 0.2s, border-color 0.2s;
+  transition: background-color var(--transition-normal), border-color var(--transition-normal);
 }
 
 .pdf-card:hover {
-  background-color: #323233;
-  border-color: #4e4e4e;
+  background-color: var(--bg-card-hover);
+  border-color: var(--border-color-hover);
 }
 
 /* Card Header */
 .pdf-card-header {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 12px;
+  gap: var(--spacing-md);
+  padding: var(--spacing-md);
   cursor: pointer;
   user-select: none;
 }
 
 .pdf-icon {
-  font-size: 24px;
+  font-size: var(--icon-lg);
 }
 
 .pdf-info {
@@ -31,9 +31,9 @@
 }
 
 .pdf-reference {
-  font-size: 13px;
+  font-size: var(--font-size-sm);
   font-weight: 600;
-  color: #cccccc;
+  color: var(--text-secondary);
   margin-bottom: 4px;
   white-space: nowrap;
   overflow: hidden;
@@ -42,67 +42,56 @@
 
 .pdf-meta {
   font-size: 11px;
-  color: #888;
+  color: var(--text-tertiary);
 }
 
 .expand-btn {
   background: none;
   border: none;
-  color: #888;
+  color: var(--text-tertiary);
   font-size: 10px;
   cursor: pointer;
   padding: 4px;
-  transition: color 0.2s;
+  transition: color var(--transition-normal);
 }
 
 .expand-btn:hover {
-  color: #cccccc;
+  color: var(--text-secondary);
 }
 
 /* Card Details (Expanded) */
 .pdf-card-details {
-  padding: 0 12px 12px 12px;
-  border-top: 1px solid #3e3e42;
-  animation: expandDown 0.2s ease-out;
-}
-
-@keyframes expandDown {
-  from {
-    opacity: 0;
-    max-height: 0;
-  }
-  to {
-    opacity: 1;
-    max-height: 300px;
-  }
+  padding: 0 var(--spacing-md) var(--spacing-md) var(--spacing-md);
+  border-top: 1px solid var(--border-color);
+  animation: expandDown var(--transition-normal) ease-out;
 }
 
 .pdf-title {
-  font-size: 12px;
-  color: #b0b0b0;
+  font-size: var(--font-size-xs);
+  color: var(--text-secondary);
   line-height: 1.5;
-  margin: 10px 0;
-  padding: 8px;
-  background-color: #1e1e1e;
-  border-radius: 4px;
-  border-left: 3px solid #007acc;
+  margin: var(--spacing-md) 0;
+  padding: var(--spacing-sm);
+  background-color: var(--bg-app);
+  border-radius: var(--radius-sm);
+  border-left: 3px solid var(--color-accent);
 }
 
 /* PDF Actions */
 .pdf-actions {
   display: flex;
-  gap: 8px;
-  margin-top: 10px;
+  gap: var(--spacing-sm);
+  margin-top: var(--spacing-md);
 }
 
 .pdf-action-btn {
   flex: 1;
   border: none;
-  padding: 6px 12px;
-  border-radius: 4px;
-  font-size: 12px;
+  padding: 6px var(--spacing-md);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-xs);
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: background-color var(--transition-normal);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -110,10 +99,10 @@
 }
 
 .pdf-action-btn.danger {
-  background-color: #d13438;
-  color: #ffffff;
+  background-color: var(--color-danger);
+  color: var(--text-primary);
 }
 
 .pdf-action-btn.danger:hover {
-  background-color: #a02d30;
+  background-color: var(--color-danger-hover);
 }

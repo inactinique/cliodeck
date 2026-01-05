@@ -3,47 +3,47 @@
   flex-direction: column;
   height: 100%;
   width: 100%;
-  background-color: #1e1e1e;
+  background-color: var(--bg-app);
 }
 
 /* Toolbar */
 .editor-toolbar {
   display: flex;
   align-items: center;
-  gap: 16px;
-  padding: 0 16px;
-  background-color: #252526;
-  border-bottom: 1px solid #3e3e42;
+  gap: var(--spacing-md);
+  padding: 0 var(--spacing-md);
+  background-color: var(--bg-panel);
+  border-bottom: 1px solid var(--border-color);
   min-height: 42px;
 }
 
 .toolbar-section {
   display: flex;
-  gap: 4px;
+  gap: var(--spacing-xs);
   align-items: center;
 }
 
 .toolbar-btn {
   background: none;
   border: none;
-  color: #cccccc;
-  font-size: 14px;
+  color: var(--text-secondary);
+  font-size: var(--font-size-sm);
   cursor: pointer;
-  padding: 8px 10px;
-  border-radius: 4px;
-  transition: background-color 0.2s;
+  padding: var(--spacing-sm) var(--spacing-sm);
+  border-radius: var(--radius-sm);
+  transition: background-color var(--transition-normal);
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
 .toolbar-btn:hover {
-  background-color: #3e3e42;
+  background-color: var(--bg-card);
 }
 
 .toolbar-btn.active {
-  background-color: #007acc;
-  color: #ffffff;
+  background-color: var(--color-accent);
+  color: var(--text-primary);
 }
 
 .toolbar-btn strong,
@@ -62,15 +62,15 @@
 /* Resize Handle */
 .editor-resize-handle {
   width: 1px;
-  background-color: #3e3e42;
+  background-color: var(--border-color);
   cursor: col-resize;
-  transition: background-color 0.2s;
+  transition: background-color var(--transition-normal);
 }
 
 .editor-resize-handle:hover {
-  background-color: #007acc;
+  background-color: var(--color-accent);
 }
 
 .editor-resize-handle:active {
-  background-color: #0098ff;
+  background-color: var(--color-accent-active);
 }

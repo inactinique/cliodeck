@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import ForceGraph2D from 'react-force-graph-2d';
 import { CollapsibleSection } from '../common/CollapsibleSection';
 import { TopicTimeline } from './TopicTimeline';
+import { TextometricsPanel } from './TextometricsPanel';
 import { HelperTooltip } from '../Methodology/HelperTooltip';
 import './CorpusExplorerPanel.css';
 
@@ -62,6 +63,12 @@ interface TopicAnalysisResult {
   topics: Topic[];
   topicAssignments?: Record<string, number>;
   outliers?: string[];
+  statistics?: {
+    totalDocuments: number;
+    numTopics: number;
+    numOutliers: number;
+    numDocumentsInTopics: number;
+  };
 }
 
 export const CorpusExplorerPanel: React.FC = () => {
@@ -682,6 +689,11 @@ export const CorpusExplorerPanel: React.FC = () => {
         )}
       </CollapsibleSection>
 
+      {/* Textométrie */}
+      <CollapsibleSection title="Textométrie" defaultExpanded={false}>
+        <TextometricsPanel />
+      </CollapsibleSection>
+
       {/* Topics */}
       <CollapsibleSection title="Analyse thématique (BERTopic)" defaultExpanded={false}>
         {!topicAnalysis ? (
@@ -710,7 +722,19 @@ export const CorpusExplorerPanel: React.FC = () => {
         ) : (
           <div className="topics-list">
             <div className="topics-header">
-              <span>{topicAnalysis.topics?.length || 0} topics identifiés</span>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                <span>{topicAnalysis.topics?.length || 0} topics identifiés</span>
+                {topicAnalysis.statistics && (
+                  <span style={{ fontSize: '0.85em', color: '#666' }}>
+                    {topicAnalysis.statistics.numDocumentsInTopics}/{topicAnalysis.statistics.totalDocuments} documents analysés
+                    {topicAnalysis.statistics.numOutliers > 0 && (
+                      <span style={{ marginLeft: '0.5rem' }}>
+                        ({topicAnalysis.statistics.numOutliers} outliers)
+                      </span>
+                    )}
+                  </span>
+                )}
+              </div>
               <div className="topics-actions">
                 <button onClick={loadTopics} disabled={loadingTopics} className="reload-topics-btn">
                   {loadingTopics ? 'Analyse...' : 'Réanalyser'}

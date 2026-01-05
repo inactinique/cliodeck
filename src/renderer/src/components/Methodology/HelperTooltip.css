@@ -6,13 +6,13 @@
 }
 
 .help-icon {
-  color: #858585;
+  color: var(--text-tertiary);
   cursor: help;
-  transition: color 0.2s;
+  transition: color var(--transition-normal);
 }
 
 .help-icon:hover {
-  color: #007acc;
+  color: var(--color-accent);
 }
 
 .tooltip-content {
@@ -20,9 +20,9 @@
   top: calc(100% + 8px);
   left: 50%;
   transform: translateX(-50%);
-  background-color: #252526;
-  border: 1px solid #3e3e42;
-  border-radius: 6px;
+  background-color: var(--bg-panel);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
   padding: 0.75rem;
   min-width: 200px;
   max-width: 300px;
@@ -38,12 +38,12 @@
   left: 50%;
   transform: translateX(-50%);
   border: 6px solid transparent;
-  border-bottom-color: #252526;
+  border-bottom-color: var(--bg-panel);
 }
 
 .tooltip-content p {
   margin: 0;
-  color: #d4d4d4;
+  color: var(--text-secondary);
   font-size: 0.85rem;
   line-height: 1.4;
 }
@@ -53,16 +53,16 @@
   width: 100%;
   margin-top: 0.5rem;
   padding: 0.4rem;
-  background-color: #0e639c;
+  background-color: var(--color-accent);
   border: none;
-  color: #ffffff;
-  border-radius: 4px;
+  color: var(--text-primary);
+  border-radius: var(--radius-sm);
   font-size: 0.8rem;
   cursor: pointer;
   pointer-events: all;
-  transition: background-color 0.2s;
+  transition: background-color var(--transition-normal);
 }
 
 .learn-more-btn:hover {
-  background-color: #1177bb;
+  background-color: var(--color-accent-hover);
 }

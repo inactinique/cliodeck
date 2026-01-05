@@ -4,6 +4,7 @@ import { VectorStore } from '../../../backend/core/vector-store/VectorStore.js';
 import { OllamaClient } from '../../../backend/core/llm/OllamaClient.js';
 import { KnowledgeGraphBuilder } from '../../../backend/core/analysis/KnowledgeGraphBuilder.js';
 import { TopicModelingService } from '../../../backend/core/analysis/TopicModelingService.js';
+import { TextometricsService } from '../../../backend/core/analysis/TextometricsService.js';
 import { configManager } from './config-manager.js';
 import path from 'path';
 import fs from 'fs';
@@ -335,6 +336,65 @@ class PDFService {
   }
 
   /**
+   * Analyse textométrique du corpus
+   */
+  async getTextStatistics(options?: { topN?: number }) {
+    this.ensureInitialized();
+
+    const documents = await this.vectorStore!.getAllDocuments();
+
+    if (documents.length === 0) {
+      throw new Error('No documents found in corpus');
+    }
+
+    console.log(`📊 Analyzing text statistics for ${documents.length} documents...`);
+
+    // Récupérer le texte de chaque document
+    const corpusDocuments: Array<{ id: string; text: string }> = [];
+
+    for (const doc of documents) {
+      const chunks = this.vectorStore!.getChunksForDocument(doc.id);
+      console.log(`   Document ${doc.id.substring(0, 8)}: ${chunks.length} chunks`);
+
+      const fullText = chunks.map((chunkWithEmbedding) => chunkWithEmbedding.chunk.content).join(' ');
+      console.log(`   Text length: ${fullText.length} characters`);
+
+      corpusDocuments.push({
+        id: doc.id,
+        text: fullText,
+      });
+    }
+
+    console.log(`📊 Total corpus documents prepared: ${corpusDocuments.length}`);
+    console.log(`📊 Total text length: ${corpusDocuments.reduce((sum, doc) => sum + doc.text.length, 0)} characters`);
+
+    // Analyser avec le service textométrique
+    const textometricsService = new TextometricsService();
+    const statistics = textometricsService.analyzeCorpus(
+      corpusDocuments,
+      options?.topN || 50
+    );
+
+    console.log(`✅ Text statistics computed:`, {
+      totalWords: statistics.totalWords,
+      vocabularySize: statistics.vocabularySize,
+      lexicalRichness: statistics.lexicalRichness.toFixed(3),
+      topWordsCount: statistics.topWords.length,
+    });
+
+    // Convertir Map en objet pour JSON serialization
+    const wordFrequencyDistributionObj: Record<number, number> = {};
+    statistics.wordFrequencyDistribution.forEach((count, freq) => {
+      wordFrequencyDistributionObj[freq] = count;
+    });
+
+    return {
+      ...statistics,
+      wordFrequencyDistribution: wordFrequencyDistributionObj,
+    };
+  }
+
+  /**
    * Analyse les topics du corpus avec BERTopic
    */
   async analyzeTopics(options?: any) {
@@ -351,6 +411,43 @@ class PDFService {
     const texts: string[] = [];
     const documentIds: string[] = [];
 
+    // D'abord, déterminer la dimension d'embedding la plus commune
+    const dimensionCounts = new Map<number, number>();
+
+    for (const doc of documents) {
+      let embedding: Float32Array | null = null;
+
+      if (doc.summaryEmbedding) {
+        embedding = doc.summaryEmbedding;
+      } else {
+        const chunks = this.vectorStore!.getChunksForDocument(doc.id);
+        if (chunks.length > 0 && chunks[0].embedding) {
+          embedding = chunks[0].embedding;
+        }
+      }
+
+      if (embedding && embedding.length > 0) {
+        const count = dimensionCounts.get(embedding.length) || 0;
+        dimensionCounts.set(embedding.length, count + 1);
+      }
+    }
+
+    // Trouver la dimension la plus fréquente
+    let expectedDimension = 0;
+    let maxCount = 0;
+    for (const [dim, count] of dimensionCounts.entries()) {
+      if (count > maxCount) {
+        maxCount = count;
+        expectedDimension = dim;
+      }
+    }
+
+    console.log(`📊 Expected embedding dimension: ${expectedDimension} (found in ${maxCount} documents)`);
+    if (dimensionCounts.size > 1) {
+      console.warn(`⚠️ Found ${dimensionCounts.size} different embedding dimensions:`, Array.from(dimensionCounts.entries()));
+    }
+
+    // Maintenant collecter les embeddings avec la bonne dimension
     for (const doc of documents) {
       // Utiliser le résumé si disponible, sinon le titre
       const text = doc.summary || doc.title;
@@ -368,6 +465,12 @@ class PDFService {
       }
 
       if (text && embedding) {
+        // Vérifier la dimension
+        if (embedding.length !== expectedDimension) {
+          console.warn(`⚠️ Skipping document ${doc.id}: wrong embedding dimension (expected ${expectedDimension}, got ${embedding.length})`);
+          continue;
+        }
+
         // Valider que l'embedding est complet (pas de valeurs null/undefined)
         const isValid = embedding.length > 0 && !Array.from(embedding).some(v => v === null || v === undefined || isNaN(v));
 

@@ -4,7 +4,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.7);
+  background-color: var(--overlay-bg);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -12,10 +12,10 @@
 }
 
 .presentation-export-content {
-  background-color: #1e1e1e;
-  border: 1px solid #3e3e42;
-  border-radius: 8px;
-  padding: 1.5rem;
+  background-color: var(--bg-app);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-lg);
   max-width: 600px;
   width: 90%;
   max-height: 90vh;
@@ -31,26 +31,26 @@
 
 .presentation-export-header h3 {
   margin: 0;
-  color: #ccc;
-  font-size: 1.1rem;
+  color: var(--text-secondary);
+  font-size: var(--font-size-lg);
 }
 
 .close-btn {
   background: transparent;
   border: none;
-  color: #888;
+  color: var(--text-tertiary);
   cursor: pointer;
-  padding: 0.25rem;
-  border-radius: 4px;
+  padding: var(--spacing-xs);
+  border-radius: var(--radius-sm);
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s;
+  transition: all var(--transition-normal);
 }
 
 .close-btn:hover {
-  background-color: #3a3a3a;
-  color: #fff;
+  background-color: var(--bg-card);
+  color: var(--text-primary);
 }
 
 .close-btn:disabled {
@@ -71,24 +71,24 @@
   margin-bottom: var(--spacing-sm);
   font-size: var(--font-size-sm);
   font-weight: 600;
-  color: #ccc;
+  color: var(--text-secondary);
 }
 
 .form-field input,
 .form-field select {
   width: 100%;
-  padding: var(--item-padding-vertical) var(--item-padding-horizontal);
-  background-color: #252526;
-  color: #ccc;
-  border: 1px solid #3e3e42;
-  border-radius: 4px;
+  padding: var(--spacing-sm) var(--spacing-md);
+  background-color: var(--bg-panel);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
   font-size: var(--font-size-sm);
 }
 
 .form-field input:focus,
 .form-field select:focus {
   outline: none;
-  border-color: #007acc;
+  border-color: var(--color-accent);
 }
 
 .form-field input:disabled,
@@ -99,7 +99,7 @@
 
 .path-selector {
   display: flex;
-  gap: var(--list-item-gap);
+  gap: var(--spacing-sm);
   align-items: center;
 }
 
@@ -108,20 +108,20 @@
 }
 
 .path-selector button {
-  padding: 0.5rem 1rem;
-  background-color: #3c3c3c;
-  color: #ccc;
-  border: 1px solid #3e3e42;
-  border-radius: 4px;
+  padding: var(--spacing-sm) var(--spacing-md);
+  background-color: var(--bg-input);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
   cursor: pointer;
   font-size: var(--font-size-sm);
-  transition: all 0.2s;
+  transition: all var(--transition-normal);
   white-space: nowrap;
 }
 
 .path-selector button:hover {
-  background-color: #4a4a4a;
-  border-color: #007acc;
+  background-color: var(--bg-card-hover);
+  border-color: var(--color-accent);
 }
 
 .path-selector button:disabled {
@@ -132,30 +132,30 @@
 .export-progress {
   margin: var(--spacing-lg) 0;
   padding: var(--spacing-md);
-  background-color: #252526;
-  border-radius: 6px;
+  background-color: var(--bg-panel);
+  border-radius: var(--radius-sm);
 }
 
 .progress-bar-container {
   width: 100%;
   height: 8px;
-  background-color: #3e3e42;
-  border-radius: 4px;
+  background-color: var(--border-color);
+  border-radius: var(--radius-sm);
   overflow: hidden;
   margin-bottom: var(--spacing-sm);
 }
 
 .progress-bar {
   height: 100%;
-  background: linear-gradient(90deg, #007acc, #00a0ff);
-  border-radius: 4px;
-  transition: width 0.3s ease;
+  background: linear-gradient(90deg, var(--color-accent), var(--color-accent-hover));
+  border-radius: var(--radius-sm);
+  transition: width var(--transition-slow) ease;
 }
 
 .progress-message {
   margin: 0;
   font-size: var(--font-size-sm);
-  color: #888;
+  color: var(--text-tertiary);
   text-align: center;
 }
 
@@ -164,10 +164,10 @@
   align-items: center;
   gap: var(--spacing-sm);
   padding: var(--spacing-md);
-  background-color: rgba(244, 67, 54, 0.1);
-  border: 1px solid #f44336;
-  border-radius: 6px;
-  color: #ff6b6b;
+  background-color: var(--color-danger-bg);
+  border: 1px solid var(--color-danger);
+  border-radius: var(--radius-sm);
+  color: var(--color-danger);
   font-size: var(--font-size-sm);
 }
 
@@ -176,38 +176,38 @@
   align-items: center;
   gap: var(--spacing-sm);
   padding: var(--spacing-md);
-  background-color: rgba(76, 175, 80, 0.1);
-  border: 1px solid #4caf50;
-  border-radius: 6px;
-  color: #4caf50;
+  background-color: var(--color-success-bg);
+  border: 1px solid var(--color-success);
+  border-radius: var(--radius-sm);
+  color: var(--color-success);
   font-size: var(--font-size-sm);
 }
 
 .presentation-export-footer {
   display: flex;
-  gap: var(--list-item-gap);
+  gap: var(--spacing-sm);
   justify-content: flex-end;
 }
 
 .presentation-export-footer button {
-  padding: var(--item-padding-vertical) var(--item-padding-horizontal);
-  border: 1px solid #3e3e42;
-  border-radius: 6px;
+  padding: var(--spacing-sm) var(--spacing-md);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
   cursor: pointer;
   font-size: var(--font-size-sm);
-  transition: all 0.2s;
+  transition: all var(--transition-normal);
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: var(--spacing-sm);
 }
 
 .btn-cancel {
-  background-color: #252526;
-  color: #ccc;
+  background-color: var(--bg-panel);
+  color: var(--text-secondary);
 }
 
 .btn-cancel:hover {
-  background-color: #2a2a2a;
+  background-color: var(--bg-card-hover);
 }
 
 .btn-cancel:disabled {
@@ -216,13 +216,13 @@
 }
 
 .btn-export {
-  background-color: #007acc;
-  color: white;
-  border-color: #007acc;
+  background-color: var(--color-accent);
+  color: var(--text-primary);
+  border-color: var(--color-accent);
 }
 
 .btn-export:hover:not(:disabled) {
-  background-color: #005a9e;
+  background-color: var(--color-accent-hover);
 }
 
 .btn-export:disabled {
@@ -236,9 +236,10 @@
 }
 
 .presentation-export-content code {
-  padding: 0.1rem 0.3rem;
-  background-color: #3e3e42;
-  border-radius: 3px;
+  padding: 2px 6px;
+  background-color: var(--code-inline-bg);
+  border-radius: var(--radius-xs);
   font-family: 'Courier New', monospace;
   font-size: 0.85em;
+  color: var(--code-text);
 }

@@ -4,7 +4,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.7);
+  background-color: var(--overlay-bg);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -12,9 +12,9 @@
 }
 
 .settings-content {
-  background-color: #1e1e1e;
-  border: 1px solid #3e3e42;
-  border-radius: 8px;
+  background-color: var(--bg-app);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
   max-width: 800px;
   width: 90%;
   max-height: 90vh;
@@ -27,30 +27,30 @@
   align-items: center;
   justify-content: space-between;
   padding: var(--spacing-lg);
-  border-bottom: 1px solid #3e3e42;
+  border-bottom: 1px solid var(--border-color);
 }
 
 .settings-header h3 {
   margin: 0;
-  color: #ccc;
+  color: var(--text-secondary);
   font-size: 1.125rem;
 }
 
 .settings-modal .close-btn {
   background: transparent;
   border: none;
-  color: #888;
+  color: var(--text-tertiary);
   cursor: pointer;
   padding: 0.25rem;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s;
+  transition: all var(--transition-normal);
 }
 
 .settings-modal .close-btn:hover:not(:disabled) {
-  background-color: #3a3a3a;
+  background-color: var(--bg-card);
   color: #fff;
 }
 

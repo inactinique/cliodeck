@@ -2,8 +2,8 @@
   display: flex;
   flex-direction: column;
   height: 100%;
-  background-color: #1e1e1e;
-  color: #d4d4d4;
+  background-color: var(--bg-app);
+  color: var(--text-secondary);
 }
 
 .project-content {
@@ -29,18 +29,18 @@
 .project-panel .toolbar-btn {
   padding: 0.175rem;
   background-color: transparent;
-  color: #ccc;
+  color: var(--text-secondary);
   border: none;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all var(--transition-normal);
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
 }
 
 .project-panel .toolbar-btn:hover {
-  background-color: #3a3a3a;
+  background-color: var(--bg-card);
   color: #fff;
 }
 
@@ -51,13 +51,13 @@
 
 .project-panel .toolbar-btn:disabled:hover {
   background-color: transparent;
-  color: #ccc;
+  color: var(--text-secondary);
 }
 
 .current-project-info {
-  background-color: #252526;
-  border: 1px solid #3e3e42;
-  border-radius: 8px;
+  background-color: var(--bg-panel);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
   padding: var(--spacing-lg);
   margin-bottom: var(--spacing-xl);
 }
@@ -65,7 +65,7 @@
 .current-project-info h3 {
   margin: 0 0 0.75rem 0;
   font-size: 1rem;
-  color: #ccc;
+  color: var(--text-secondary);
 }
 
 .project-meta {
@@ -78,20 +78,20 @@
 .project-meta-row {
   display: flex;
   justify-content: space-between;
-  color: #888;
+  color: var(--text-tertiary);
 }
 
 .project-meta-label {
   font-weight: 600;
-  color: #ccc;
+  color: var(--text-secondary);
 }
 
 .project-type-badge {
   display: inline-block;
   padding: 0.25rem 0.75rem;
-  background-color: #007acc;
-  color: white;
-  border-radius: 12px;
+  background-color: var(--color-accent);
+  color: var(--text-primary);
+  border-radius: var(--radius-lg);
   font-size: 0.75rem;
   font-weight: 600;
 }
@@ -103,7 +103,7 @@
 .recent-projects h3 {
   margin: 0 0 1rem 0;
   font-size: 1rem;
-  color: #ccc;
+  color: var(--text-secondary);
 }
 
 .recent-projects-list {
@@ -113,19 +113,19 @@
 }
 
 .recent-project-item {
-  background-color: #252526;
-  border: 1px solid #3e3e42;
-  border-radius: 6px;
+  background-color: var(--bg-panel);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
   padding: var(--item-padding-vertical) var(--item-padding-horizontal);
-  transition: all 0.2s;
+  transition: all var(--transition-normal);
   display: flex;
   align-items: center;
   gap: 0.5rem;
 }
 
 .recent-project-item:hover {
-  border-color: #007acc;
-  background-color: #2a2a2a;
+  border-color: var(--color-accent);
+  background-color: var(--bg-card-hover);
 }
 
 .recent-project-content {
@@ -138,33 +138,33 @@
   flex-shrink: 0;
   background: transparent;
   border: none;
-  color: #888;
+  color: var(--text-tertiary);
   cursor: pointer;
   padding: 0.25rem;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s;
+  transition: all var(--transition-normal);
 }
 
 .recent-project-remove:hover {
-  background-color: #f44336;
-  color: white;
+  background-color: var(--color-danger);
+  color: var(--text-primary);
 }
 
 .recent-project-name {
   font-weight: 600;
-  color: #ccc;
+  color: var(--text-secondary);
   margin-bottom: 0.25rem;
 }
 
 .recent-project-path {
   font-size: 0.75rem;
-  color: #888;
+  color: var(--text-tertiary);
   overflow: hidden;
   text-overflow: ellipsis;
-  white-space: nowrap;
+  var(--text-primary)-space: nowrap;
 }
 
 .create-project-modal {
@@ -173,7 +173,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.7);
+  background-color: var(--overlay-bg);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -181,9 +181,9 @@
 }
 
 .create-project-content {
-  background-color: #1e1e1e;
-  border: 1px solid #3e3e42;
-  border-radius: 8px;
+  background-color: var(--bg-app);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
   padding: 1rem;
   max-width: 500px;
   width: 90%;
@@ -191,7 +191,7 @@
 
 .create-project-content h3 {
   margin: 0 0 var(--spacing-lg) 0;
-  color: #ccc;
+  color: var(--text-secondary);
 }
 
 .form-field {
@@ -203,24 +203,24 @@
   margin-bottom: var(--spacing-sm);
   font-size: var(--font-size-sm);
   font-weight: 600;
-  color: #ccc;
+  color: var(--text-secondary);
 }
 
 .form-field input,
 .form-field select {
   width: 100%;
   padding: var(--item-padding-vertical) var(--item-padding-horizontal);
-  background-color: #252526;
-  color: #ccc;
-  border: 1px solid #3e3e42;
-  border-radius: 4px;
+  background-color: var(--bg-panel);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
   font-size: var(--font-size-sm);
 }
 
 .form-field input:focus,
 .form-field select:focus {
   outline: none;
-  border-color: #007acc;
+  border-color: var(--color-accent);
 }
 
 .form-actions {
@@ -232,30 +232,30 @@
 .form-actions button {
   flex: 1;
   padding: var(--item-padding-vertical) var(--item-padding-horizontal);
-  border: 1px solid #3e3e42;
-  border-radius: 6px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
   cursor: pointer;
   font-size: var(--font-size-sm);
-  transition: all 0.2s;
+  transition: all var(--transition-normal);
 }
 
 .form-actions .btn-cancel {
-  background-color: #252526;
-  color: #ccc;
+  background-color: var(--bg-panel);
+  color: var(--text-secondary);
 }
 
 .form-actions .btn-cancel:hover {
-  background-color: #2a2a2a;
+  background-color: var(--bg-card-hover);
 }
 
 .form-actions .btn-submit {
-  background-color: #007acc;
-  color: white;
-  border-color: #007acc;
+  background-color: var(--color-accent);
+  color: var(--text-primary);
+  border-color: var(--color-accent);
 }
 
 .form-actions .btn-submit:hover {
-  background-color: #005a9e;
+  background-color: var(--color-accent-hover);
 }
 
 .form-actions .btn-submit:disabled {
@@ -266,7 +266,7 @@
 .empty-state {
   text-align: center;
   padding: 1rem;
-  color: #888;
+  color: var(--text-tertiary);
 }
 
 .empty-state p {
@@ -286,18 +286,18 @@
 
 .path-selector button {
   padding: 0.5rem 1rem;
-  background-color: #3c3c3c;
-  color: #ccc;
-  border: 1px solid #3e3e42;
-  border-radius: 4px;
+  background-color: var(--bg-input);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
   cursor: pointer;
   font-size: var(--font-size-sm);
-  transition: all 0.2s;
+  transition: all var(--transition-normal);
 }
 
 .path-selector button:hover {
-  background-color: #4a4a4a;
-  border-color: #007acc;
+  background-color: var(--bg-card-hover);
+  border-color: var(--color-accent);
 }
 
 .project-files-list {
@@ -308,11 +308,11 @@
 
 .project-file-item {
   padding: 0.5rem 0.75rem;
-  background-color: #252526;
-  border: 1px solid #3e3e42;
-  border-radius: 4px;
+  background-color: var(--bg-panel);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all var(--transition-normal);
   font-size: 0.875rem;
   display: flex;
   align-items: center;
@@ -320,8 +320,8 @@
 }
 
 .project-file-item:hover {
-  background-color: #2a2a2a;
-  border-color: #007acc;
+  background-color: var(--bg-card-hover);
+  border-color: var(--color-accent);
   color: #fff;
 }
 
@@ -330,17 +330,17 @@
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  background-color: #007acc;
-  color: white;
-  border: 1px solid #007acc;
+  background-color: var(--color-accent);
+  color: var(--text-primary);
+  border: 1px solid var(--color-accent);
   padding: 0.75rem;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   cursor: pointer;
   font-weight: 600;
-  transition: all 0.2s;
+  transition: all var(--transition-normal);
 }
 
 .project-btn.export-btn:hover {
-  background-color: #005a9e;
-  border-color: #005a9e;
+  background-color: var(--color-accent-hover);
+  border-color: var(--color-accent-hover);
 }
