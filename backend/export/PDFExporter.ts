@@ -1,7 +1,17 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import puppeteer from 'puppeteer';
 import { marked } from 'marked';
+
+// Lazy-load Puppeteer only when needed (saves ~400MB on startup)
+let puppeteerInstance: typeof import('puppeteer') | null = null;
+async function getPuppeteer() {
+  if (!puppeteerInstance) {
+    console.log('📦 Lazy-loading Puppeteer (~400MB)...');
+    puppeteerInstance = await import('puppeteer');
+    console.log('✅ Puppeteer loaded');
+  }
+  return puppeteerInstance;
+}
 
 export interface PDFExportOptions {
   format?: 'A4' | 'Letter';
@@ -29,6 +39,9 @@ export class PDFExporter {
   ): Promise<void> {
     // Convertir markdown en HTML
     const html = this.markdownToHTML(markdown);
+
+    // Lazy-load Puppeteer (only loaded when export is triggered)
+    const puppeteer = await getPuppeteer();
 
     // Lancer Puppeteer
     const browser = await puppeteer.launch({

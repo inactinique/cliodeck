@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, memo } from 'react';
 import { ChatMessage } from '../../stores/chatStore';
 import { MessageBubble } from './MessageBubble';
 import { useChatStore } from '../../stores/chatStore';
@@ -8,7 +8,7 @@ interface MessageListProps {
   messages: ChatMessage[];
 }
 
-export const MessageList: React.FC<MessageListProps> = ({ messages }) => {
+export const MessageList: React.FC<MessageListProps> = memo(({ messages }) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { isProcessing, currentStreamingMessage } = useChatStore();
 
@@ -48,4 +48,7 @@ export const MessageList: React.FC<MessageListProps> = ({ messages }) => {
       <div ref={messagesEndRef} />
     </div>
   );
-};
+}, (prevProps, nextProps) => {
+  // Custom comparison: only re-render if messages array changes
+  return prevProps.messages === nextProps.messages;
+});

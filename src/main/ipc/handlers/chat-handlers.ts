@@ -1,0 +1,82 @@
+/**
+ * Chat and RAG IPC handlers
+ */
+import { ipcMain, BrowserWindow } from 'electron';
+import { projectManager } from '../../services/project-manager.js';
+import { pdfService } from '../../services/pdf-service.js';
+import { chatService } from '../../services/chat-service.js';
+import { configManager } from '../../services/config-manager.js';
+import { successResponse, errorResponse } from '../utils/error-handler.js';
+import { validate, ChatSendSchema } from '../utils/validation.js';
+
+export function setupChatHandlers() {
+  ipcMain.handle('chat:send', async (event, message: string, options?: any) => {
+    console.log('📞 IPC Call: chat:send', { message: message.substring(0, 50) + '...', options });
+    try {
+      // Validate input
+      const validatedData = validate(ChatSendSchema, { message, options });
+
+      // Initialize PDF service for RAG if context is requested
+      if (validatedData.options?.context) {
+        const projectPath = projectManager.getCurrentProjectPath();
+        console.log('🔍 [RAG DEBUG] Current project path:', projectPath);
+
+        if (projectPath) {
+          console.log('🔍 [RAG DEBUG] Initializing PDF service for:', projectPath);
+          await pdfService.init(projectPath);
+          console.log('✅ [RAG DEBUG] PDF service initialized successfully');
+
+          // Test search to verify RAG is working
+          const stats = await pdfService.getStatistics();
+          console.log('🔍 [RAG DEBUG] Vector DB statistics:', stats);
+        } else {
+          console.warn('⚠️  [RAG DEBUG] No project path - RAG will not be used');
+        }
+      } else {
+        console.log('🔍 [RAG DEBUG] Context not requested - RAG disabled');
+      }
+
+      const window = BrowserWindow.fromWebContents(event.sender);
+
+      // Load RAG config and merge with passed options
+      const ragConfig = configManager.getRAGConfig();
+      const enrichedOptions = {
+        context: validatedData.options?.context,
+        topK: validatedData.options?.topK || ragConfig.topK,
+        includeSummaries: ragConfig.includeSummaries || false,
+        useGraphContext: ragConfig.useGraphContext || false,
+        additionalGraphDocs: ragConfig.additionalGraphDocs || 3,
+        window,
+        // Per-query parameters (from RAG settings panel)
+        model: validatedData.options?.model,
+        timeout: validatedData.options?.timeout,
+        temperature: validatedData.options?.temperature,
+        top_p: validatedData.options?.top_p,
+        top_k: validatedData.options?.top_k,
+        repeat_penalty: validatedData.options?.repeat_penalty,
+      };
+
+      console.log('🔍 [RAG DEBUG] Enriched options:', enrichedOptions);
+
+      const response = await chatService.sendMessage(validatedData.message, enrichedOptions);
+
+      console.log('📤 IPC Response: chat:send', { responseLength: response.length });
+      return successResponse({ response });
+    } catch (error: any) {
+      console.error('❌ chat:send error:', error);
+      return { ...errorResponse(error), response: '' };
+    }
+  });
+
+  ipcMain.handle('chat:cancel', async () => {
+    try {
+      chatService.cancelCurrentStream();
+      return successResponse();
+    } catch (error: any) {
+      console.error('❌ chat:cancel error:', error);
+      return errorResponse(error);
+    }
+  });
+
+  console.log('✅ Chat handlers registered');
+}

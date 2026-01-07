@@ -1,6 +1,8 @@
 import React, { useEffect } from 'react';
+import { ErrorBoundary } from 'react-error-boundary';
 import { MainLayout } from './components/Layout/MainLayout';
 import { EditorPanel } from './components/Editor/EditorPanel';
+import { ErrorFallback } from './components/ErrorFallback';
 import { useMenuShortcuts } from './hooks/useMenuShortcuts';
 import { useLanguageStore } from './stores/languageStore';
 import { useProjectStore } from './stores/projectStore';
@@ -39,9 +41,20 @@ function App() {
   }, [initializeLanguage, loadProject]);
 
   return (
-    <MainLayout
-      centerPanel={<EditorPanel />}
-    />
+    <ErrorBoundary
+      FallbackComponent={ErrorFallback}
+      onReset={() => {
+        // Reset app state if needed
+        window.location.reload();
+      }}
+      onError={(error, errorInfo) => {
+        // Log error to console
+        console.error('Error caught by boundary:', error, errorInfo);
+        // TODO: Send to error tracking service (Sentry, etc.)
+      }}
+    >
+      <MainLayout centerPanel={<EditorPanel />} />
+    </ErrorBoundary>
   );
 }
 

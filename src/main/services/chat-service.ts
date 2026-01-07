@@ -1,4 +1,5 @@
 // @ts-nocheck
+import { LRUCache } from 'lru-cache';
 import { pdfService } from './pdf-service.js';
 import { BrowserWindow } from 'electron';
 import { historyService } from './history-service.js';
@@ -36,6 +37,13 @@ function hashString(str: string): string {
 class ChatService {
   private currentStream: any = null;
   private compressor: ContextCompressor = new ContextCompressor();
+
+  // LRU Cache for RAG search results (cache identical queries)
+  private ragCache = new LRUCache<string, any[]>({
+    max: 100, // Store up to 100 different queries
+    ttl: 1000 * 60 * 10, // 10 minutes TTL
+    updateAgeOnGet: true, // Refresh TTL on access
+  });
 
   /**
    * Convertit les résultats de recherche en utilisant les résumés au lieu des chunks
@@ -145,7 +153,21 @@ class ChatService {
           timestamp: new Date().toISOString(),
         });
 
-        searchResults = await pdfService.search(message, { topK: options.topK });
+        // Check cache first (identical queries = instant results)
+        const cacheKey = `${queryHash}-${options.topK || 5}`;
+        const cachedResults = this.ragCache.get(cacheKey);
+
+        if (cachedResults) {
+          console.log(`💾 Cache HIT for query hash ${queryHash} (saved ${Date.now() - searchStart}ms)`);
+          searchResults = cachedResults;
+        } else {
+          console.log(`🔍 Cache MISS for query hash ${queryHash}, performing search...`);
+          searchResults = await pdfService.search(message, { topK: options.topK });
+
+          // Store in cache for future identical queries
+          this.ragCache.set(cacheKey, searchResults);
+          console.log(`💾 Cached ${searchResults.length} results for query hash ${queryHash}`);
+        }
         const searchDuration = Date.now() - searchStart;
 
         console.log('🔍 [RAG DETAILED DEBUG] Search completed:', {

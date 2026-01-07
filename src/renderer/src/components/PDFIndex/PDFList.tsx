@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { PDFCard } from './PDFCard';
 import './PDFList.css';
 
@@ -17,7 +17,7 @@ interface PDFListProps {
   onDelete: (id: string) => void;
 }
 
-export const PDFList: React.FC<PDFListProps> = ({ documents, onDelete }) => {
+export const PDFList: React.FC<PDFListProps> = memo(({ documents, onDelete }) => {
   return (
     <div className="pdf-list">
       {documents.map((doc) => (
@@ -25,4 +25,4 @@ export const PDFList: React.FC<PDFListProps> = ({ documents, onDelete }) => {
       ))}
     </div>
   );
-};
+});
