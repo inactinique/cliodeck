@@ -1,6 +1,7 @@
 // @ts-nocheck
 import { PDFIndexer } from '../../../backend/core/pdf/PDFIndexer.js';
 import { VectorStore } from '../../../backend/core/vector-store/VectorStore.js';
+import { EnhancedVectorStore } from '../../../backend/core/vector-store/EnhancedVectorStore.js';
 import { OllamaClient } from '../../../backend/core/llm/OllamaClient.js';
 import { KnowledgeGraphBuilder } from '../../../backend/core/analysis/KnowledgeGraphBuilder.js';
 import { TopicModelingService } from '../../../backend/core/analysis/TopicModelingService.js';
@@ -51,7 +52,7 @@ function expandQueryMultilingual(query: string): string[] {
 
 class PDFService {
   private pdfIndexer: PDFIndexer | null = null;
-  private vectorStore: VectorStore | null = null;
+  private vectorStore: VectorStore | EnhancedVectorStore | null = null;
   private ollamaClient: OllamaClient | null = null;
   private currentProjectPath: string | null = null;
 
@@ -81,8 +82,26 @@ class PDFService {
         config.ollamaEmbeddingModel
       );
 
-      // Initialiser VectorStore pour ce projet spécifique
-      this.vectorStore = new VectorStore(projectPath);
+      // Initialiser VectorStore (Enhanced ou Standard selon config)
+      const useEnhancedSearch =
+        ragConfig.useHNSWIndex !== false || ragConfig.useHybridSearch !== false;
+
+      if (useEnhancedSearch) {
+        console.log('🚀 [PDF-SERVICE] Using EnhancedVectorStore (HNSW + BM25)');
+        this.vectorStore = new EnhancedVectorStore(projectPath);
+        await this.vectorStore.initialize();
+
+        // Configure search modes
+        if (ragConfig.useHNSWIndex !== undefined) {
+          this.vectorStore.setUseHNSW(ragConfig.useHNSWIndex);
+        }
+        if (ragConfig.useHybridSearch !== undefined) {
+          this.vectorStore.setUseHybrid(ragConfig.useHybridSearch);
+        }
+      } else {
+        console.log('📊 [PDF-SERVICE] Using standard VectorStore (linear search)');
+        this.vectorStore = new VectorStore(projectPath);
+      }
 
       // Convertir le nouveau format de config en ancien format pour le summarizer
       // Support pour compatibilité ascendante et descendante
@@ -99,12 +118,13 @@ class PDFService {
         maxLength: summarizerConfig.maxLength
       });
 
-      // Initialiser PDFIndexer avec configuration du summarizer
+      // Initialiser PDFIndexer avec configuration du summarizer et adaptive chunking
       this.pdfIndexer = new PDFIndexer(
         this.vectorStore,
         this.ollamaClient,
         ragConfig.chunkingConfig,
-        summarizerConfig
+        summarizerConfig,
+        ragConfig.useAdaptiveChunking !== false // Enable by default
       );
 
       this.currentProjectPath = projectPath;
@@ -169,11 +189,25 @@ class PDFService {
       });
 
       const vectorSearchStart = Date.now();
-      const results = this.vectorStore!.search(
-        queryEmbedding,
-        topK,
-        options?.documentIds
-      );
+
+      // EnhancedVectorStore requires query string + embedding
+      // VectorStore requires only embedding
+      let results;
+      if (this.vectorStore instanceof EnhancedVectorStore) {
+        results = await this.vectorStore.search(
+          expandedQuery,
+          queryEmbedding,
+          topK,
+          options?.documentIds
+        );
+      } else {
+        results = this.vectorStore!.search(
+          queryEmbedding,
+          topK,
+          options?.documentIds
+        );
+      }
+
       const vectorSearchDuration = Date.now() - vectorSearchStart;
 
       // Merger les résultats (garder le meilleur score par chunk)

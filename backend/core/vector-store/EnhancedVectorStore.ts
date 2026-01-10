@@ -261,6 +261,52 @@ export class EnhancedVectorStore {
   }
 
   /**
+   * Delegate methods to base VectorStore for compatibility
+   */
+  saveDocument(document: any): void {
+    return this.vectorStore.saveDocument(document);
+  }
+
+  getDocument(documentId: string): any {
+    return this.vectorStore.getDocument(documentId);
+  }
+
+  getAllDocuments(): any[] {
+    return this.vectorStore.getAllDocuments();
+  }
+
+  deleteDocument(documentId: string): void {
+    this.vectorStore.deleteDocument(documentId);
+  }
+
+  saveCitation(citation: any): void {
+    this.vectorStore.saveCitation(citation);
+  }
+
+  getStatistics(): any {
+    return this.vectorStore.getStatistics();
+  }
+
+  cleanOrphanedChunks(): void {
+    this.vectorStore.cleanOrphanedChunks();
+  }
+
+  verifyIntegrity(): any {
+    return this.vectorStore.verifyIntegrity();
+  }
+
+  getAllChunksWithEmbeddings(): any[] {
+    return this.vectorStore.getAllChunksWithEmbeddings();
+  }
+
+  /**
+   * Save chunk to base store only (for backward compatibility)
+   */
+  saveChunk(chunk: any, embedding: Float32Array): void {
+    this.vectorStore.saveChunk(chunk, embedding);
+  }
+
+  /**
    * Close database connection
    */
   close(): void {

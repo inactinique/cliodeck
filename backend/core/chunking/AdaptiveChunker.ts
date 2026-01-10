@@ -391,6 +391,31 @@ export class AdaptiveChunker {
       .replace(/[\x00-\x1F\x7F-\x9F]/g, '')
       .trim();
   }
+
+  /**
+   * Get chunking statistics (compatible with DocumentChunker)
+   */
+  getChunkingStats(chunks: any[]): {
+    totalChunks: number;
+    totalWords: number;
+    averageWordCount: number;
+    minWordCount: number;
+    maxWordCount: number;
+  } {
+    const wordCounts = chunks.map((chunk) => {
+      return chunk.content.split(/\s+/).filter((w: string) => w.length > 0).length;
+    });
+
+    const totalWords = wordCounts.reduce((sum, count) => sum + count, 0);
+
+    return {
+      totalChunks: chunks.length,
+      totalWords,
+      averageWordCount: Math.round(totalWords / chunks.length) || 0,
+      minWordCount: Math.min(...wordCounts) || 0,
+      maxWordCount: Math.max(...wordCounts) || 0,
+    };
+  }
 }
 
 // Types

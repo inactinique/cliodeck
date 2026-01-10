@@ -1,7 +1,9 @@
 import { randomUUID } from 'crypto';
 import { PDFExtractor } from './PDFExtractor';
 import { DocumentChunker, CHUNKING_CONFIGS } from '../chunking/DocumentChunker';
+import { AdaptiveChunker } from '../chunking/AdaptiveChunker';
 import { VectorStore } from '../vector-store/VectorStore';
+import { EnhancedVectorStore } from '../vector-store/EnhancedVectorStore';
 import { OllamaClient } from '../llm/OllamaClient';
 import { CitationExtractor } from '../analysis/CitationExtractor';
 import { DocumentSummarizer, type SummarizerConfig } from '../analysis/DocumentSummarizer';
@@ -28,21 +30,33 @@ export interface IndexingProgress {
 
 export class PDFIndexer {
   private pdfExtractor: PDFExtractor;
-  private chunker: DocumentChunker;
-  private vectorStore: VectorStore;
+  private chunker: DocumentChunker | AdaptiveChunker;
+  private vectorStore: VectorStore | EnhancedVectorStore;
   private ollamaClient: OllamaClient;
   private citationExtractor: CitationExtractor;
   private documentSummarizer: DocumentSummarizer | null = null;
   private summarizerConfig: SummarizerConfig;
+  private useAdaptiveChunking: boolean;
 
   constructor(
-    vectorStore: VectorStore,
+    vectorStore: VectorStore | EnhancedVectorStore,
     ollamaClient: OllamaClient,
     chunkingConfig: 'cpuOptimized' | 'standard' | 'large' = 'cpuOptimized',
-    summarizerConfig?: SummarizerConfig
+    summarizerConfig?: SummarizerConfig,
+    useAdaptiveChunking: boolean = false
   ) {
     this.pdfExtractor = new PDFExtractor();
-    this.chunker = new DocumentChunker(CHUNKING_CONFIGS[chunkingConfig]);
+    this.useAdaptiveChunking = useAdaptiveChunking;
+
+    // Choose chunker based on configuration
+    if (useAdaptiveChunking) {
+      console.log('📐 Using AdaptiveChunker (structure-aware)');
+      this.chunker = new AdaptiveChunker(CHUNKING_CONFIGS[chunkingConfig]);
+    } else {
+      console.log('📐 Using DocumentChunker (fixed-size)');
+      this.chunker = new DocumentChunker(CHUNKING_CONFIGS[chunkingConfig]);
+    }
+
     this.vectorStore = vectorStore;
     this.ollamaClient = ollamaClient;
     this.citationExtractor = new CitationExtractor();
@@ -227,28 +241,71 @@ export class PDFIndexer {
         totalChunks: chunks.length,
       });
 
-      for (let i = 0; i < chunks.length; i++) {
-        const chunk = chunks[i];
+      // Check if we're using EnhancedVectorStore
+      const isEnhancedStore = this.vectorStore instanceof EnhancedVectorStore;
 
-        // Générer l'embedding
-        const embedding = await this.ollamaClient.generateEmbedding(chunk.content);
+      if (isEnhancedStore) {
+        // Batch processing for EnhancedVectorStore
+        console.log('📦 Using batch indexing for EnhancedVectorStore');
+        const chunksWithEmbeddings = [];
 
-        // Sauvegarder le chunk avec son embedding
-        this.vectorStore.saveChunk(chunk, embedding);
+        for (let i = 0; i < chunks.length; i++) {
+          const chunk = chunks[i];
 
-        // Mise à jour de la progression
-        const progress = 50 + Math.floor((i / chunks.length) * 45);
+          // Générer l'embedding
+          const embedding = await this.ollamaClient.generateEmbedding(chunk.content);
+
+          chunksWithEmbeddings.push({ chunk, embedding });
+
+          // Mise à jour de la progression
+          const progress = 50 + Math.floor((i / chunks.length) * 40);
+          onProgress?.({
+            stage: 'embedding',
+            progress,
+            message: `Embeddings: ${i + 1}/${chunks.length}`,
+            currentChunk: i + 1,
+            totalChunks: chunks.length,
+          });
+
+          // Log progression tous les 10 chunks
+          if ((i + 1) % 10 === 0 || i === chunks.length - 1) {
+            console.log(`  Embeddings: ${i + 1}/${chunks.length}`);
+          }
+        }
+
+        // Batch add to all indexes (HNSW, BM25, SQLite)
+        await (this.vectorStore as EnhancedVectorStore).addChunks(chunksWithEmbeddings);
+
         onProgress?.({
           stage: 'embedding',
-          progress,
-          message: `Embeddings: ${i + 1}/${chunks.length}`,
-          currentChunk: i + 1,
-          totalChunks: chunks.length,
+          progress: 95,
+          message: 'Index HNSW et BM25 construits',
         });
+      } else {
+        // Original behavior for VectorStore
+        for (let i = 0; i < chunks.length; i++) {
+          const chunk = chunks[i];
 
-        // Log progression tous les 10 chunks
-        if ((i + 1) % 10 === 0 || i === chunks.length - 1) {
-          console.log(`  Embeddings: ${i + 1}/${chunks.length}`);
+          // Générer l'embedding
+          const embedding = await this.ollamaClient.generateEmbedding(chunk.content);
+
+          // Sauvegarder le chunk avec son embedding
+          this.vectorStore.saveChunk(chunk, embedding);
+
+          // Mise à jour de la progression
+          const progress = 50 + Math.floor((i / chunks.length) * 45);
+          onProgress?.({
+            stage: 'embedding',
+            progress,
+            message: `Embeddings: ${i + 1}/${chunks.length}`,
+            currentChunk: i + 1,
+            totalChunks: chunks.length,
+          });
+
+          // Log progression tous les 10 chunks
+          if ((i + 1) % 10 === 0 || i === chunks.length - 1) {
+            console.log(`  Embeddings: ${i + 1}/${chunks.length}`);
+          }
         }
       }
 
@@ -259,7 +316,12 @@ export class PDFIndexer {
         message: 'Calcul des similarités avec les autres documents...',
       });
 
-      const similaritiesCount = this.vectorStore.computeAndSaveSimilarities(
+      // Get the base VectorStore for similarity calculations
+      const baseStore = isEnhancedStore
+        ? (this.vectorStore as EnhancedVectorStore).getBaseStore()
+        : (this.vectorStore as VectorStore);
+
+      const similaritiesCount = baseStore.computeAndSaveSimilarities(
         documentId,
         0.5 // Seuil de similarité
       );
