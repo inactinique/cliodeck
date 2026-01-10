@@ -562,6 +562,7 @@ class PDFService {
 
     // Ajuster min_topic_size en fonction du nombre de topics demandés
     // Si l'utilisateur demande beaucoup de topics, réduire min_topic_size
+    // Minimum absolu: 2 (validation Pydantic du service Python)
     let adjustedMinTopicSize = options?.minTopicSize || 2;
     const requestedTopics = options?.nrTopics || defaultNrTopics;
 
@@ -569,9 +570,9 @@ class PDFService {
       // Si on demande beaucoup de topics par rapport au corpus, réduire min_topic_size
       const topicsPerDoc = requestedTopics / embeddings.length;
       if (topicsPerDoc > 0.08) {
-        // Plus de 1 topic pour 12 documents → très granulaire, utiliser min_topic_size=1
-        adjustedMinTopicSize = 1;
-        console.log(`📊 Adjusted minTopicSize to 1 (high topic granularity requested: ${requestedTopics} topics for ${embeddings.length} docs)`);
+        // Plus de 1 topic pour 12 documents → très granulaire, utiliser min_topic_size=2 (minimum autorisé)
+        adjustedMinTopicSize = 2;
+        console.log(`📊 Adjusted minTopicSize to 2 (high topic granularity requested: ${requestedTopics} topics for ${embeddings.length} docs)`);
       }
     }
 

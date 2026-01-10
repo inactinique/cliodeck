@@ -1,6 +1,6 @@
 import Database from 'better-sqlite3';
 import path from 'path';
-import { existsSync, mkdirSync } from 'fs';
+import { existsSync, mkdirSync, chmodSync } from 'fs';
 import { randomUUID } from 'crypto';
 import type {
   PDFDocument,
@@ -43,9 +43,25 @@ export class VectorStore {
       console.log(`📂 Dossier .mdfocus créé: ${mdfocusDir}`);
     }
 
+    // S'assurer que le dossier .mdfocus a les bonnes permissions
+    try {
+      chmodSync(mdfocusDir, 0o755); // rwxr-xr-x
+    } catch (error) {
+      console.warn(`⚠️  Could not set permissions on ${mdfocusDir}:`, error);
+    }
+
     // Ouvrir la base de données
     this.db = new Database(this.dbPath);
     console.log('✅ Base de données ouverte');
+
+    // S'assurer que le fichier de base de données a les bonnes permissions
+    try {
+      if (existsSync(this.dbPath)) {
+        chmodSync(this.dbPath, 0o644); // rw-r--r--
+      }
+    } catch (error) {
+      console.warn(`⚠️  Could not set permissions on ${this.dbPath}:`, error);
+    }
 
     // ✅ IMPORTANT : Activer les clés étrangères (désactivées par défaut dans SQLite)
     this.enableForeignKeys();
