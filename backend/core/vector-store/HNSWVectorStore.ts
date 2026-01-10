@@ -1,8 +1,11 @@
-import { HierarchicalNSW } from 'hnswlib-node';
+import hnswlib from 'hnswlib-node';
 import { VectorStore } from './VectorStore';
 import type { SearchResult, DocumentChunk } from '../../types/pdf-document';
 import * as path from 'path';
 import * as fs from 'fs';
+
+const { HierarchicalNSW } = hnswlib;
+type HierarchicalNSW = InstanceType<typeof HierarchicalNSW>;
 
 /**
  * HNSW-based vector store for fast approximate nearest neighbor search
