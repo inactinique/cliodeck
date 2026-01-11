@@ -1,7 +1,6 @@
-import { writeFile, readFile, mkdir } from 'fs/promises';
-import { join, dirname, basename, extname } from 'path';
+import { writeFile, readFile } from 'fs/promises';
+import { join, dirname, extname } from 'path';
 import { existsSync } from 'fs';
-import { tmpdir } from 'os';
 import {
   Document,
   Packer,
@@ -17,11 +16,9 @@ import {
   BorderStyle,
   ShadingType,
   UnderlineType,
-  IPropertiesOptions,
   Header,
   Footer,
   PageNumber,
-  NumberFormat,
 } from 'docx';
 import { marked } from 'marked';
 
@@ -70,7 +67,7 @@ class MarkdownToWordParser {
     return this.paragraphs;
   }
 
-  private async processToken(token: marked.Token): Promise<void> {
+  private async processToken(token: any): Promise<void> {
     switch (token.type) {
       case 'heading':
         this.addHeading(token.text, token.depth);
@@ -113,7 +110,7 @@ class MarkdownToWordParser {
   }
 
   private addHeading(text: string, level: number): void {
-    const headingLevels: Record<number, HeadingLevel> = {
+    const headingLevels: Record<number, typeof HeadingLevel[keyof typeof HeadingLevel]> = {
       1: HeadingLevel.HEADING_1,
       2: HeadingLevel.HEADING_2,
       3: HeadingLevel.HEADING_3,
@@ -140,7 +137,7 @@ class MarkdownToWordParser {
     );
   }
 
-  private addList(token: marked.Tokens.List): void {
+  private addList(token: any): void {
     for (const item of token.items) {
       const runs = this.parseInlineFormatting(item.text);
       this.paragraphs.push(
@@ -180,29 +177,36 @@ class MarkdownToWordParser {
   }
 
   private addBlockquote(text: string): void {
-    const runs = this.parseInlineFormatting(text);
     this.paragraphs.push(
       new Paragraph({
-        children: runs,
+        children: [
+          new TextRun({
+            text: this.stripMarkdown(text),
+            italics: true,
+          }),
+        ],
         indent: { left: convertInchesToTwip(0.5) },
-        italics: true,
         spacing: { before: 100, after: 100 },
       })
     );
   }
 
-  private addTable(token: marked.Tokens.Table): void {
+  private addTable(token: any): void {
     const rows: TableRow[] = [];
 
     // Header row
     if (token.header && token.header.length > 0) {
       const headerCells = token.header.map(
-        (cell) =>
+        (cell: any) =>
           new TableCell({
             children: [
               new Paragraph({
-                children: this.parseInlineFormatting(cell.text),
-                bold: true,
+                children: [
+                  new TextRun({
+                    text: this.stripMarkdown(cell.text),
+                    bold: true,
+                  }),
+                ],
               }),
             ],
             shading: {
@@ -217,7 +221,7 @@ class MarkdownToWordParser {
     // Data rows
     for (const row of token.rows) {
       const cells = row.map(
-        (cell) =>
+        (cell: any) =>
           new TableCell({
             children: [
               new Paragraph({
@@ -385,13 +389,6 @@ export class WordExportService {
         message: 'Génération du document Word...',
         progress: 60,
       });
-
-      // Create document properties
-      const docProperties: IPropertiesOptions = {
-        title: options.metadata?.title || 'Document',
-        creator: options.metadata?.author || 'mdFocus',
-        description: abstract || '',
-      };
 
       // Build document sections
       const sections: any[] = [];
