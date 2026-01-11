@@ -88,6 +88,15 @@ export class HNSWVectorStore {
       throw new Error(`HNSW index is full (max ${this.maxElements} elements)`);
     }
 
+    // Validate embedding dimension
+    if (embedding.length !== this.dimension) {
+      throw new Error(
+        `Embedding dimension mismatch: expected ${this.dimension}, but got ${embedding.length}. ` +
+        `This usually happens when the embedding model has changed. ` +
+        `Please regenerate embeddings with the current model.`
+      );
+    }
+
     const label = this.currentSize;
     // Convert Float32Array to number[]
     const embeddingArray = Array.from(embedding);
@@ -112,6 +121,15 @@ export class HNSWVectorStore {
       if (this.currentSize >= this.maxElements) {
         console.warn(`⚠️  HNSW index full, stopping at ${this.currentSize} chunks`);
         break;
+      }
+
+      // Validate embedding dimension
+      if (embedding.length !== this.dimension) {
+        throw new Error(
+          `Embedding dimension mismatch: expected ${this.dimension}, but got ${embedding.length}. ` +
+          `This usually happens when the embedding model has changed. ` +
+          `Please regenerate embeddings with the current model.`
+        );
       }
 
       const label = this.currentSize;

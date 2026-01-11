@@ -48,8 +48,18 @@ export class EnhancedVectorStore {
     // Initialize base vector store (SQLite)
     this.vectorStore = new VectorStore(projectPath);
 
-    // Initialize HNSW index
-    this.hnswStore = new HNSWVectorStore(projectPath);
+    // Detect embedding dimension from existing data
+    const embeddingDimension = this.vectorStore.getEmbeddingDimension();
+    const dimension = embeddingDimension || 768; // Default to 768 if no embeddings exist
+
+    if (embeddingDimension) {
+      console.log(`📏 Detected embedding dimension: ${dimension}`);
+    } else {
+      console.log(`📏 No existing embeddings found, using default dimension: ${dimension}`);
+    }
+
+    // Initialize HNSW index with detected dimension
+    this.hnswStore = new HNSWVectorStore(projectPath, dimension);
 
     // Initialize BM25 index
     this.bm25Index = new BM25Index();
