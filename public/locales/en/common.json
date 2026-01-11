@@ -162,7 +162,16 @@
       "presentation": "Presentation",
       "notes": "Notes",
       "notesExisting": "Notes (existing folder)"
-    }
+    },
+    "settings": "Project Settings",
+    "citationStyle": "Citation Style (CSL)",
+    "selectCSL": "Select a .csl file",
+    "noCslSelected": "No citation style selected",
+    "cslSelected": "CSL Style:",
+    "cslHelp": "The CSL file defines the citation and bibliography format in PDF and Word exports",
+    "cslSelectError": "Error selecting CSL file",
+    "cslSaveError": "Error saving CSL path",
+    "cslRemoveError": "Error removing CSL path"
   },
   "export": {
     "pdf": {
@@ -178,7 +187,20 @@
       "exporting": "Exporting...",
       "success": "Export successful! PDF created at:",
       "error": "Export error"
-    }
+    },
+    "word": {
+      "title": "Word Export (.docx)",
+      "documentTitle": "Document title",
+      "author": "Author (optional)",
+      "templateDetected": "Word template detected:",
+      "abstractNote": "The abstract will be automatically read from...",
+      "outputFile": "Output file",
+      "exporting": "Exporting...",
+      "success": "Export successful! Word document created at:",
+      "error": "Export error"
+    },
+    "exportToPDF": "Export to PDF",
+    "exportToWord": "Export to Word"
   },
   "rag": {
     "title": "RAG Configuration",

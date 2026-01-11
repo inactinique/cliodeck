@@ -18,6 +18,10 @@ const api = {
       filePath?: string;
       zoteroCollection?: string;
     }) => ipcRenderer.invoke('project:set-bibliography-source', data),
+    setCSLPath: (data: {
+      projectPath: string;
+      cslPath?: string;
+    }) => ipcRenderer.invoke('project:set-csl-path', data),
   },
 
   // PDF & Documents
@@ -125,6 +129,30 @@ const api = {
       ipcRenderer.on('pdf-export:progress', listener);
       return () => ipcRenderer.removeListener('pdf-export:progress', listener);
     },
+  },
+
+  // Word Export
+  wordExport: {
+    export: (options: {
+      projectPath: string;
+      projectType: 'notes' | 'article' | 'book' | 'presentation';
+      content: string;
+      outputPath?: string;
+      bibliographyPath?: string;
+      cslPath?: string;
+      templatePath?: string;
+      metadata?: {
+        title?: string;
+        author?: string;
+        date?: string;
+      };
+    }) => ipcRenderer.invoke('word-export:export', options),
+    onProgress: (callback: (progress: any) => void) => {
+      const listener = (_event: any, progress: any) => callback(progress);
+      ipcRenderer.on('word-export:progress', listener);
+      return () => ipcRenderer.removeListener('word-export:progress', listener);
+    },
+    findTemplate: (projectPath: string) => ipcRenderer.invoke('word-export:find-template', projectPath),
   },
 
   // Reveal.js Export

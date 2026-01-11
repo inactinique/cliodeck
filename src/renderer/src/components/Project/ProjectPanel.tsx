@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { FilePlus, FolderOpen, X, FileDown } from 'lucide-react';
+import { FilePlus, FolderOpen, X, FileDown, FileType } from 'lucide-react';
 import { useProjectStore } from '../../stores/projectStore';
 import { useEditorStore } from '../../stores/editorStore';
 import { FileTree } from '../FileTree/FileTree';
 import { CollapsibleSection } from '../common/CollapsibleSection';
 import { PDFExportModal } from '../Export/PDFExportModal';
+import { WordExportModal } from '../Export/WordExportModal';
 import { BeamerConfig } from './BeamerConfig';
+import { CSLSettings } from './CSLSettings';
 import './ProjectPanel.css';
 
 export const ProjectPanel: React.FC = () => {
@@ -24,6 +26,7 @@ export const ProjectPanel: React.FC = () => {
 
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showPDFExportModal, setShowPDFExportModal] = useState(false);
+  const [showWordExportModal, setShowWordExportModal] = useState(false);
   const [newProjectName, setNewProjectName] = useState('');
   const [newProjectType, setNewProjectType] = useState<'article' | 'book' | 'presentation' | 'notes'>('article');
   const [newProjectPath, setNewProjectPath] = useState('');
@@ -162,10 +165,18 @@ export const ProjectPanel: React.FC = () => {
             <button
               className="toolbar-btn"
               onClick={() => setShowPDFExportModal(true)}
-              title="Exporter en PDF"
+              title={t("export.exportToPDF")}
               disabled={!currentProject}
             >
               <FileDown size={20} strokeWidth={1} />
+            </button>
+            <button
+              className="toolbar-btn"
+              onClick={() => setShowWordExportModal(true)}
+              title={t("export.exportToWord")}
+              disabled={!currentProject}
+            >
+              <FileType size={20} strokeWidth={1} />
             </button>
           </div>
         </div>
@@ -249,6 +260,21 @@ export const ProjectPanel: React.FC = () => {
                   <BeamerConfig projectPath={currentProject.path} />
                 </CollapsibleSection>
               </>
+            )}
+
+            {/* Project Settings - CSL for articles, books, and presentations */}
+            {(currentProject.type === 'article' || currentProject.type === 'book' || currentProject.type === 'presentation') && (
+              <CollapsibleSection title={t('project.settings')} defaultExpanded={false}>
+                <CSLSettings
+                  projectPath={currentProject.path}
+                  currentCSL={currentProject.cslPath}
+                  onCSLChange={() => {
+                    // Reload project to get updated CSL path
+                    const projectJsonPath = `${currentProject.path}/project.json`;
+                    loadProject(projectJsonPath);
+                  }}
+                />
+              </CollapsibleSection>
             )}
 
             <button
@@ -376,6 +402,12 @@ export const ProjectPanel: React.FC = () => {
       <PDFExportModal
         isOpen={showPDFExportModal}
         onClose={() => setShowPDFExportModal(false)}
+      />
+
+      {/* Word Export Modal */}
+      <WordExportModal
+        isOpen={showWordExportModal}
+        onClose={() => setShowWordExportModal(false)}
       />
     </div>
   );

@@ -19,6 +19,7 @@ interface Project {
     filePath?: string; // Path to .bib file relative to project
     zoteroCollection?: string; // Zotero collection key
   };
+  cslPath?: string; // Path to CSL file (relative to project or absolute)
   chapters?: Chapter[];
 }
 
@@ -314,6 +315,27 @@ N'oubliez pas de mentionner les perspectives futures.
       return { success: true };
     } catch (error) {
       console.error('❌ Failed to set bibliography source:', error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  async setCSLPath(data: {
+    projectPath: string;
+    cslPath?: string;
+  }) {
+    try {
+      const projectContent = await readFile(data.projectPath, 'utf-8');
+      const project: Project = JSON.parse(projectContent);
+
+      project.cslPath = data.cslPath;
+      project.updatedAt = new Date().toISOString();
+
+      await writeFile(data.projectPath, JSON.stringify(project, null, 2));
+
+      console.log('✅ CSL path configured:', data.cslPath);
+      return { success: true };
+    } catch (error) {
+      console.error('❌ Failed to set CSL path:', error);
       return { success: false, error: error.message };
     }
   }

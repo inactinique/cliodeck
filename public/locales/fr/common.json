@@ -162,7 +162,16 @@
       "presentation": "Présentation",
       "notes": "Notes",
       "notesExisting": "Notes (dossier existant)"
-    }
+    },
+    "settings": "Paramètres du projet",
+    "citationStyle": "Style de citation (CSL)",
+    "selectCSL": "Sélectionner un fichier .csl",
+    "noCslSelected": "Aucun style de citation sélectionné",
+    "cslSelected": "Style CSL:",
+    "cslHelp": "Le fichier CSL définit le format des citations et de la bibliographie dans les exports PDF et Word",
+    "cslSelectError": "Erreur lors de la sélection du fichier CSL",
+    "cslSaveError": "Erreur lors de la sauvegarde du chemin CSL",
+    "cslRemoveError": "Erreur lors de la suppression du chemin CSL"
   },
   "export": {
     "pdf": {
@@ -178,7 +187,20 @@
       "exporting": "Export en cours...",
       "success": "Export réussi! PDF créé à:",
       "error": "Erreur lors de l'export"
-    }
+    },
+    "word": {
+      "title": "Export Word (.docx)",
+      "documentTitle": "Titre du document",
+      "author": "Auteur (optionnel)",
+      "templateDetected": "Modèle Word détecté:",
+      "abstractNote": "Le résumé sera automatiquement lu depuis...",
+      "outputFile": "Fichier de sortie",
+      "exporting": "Export en cours...",
+      "success": "Export réussi! Document Word créé à:",
+      "error": "Erreur lors de l'export"
+    },
+    "exportToPDF": "Exporter en PDF",
+    "exportToWord": "Exporter en Word"
   },
   "rag": {
     "title": "Configuration RAG",
