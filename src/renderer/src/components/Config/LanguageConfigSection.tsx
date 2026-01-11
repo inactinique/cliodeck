@@ -21,9 +21,7 @@ export const LanguageConfigSection: React.FC = () => {
             <label className="config-label">
               {t('settings.selectLanguage')}
               <span className="config-help">
-                {currentLanguage === 'fr' && 'Choisir la langue de l\'interface'}
-                {currentLanguage === 'en' && 'Choose the interface language'}
-                {currentLanguage === 'de' && 'Wählen Sie die Sprache der Benutzeroberfläche'}
+                {t('settings.languageSelector.label')}
               </span>
             </label>
             <select
@@ -39,9 +37,7 @@ export const LanguageConfigSection: React.FC = () => {
             </select>
             <div className="config-description">
               <small>
-                {currentLanguage === 'fr' && '• La langue sera appliquée immédiatement'}
-                {currentLanguage === 'en' && '• Language will be applied immediately'}
-                {currentLanguage === 'de' && '• Die Sprache wird sofort angewendet'}
+                • {t('settings.languageSelector.changeWarning')}
               </small>
             </div>
           </div>

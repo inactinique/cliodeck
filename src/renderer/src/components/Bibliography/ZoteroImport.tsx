@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Download, RefreshCw } from 'lucide-react';
 import { useBibliographyStore } from '../../stores/bibliographyStore';
 import { useProjectStore } from '../../stores/projectStore';
@@ -10,6 +11,7 @@ interface ZoteroCollection {
 }
 
 export const ZoteroImport: React.FC = () => {
+  const { t } = useTranslation('common');
   const currentProject = useProjectStore((state) => state.currentProject);
   const [userId, setUserId] = useState<string>('');
   const [apiKey, setApiKey] = useState<string>('');
@@ -44,7 +46,7 @@ export const ZoteroImport: React.FC = () => {
 
   const handleLoadCollections = async () => {
     if (!userId || !apiKey) {
-      alert('Veuillez configurer Zotero dans les paramètres d\'abord');
+      alert(t('zotero.import.configureFirst'));
       return;
     }
 
@@ -55,11 +57,11 @@ export const ZoteroImport: React.FC = () => {
       if (result.success && result.collections) {
         setCollections(result.collections);
       } else {
-        alert('Erreur lors du chargement des collections');
+        alert(t('zotero.import.loadCollectionsError'));
       }
     } catch (error) {
       console.error('Failed to load collections:', error);
-      alert('Erreur lors du chargement des collections');
+      alert(t('zotero.import.loadCollectionsError'));
     } finally {
       setIsLoadingCollections(false);
     }
@@ -67,7 +69,7 @@ export const ZoteroImport: React.FC = () => {
 
   const handleImport = async () => {
     if (!userId || !apiKey) {
-      alert('Veuillez configurer Zotero dans les paramètres');
+      alert(t('zotero.import.configureFirst'));
       return;
     }
 
@@ -126,16 +128,16 @@ export const ZoteroImport: React.FC = () => {
           console.log('✅ Bibliography source saved to project');
         }
 
-        alert(`✅ Import réussi!\n\n${citationCount} références importées`);
+        alert(t('zotero.import.success', { count: citationCount }));
 
         // Reset selection
         setSelectedCollection('');
       } else {
-        alert(`❌ Erreur: ${syncResult.error}`);
+        alert(t('zotero.import.error', { error: syncResult.error }));
       }
     } catch (error) {
       console.error('Import failed:', error);
-      alert('Erreur lors de l\'import');
+      alert(t('zotero.import.genericError'));
     } finally {
       setIsImporting(false);
     }
@@ -144,15 +146,15 @@ export const ZoteroImport: React.FC = () => {
   return (
     <div className="zotero-import">
       <div className="zotero-import-header">
-        <h4>Import depuis Zotero</h4>
+        <h4>{t('zotero.import.title')}</h4>
         {(!userId || !apiKey) && (
           <p className="zotero-warning">
-            ⚠️ Configurez vos identifiants Zotero dans les paramètres
+            {t('zotero.import.configWarning')}
           </p>
         )}
         {!currentProject && (
           <p className="zotero-info">
-            💡 Ouvrez un projet pour que la bibliographie soit automatiquement sauvegardée avec le projet
+            {t('zotero.import.projectInfo')}
           </p>
         )}
       </div>
@@ -166,7 +168,7 @@ export const ZoteroImport: React.FC = () => {
             className="zotero-select"
           >
             <option value="">
-              {collections.length === 0 ? 'Charger les collections...' : 'Toutes les collections'}
+              {collections.length === 0 ? t('zotero.import.loadCollections') : t('zotero.import.allCollections')}
             </option>
             {collections.map((col) => {
               const depth = getCollectionDepth(col.key);
@@ -184,7 +186,7 @@ export const ZoteroImport: React.FC = () => {
             className="toolbar-btn"
             onClick={handleLoadCollections}
             disabled={!userId || !apiKey || isLoadingCollections}
-            title="Charger les collections"
+            title={t('zotero.import.loadCollectionsButton')}
           >
             <RefreshCw size={16} className={isLoadingCollections ? 'spinning' : ''} />
           </button>
@@ -196,7 +198,7 @@ export const ZoteroImport: React.FC = () => {
           disabled={!userId || !apiKey || isImporting}
         >
           <Download size={16} />
-          {isImporting ? 'Import en cours...' : 'Importer'}
+          {isImporting ? t('zotero.import.importing') : t('zotero.import.importButton')}
         </button>
       </div>
     </div>

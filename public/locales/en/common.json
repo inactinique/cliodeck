@@ -17,7 +17,48 @@
     "search": "Search",
     "refresh": "Refresh",
     "test": "Test",
-    "sync": "Sync"
+    "sync": "Sync",
+    "title": "Actions",
+    "dangerZone": "Danger zone",
+    "purgeDatabase": {
+      "title": "Purge database",
+      "description": "Deletes all vector chunks and resets indexes. PDFs will need to be reindexed.",
+      "button": "Purge database",
+      "confirmTitle": "⚠️ WARNING - Irreversible action",
+      "confirmMessage": "This action will:\n\n• Delete ALL vector embeddings\n• Delete ALL text chunks\n• Destroy HNSW and BM25 indexes\n• Completely reset the vector database\n\nYou will need to reindex ALL your PDFs.\n\nType 'PURGE' to confirm:",
+      "finalConfirm": "Final confirmation: This action is IRREVERSIBLE. Continue?",
+      "purging": "Purging...",
+      "success": "Database purged successfully",
+      "error": "Error during purge",
+      "cancelledNoMatch": "Purge cancelled (incorrect confirmation text)",
+      "cancelled": "Purge cancelled"
+    },
+    "rebuildIndexes": {
+      "title": "Rebuild indexes",
+      "description": "Rebuilds HNSW and BM25 indexes from existing SQLite database. Useful if indexes are corrupted.",
+      "button": "Rebuild",
+      "rebuilding": "Rebuilding...",
+      "success": "Indexes rebuilt successfully",
+      "error": "Error during rebuild"
+    },
+    "optimizeDatabase": {
+      "title": "Optimize database",
+      "description": "Compacts SQLite database and optimizes performance. Recommended after deleting many documents.",
+      "button": "Optimize",
+      "optimizing": "Optimizing...",
+      "success": "Database optimized. Saved: {{saved}}",
+      "error": "Error during optimization"
+    },
+    "exportData": {
+      "title": "Export data",
+      "description": "Exports project configuration and metadata (not PDFs).",
+      "button": "Export"
+    },
+    "importData": {
+      "title": "Import data",
+      "description": "Imports configuration from a previous export.",
+      "button": "Import"
+    }
   },
   "settings": {
     "title": "Settings",
@@ -28,7 +69,14 @@
     "selectLanguage": "Select language",
     "tooltipSave": "Save",
     "tooltipReset": "Reset",
-    "saving": "Saving..."
+    "saving": "Saving...",
+    "languageSelector": {
+      "label": "Choose interface language",
+      "changeWarning": "Language will be applied on next application restart.",
+      "fr": "French",
+      "en": "English",
+      "de": "German"
+    }
   },
   "editor": {
     "title": "Editor",
@@ -64,7 +112,21 @@
     "sortBy": "Sort by:",
     "author": "Author",
     "year": "Year",
-    "titleField": "Title"
+    "titleField": "Title",
+    "noCitations": "No citations available",
+    "importPrompt": "Import a BibTeX file to get started",
+    "pdfIndexed": "PDF indexed:",
+    "indexError": "Error:",
+    "viewDetails": "View details",
+    "copyKey": "Copy key",
+    "indexPDF": "Index PDF",
+    "openPDF": "Open PDF",
+    "keyCopied": "Key copied!",
+    "journal": "Journal:",
+    "publisher": "Publisher:",
+    "booktitle": "Book title:",
+    "insertCitation": "Insert citation",
+    "indexPDFButton": "Index PDF"
   },
   "project": {
     "title": "Project",
@@ -167,7 +229,30 @@
     "autoSync": "Auto-sync",
     "testConnection": "Test connection",
     "connectionSuccess": "Zotero connection successful!",
-    "connectionError": "Unable to connect to Zotero"
+    "connectionError": "Unable to connect to Zotero",
+    "import": {
+      "title": "Import from Zotero",
+      "notConfigured": "Zotero is not configured",
+      "configureFirst": "Please configure your Zotero connection in settings first.",
+      "goToSettings": "Go to settings",
+      "loading": "Loading Zotero collections...",
+      "loadError": "Error loading Zotero collections",
+      "selectCollection": "Select a collection",
+      "selectPlaceholder": "Choose a collection...",
+      "options": "Import options",
+      "downloadPDFs": "Download attached PDFs",
+      "indexPDFs": "Automatically index PDFs",
+      "mergeBibliography": "Merge with existing bibliography",
+      "startImport": "Start import",
+      "importing": "Importing...",
+      "fetchingMetadata": "Fetching metadata ({{current}}/{{total}})",
+      "downloadingPDFs": "Downloading PDFs ({{current}}/{{total}})",
+      "indexingPDFs": "Indexing PDFs ({{current}}/{{total}})",
+      "successTitle": "✅ Import successful!",
+      "successMessage": "**{{items}} references** imported\n**{{pdfs}} PDFs** downloaded\n**{{indexed}} documents** indexed",
+      "errorTitle": "❌ Import error",
+      "close": "Close"
+    }
   },
   "suggestions": {
     "title": "Suggestions",
@@ -196,7 +281,13 @@
     "excerpt": "Excerpt:",
     "page": "Page",
     "similarity": "Similarity",
-    "openPDF": "Open PDF"
+    "openPDF": "Open PDF",
+    "aiAssistant": "AI Assistant",
+    "helpText": "The assistant uses RAG (Retrieval-Augmented Generation) to answer your questions based on indexed PDF documents.",
+    "emptyState": {
+      "title": "No indexed documents",
+      "message": "The assistant will search through your indexed PDFs to answer your questions.\n\nIndex PDFs to get started."
+    }
   },
   "corpus": {
     "title": "Corpus",
