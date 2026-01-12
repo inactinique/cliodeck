@@ -4,6 +4,7 @@ import { pdfService } from './pdf-service.js';
 import { BrowserWindow } from 'electron';
 import { historyService } from './history-service.js';
 import { ContextCompressor } from '../../../backend/core/rag/ContextCompressor.js';
+import { getSystemPrompt } from '../../../backend/core/llm/SystemPrompts.js';
 
 // Options enrichies pour le RAG
 interface EnrichedRAGOptions {
@@ -21,6 +22,11 @@ interface EnrichedRAGOptions {
   top_p?: number;                 // LLM top_p
   top_k?: number;                 // LLM top_k
   repeat_penalty?: number;        // LLM repeat penalty
+
+  // System prompt configuration (Phase 2.3)
+  systemPromptLanguage?: 'fr' | 'en';    // Language for default prompt
+  useCustomSystemPrompt?: boolean;       // Use custom prompt
+  customSystemPrompt?: string;           // Custom system prompt text
 }
 
 // Fonction utilitaire pour hasher une chaîne (identifier les questions identiques)
@@ -275,6 +281,19 @@ class ChatService {
       // Récupérer le contexte du projet
       const projectContext = pdfService.getProjectContext();
 
+      // Build system prompt based on configuration (Phase 2.3)
+      const systemPromptLanguage = options.systemPromptLanguage || 'fr';
+      const useCustomPrompt = options.useCustomSystemPrompt || false;
+      const customPrompt = options.customSystemPrompt;
+      const systemPrompt = getSystemPrompt(systemPromptLanguage, useCustomPrompt, customPrompt);
+
+      console.log('🤖 [SYSTEM PROMPT] Configuration:', {
+        language: systemPromptLanguage,
+        useCustom: useCustomPrompt,
+        hasCustom: !!customPrompt,
+        promptPreview: systemPrompt.substring(0, 100) + '...',
+      });
+
       // Stream la réponse avec contexte RAG si disponible
       if (searchResults.length > 0) {
         console.log('✅ [RAG DETAILED DEBUG] Generating response WITH context:', {
@@ -302,7 +321,8 @@ class ChatService {
           projectContext,
           options.model,      // Model override
           options.timeout,    // Timeout override
-          generationOptions   // Generation parameters
+          generationOptions,  // Generation parameters
+          systemPrompt        // System prompt (Phase 2.3)
         );
         this.currentStream = generator;
 
@@ -337,7 +357,8 @@ class ChatService {
           [],
           options.model,      // Model override
           options.timeout,    // Timeout override
-          generationOptions   // Generation parameters
+          generationOptions,  // Generation parameters
+          systemPrompt        // System prompt (Phase 2.3)
         );
         this.currentStream = generator;
 

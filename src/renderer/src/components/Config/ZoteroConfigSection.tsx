@@ -44,8 +44,9 @@ export const ZoteroConfigSection: React.FC<ZoteroConfigSectionProps> = ({
   };
 
   return (
-    <CollapsibleSection title="Zotero">
-      <div className="config-section-content">
+    <CollapsibleSection title="Zotero" defaultExpanded={false}>
+      <div className="config-section">
+        <div className="config-section-content">
         <p className="config-description">
           Configurez vos identifiants Zotero pour importer votre bibliographie.
           L'import se fait depuis le panneau Bibliographie.
@@ -103,6 +104,7 @@ export const ZoteroConfigSection: React.FC<ZoteroConfigSectionProps> = ({
             <ExternalLink size={14} />
             Obtenir une API Key
           </a>
+        </div>
         </div>
       </div>
     </CollapsibleSection>

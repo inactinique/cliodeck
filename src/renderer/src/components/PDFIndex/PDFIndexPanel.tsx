@@ -5,6 +5,7 @@ import { IndexingProgress } from './IndexingProgress';
 import { CollapsibleSection } from '../common/CollapsibleSection';
 import { useProjectStore } from '../../stores/projectStore';
 import { HelperTooltip } from '../Methodology/HelperTooltip';
+import { PDFRenameModal } from './PDFRenameModal';
 import './PDFIndexPanel.css';
 
 interface PDFDocument {
@@ -37,6 +38,8 @@ export const PDFIndexPanel: React.FC = () => {
     totalChunks: 0,
   });
   const [isCleaning, setIsCleaning] = useState(false);
+  const [showRenameModal, setShowRenameModal] = useState(false);
+  const [pendingFiles, setPendingFiles] = useState<string[]>([]);
 
   useEffect(() => {
     loadDocuments();
@@ -92,16 +95,27 @@ export const PDFIndexPanel: React.FC = () => {
       });
 
       if (!result.canceled && result.filePaths && result.filePaths.length > 0) {
-        for (const filePath of result.filePaths) {
-          await indexPDF(filePath);
-        }
+        // Show rename modal instead of indexing directly
+        setPendingFiles(result.filePaths);
+        setShowRenameModal(true);
       }
     } catch (error) {
       console.error('Failed to add PDF:', error);
     }
   };
 
-  const indexPDF = async (filePath: string) => {
+  const handleConfirmRename = async (renamedFiles: Map<string, string>) => {
+    setShowRenameModal(false);
+
+    // Index each PDF with its custom name
+    for (const [filePath, customTitle] of renamedFiles.entries()) {
+      await indexPDF(filePath, customTitle);
+    }
+
+    setPendingFiles([]);
+  };
+
+  const indexPDF = async (filePath: string, customTitle?: string) => {
     setIndexingState({
       isIndexing: true,
       currentFile: filePath,
@@ -117,7 +131,7 @@ export const PDFIndexPanel: React.FC = () => {
           progress: progress.progress,
           stage: progress.message,
         });
-      });
+      }, customTitle);
 
       // Check if indexing failed
       if (result && !result.success) {
@@ -301,6 +315,17 @@ export const PDFIndexPanel: React.FC = () => {
           )}
         </div>
       </CollapsibleSection>
+
+      {/* PDF Rename Modal */}
+      <PDFRenameModal
+        isOpen={showRenameModal}
+        onClose={() => {
+          setShowRenameModal(false);
+          setPendingFiles([]);
+        }}
+        files={pendingFiles}
+        onConfirm={handleConfirmRename}
+      />
     </div>
   );
 };

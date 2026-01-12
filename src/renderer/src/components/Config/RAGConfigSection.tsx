@@ -50,7 +50,7 @@ export const RAGConfigSection: React.FC<RAGConfigSectionProps> = ({ config, onCh
   };
 
   return (
-    <CollapsibleSection title="Configuration RAG" defaultExpanded={true}>
+    <CollapsibleSection title="Configuration RAG" defaultExpanded={false}>
       <div className="config-section">
         <div className="config-section-content">
           {/* Top K */}

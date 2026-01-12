@@ -81,6 +81,7 @@ export const ConfigPanel: React.FC = () => {
   const [availableModels, setAvailableModels] = useState<string[]>([]);
   const [isSaving, setIsSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState('');
+  const [saveMessageType, setSaveMessageType] = useState<'success' | 'error'>('success');
 
   // Load configuration on mount
   useEffect(() => {
@@ -146,10 +147,11 @@ export const ConfigPanel: React.FC = () => {
         fontFamily: editorConfig.fontFamily,
       });
 
+      setSaveMessageType('success');
       setSaveMessage('✅ ' + t('settings.saved'));
-      setTimeout(() => setSaveMessage(''), 3000);
     } catch (error) {
       console.error('Failed to save config:', error);
+      setSaveMessageType('error');
       setSaveMessage('❌ ' + t('settings.saveError'));
     } finally {
       setIsSaving(false);
@@ -198,7 +200,9 @@ export const ConfigPanel: React.FC = () => {
     <div className="config-panel">
       <div className="config-header">
         <div className="config-actions">
-          {saveMessage && <span className="save-message">{saveMessage}</span>}
+          {saveMessage && (
+            <span className={`save-message ${saveMessageType}`}>{saveMessage}</span>
+          )}
           <button
             className="toolbar-btn"
             onClick={handleResetConfig}

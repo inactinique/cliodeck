@@ -53,6 +53,10 @@ export function setupChatHandlers() {
         top_p: validatedData.options?.top_p,
         top_k: validatedData.options?.top_k,
         repeat_penalty: validatedData.options?.repeat_penalty,
+        // System prompt configuration (Phase 2.3)
+        systemPromptLanguage: validatedData.options?.systemPromptLanguage || ragConfig.systemPromptLanguage || 'fr',
+        useCustomSystemPrompt: validatedData.options?.useCustomSystemPrompt || ragConfig.useCustomSystemPrompt || false,
+        customSystemPrompt: validatedData.options?.customSystemPrompt || ragConfig.customSystemPrompt,
       };
 
       console.log('🔍 [RAG DEBUG] Enriched options:', enrichedOptions);

@@ -148,6 +148,65 @@ export const RAGSettingsPanel: React.FC = () => {
 
           {showAdvanced && (
             <div className="advanced-settings">
+              {/* System Prompt Language */}
+              <div className="setting-group">
+                <label htmlFor="system-prompt-lang">System Prompt Language</label>
+                <select
+                  id="system-prompt-lang"
+                  value={params.systemPromptLanguage}
+                  onChange={(e) => setParams({ systemPromptLanguage: e.target.value as 'fr' | 'en' })}
+                >
+                  <option value="fr">🇫🇷 French (Français)</option>
+                  <option value="en">🇬🇧 English</option>
+                </select>
+                <small className="setting-hint">
+                  Language for the default system prompt (instructs the AI how to respond)
+                </small>
+              </div>
+
+              {/* Custom System Prompt Toggle */}
+              <div className="setting-group">
+                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                  <input
+                    type="checkbox"
+                    checked={params.useCustomSystemPrompt}
+                    onChange={(e) => setParams({ useCustomSystemPrompt: e.target.checked })}
+                  />
+                  <span>Use Custom System Prompt</span>
+                </label>
+                <small className="setting-hint">
+                  Override the default system prompt with a custom one
+                </small>
+              </div>
+
+              {/* Custom System Prompt Textarea */}
+              {params.useCustomSystemPrompt && (
+                <div className="setting-group">
+                  <label htmlFor="custom-prompt">Custom System Prompt</label>
+                  <textarea
+                    id="custom-prompt"
+                    rows={6}
+                    value={params.customSystemPrompt || ''}
+                    onChange={(e) => setParams({ customSystemPrompt: e.target.value })}
+                    placeholder="Enter your custom system prompt here..."
+                    style={{
+                      width: '100%',
+                      padding: '8px',
+                      fontSize: '12px',
+                      fontFamily: 'monospace',
+                      resize: 'vertical',
+                      borderRadius: '4px',
+                      border: '1px solid var(--border-color)',
+                      background: 'var(--surface-variant)',
+                      color: 'var(--text-color)',
+                    }}
+                  />
+                  <small className="setting-hint">
+                    This prompt instructs the AI how to respond to your queries
+                  </small>
+                </div>
+              )}
+
               {/* Temperature */}
               <div className="setting-group">
                 <label htmlFor="temperature-slider">

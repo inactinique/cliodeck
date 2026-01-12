@@ -176,9 +176,31 @@ class PDFService {
     }
   }
 
-  async indexPDF(filePath: string, bibtexKey?: string, onProgress?: any) {
+  async extractPDFMetadata(filePath: string) {
+    // This doesn't require initialization since we're just extracting metadata
+    const PDFExtractor = (await import('../../../backend/core/pdf/PDFExtractor.js')).PDFExtractor;
+    const extractor = new PDFExtractor();
+
+    try {
+      const extracted = await extractor.extractFromPDF(filePath);
+      return {
+        title: extracted.title || filePath.split('/').pop()?.replace('.pdf', '') || 'Untitled',
+        author: extracted.metadata.creator,
+        pageCount: extracted.pages.length,
+      };
+    } catch (error) {
+      console.error('Failed to extract PDF metadata:', error);
+      // Fallback to filename
+      return {
+        title: filePath.split('/').pop()?.replace('.pdf', '') || 'Untitled',
+        pageCount: 0,
+      };
+    }
+  }
+
+  async indexPDF(filePath: string, bibtexKey?: string, onProgress?: any, customTitle?: string) {
     this.ensureInitialized();
-    return this.pdfIndexer!.indexPDF(filePath, bibtexKey, onProgress);
+    return this.pdfIndexer!.indexPDF(filePath, bibtexKey, onProgress, customTitle);
   }
 
   async search(query: string, options?: any) {

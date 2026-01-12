@@ -14,7 +14,7 @@ export const LanguageConfigSection: React.FC = () => {
   };
 
   return (
-    <CollapsibleSection title={t('settings.language')} defaultExpanded={true}>
+    <CollapsibleSection title={t('settings.language')} defaultExpanded={false}>
       <div className="config-section">
         <div className="config-section-content">
           <div className="config-field">

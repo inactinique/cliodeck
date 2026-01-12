@@ -79,7 +79,8 @@ export class PDFIndexer {
   async indexPDF(
     filePath: string,
     bibtexKey?: string,
-    onProgress?: (progress: IndexingProgress) => void
+    onProgress?: (progress: IndexingProgress) => void,
+    customTitle?: string
   ): Promise<PDFDocument> {
     try {
       // 1. Extraire le texte + métadonnées
@@ -89,7 +90,10 @@ export class PDFIndexer {
         message: 'Extraction du texte PDF...',
       });
 
-      const { pages, metadata, title } = await this.pdfExtractor.extractDocument(filePath);
+      const { pages, metadata, title: extractedTitle } = await this.pdfExtractor.extractDocument(filePath);
+
+      // Use custom title if provided, otherwise use extracted title
+      const title = customTitle || extractedTitle;
 
       onProgress?.({
         stage: 'extracting',

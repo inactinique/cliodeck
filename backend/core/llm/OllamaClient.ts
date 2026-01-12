@@ -1,5 +1,6 @@
 import type { SearchResult } from '../../types/pdf-document';
 import http from 'http';
+import { getSystemPrompt, getDefaultSystemPrompt } from './SystemPrompts.js';
 
 // MARK: - Types
 
@@ -377,11 +378,12 @@ export class OllamaClient {
     context: string[],
     modelOverride?: string,
     timeoutOverride?: number,
-    generationOptions?: Partial<typeof GENERATION_PRESETS.academic>
+    generationOptions?: Partial<typeof GENERATION_PRESETS.academic>,
+    systemPrompt?: string
   ): AsyncGenerator<string> {
     const url = `${this.baseURL}/api/generate`;
 
-    const fullPrompt = this.buildPrompt(prompt, context);
+    const fullPrompt = this.buildPrompt(prompt, context, systemPrompt);
 
     const model = modelOverride || this.chatModel;
     const timeout = timeoutOverride || 600000;
@@ -464,11 +466,12 @@ export class OllamaClient {
     projectContext?: string,
     modelOverride?: string,
     timeoutOverride?: number,
-    generationOptions?: Partial<typeof GENERATION_PRESETS.academic>
+    generationOptions?: Partial<typeof GENERATION_PRESETS.academic>,
+    systemPrompt?: string
   ): AsyncGenerator<string> {
     const url = `${this.baseURL}/api/generate`;
 
-    const fullPrompt = this.buildPromptWithSources(prompt, sources, projectContext);
+    const fullPrompt = this.buildPromptWithSources(prompt, sources, projectContext, systemPrompt);
 
     const model = modelOverride || this.chatModel;
     const timeout = timeoutOverride || 600000;
@@ -545,12 +548,15 @@ export class OllamaClient {
 
   // MARK: - Construction du prompt avec RAG
 
-  private buildPrompt(userQuery: string, context: string[]): string {
+  private buildPrompt(userQuery: string, context: string[], systemPrompt?: string): string {
+    // Use provided system prompt, or fallback to French default for backwards compatibility
+    const systemInstruction = systemPrompt || getDefaultSystemPrompt('fr');
+
     if (context.length === 0) {
       return userQuery;
     }
 
-    let prompt = `Tu es un assistant académique spécialisé en sciences humaines et sociales, particulièrement en histoire contemporaine. Tu aides les chercheurs à analyser et comprendre leurs documents PDF.
+    let prompt = `${systemInstruction}
 
 Voici des extraits pertinents des documents :
 
@@ -569,7 +575,10 @@ Réponds de manière précise et académique en te basant sur les extraits fourn
 
   // MARK: - Construction du prompt avec sources complètes
 
-  private buildPromptWithSources(userQuery: string, sources: SearchResult[], projectContext?: string): string {
+  private buildPromptWithSources(userQuery: string, sources: SearchResult[], projectContext?: string, systemPrompt?: string): string {
+    // Use provided system prompt, or fallback to French default for backwards compatibility
+    const systemInstruction = systemPrompt || getDefaultSystemPrompt('fr');
+
     if (sources.length === 0) {
       // Si aucune source ET aucun projet, message d'erreur
       if (!projectContext) {
@@ -585,7 +594,7 @@ Sans projet ni documents, je ne peux pas vous aider.`;
       return userQuery;
     }
 
-    let prompt = `Tu es un assistant académique spécialisé en sciences humaines et sociales, particulièrement en histoire contemporaine. Tu aides les chercheurs à analyser et comprendre leurs documents PDF.
+    let prompt = `${systemInstruction}
 `;
 
     // 🆕 Ajouter le contexte du projet si disponible

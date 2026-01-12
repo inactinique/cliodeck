@@ -10,8 +10,20 @@ import { successResponse, errorResponse, requireProject } from '../utils/error-h
 import { validate, PDFSearchSchema } from '../utils/validation.js';
 
 export function setupPDFHandlers() {
-  ipcMain.handle('pdf:index', async (event, filePath: string, bibtexKey?: string) => {
-    console.log('📞 IPC Call: pdf:index', { filePath, bibtexKey });
+  ipcMain.handle('pdf:extractMetadata', async (_event, filePath: string) => {
+    console.log('📞 IPC Call: pdf:extractMetadata', { filePath });
+    try {
+      const metadata = await pdfService.extractPDFMetadata(filePath);
+      console.log('📤 IPC Response: pdf:extractMetadata success', metadata);
+      return successResponse({ metadata });
+    } catch (error: any) {
+      console.error('❌ pdf:extractMetadata error:', error);
+      return errorResponse(error);
+    }
+  });
+
+  ipcMain.handle('pdf:index', async (event, filePath: string, bibtexKey?: string, customTitle?: string) => {
+    console.log('📞 IPC Call: pdf:index', { filePath, bibtexKey, customTitle });
     const startTime = Date.now();
 
     try {
@@ -28,7 +40,7 @@ export function setupPDFHandlers() {
         if (window) {
           window.webContents.send('pdf:indexing-progress', progress);
         }
-      });
+      }, customTitle);
 
       const durationMs = Date.now() - startTime;
 

@@ -34,8 +34,10 @@ const api = {
 
   // PDF & Documents
   pdf: {
-    index: (filePath: string, bibtexKey?: string) =>
-      ipcRenderer.invoke('pdf:index', filePath, bibtexKey),
+    extractMetadata: (filePath: string) =>
+      ipcRenderer.invoke('pdf:extractMetadata', filePath),
+    index: (filePath: string, bibtexKey?: string, onProgress?: any, customTitle?: string) =>
+      ipcRenderer.invoke('pdf:index', filePath, bibtexKey, customTitle),
     search: (query: string, options?: any) =>
       ipcRenderer.invoke('pdf:search', query, options),
     delete: (documentId: string) =>

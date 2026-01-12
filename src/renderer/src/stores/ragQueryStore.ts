@@ -14,6 +14,11 @@ export interface RAGQueryParams {
   top_p: number;
   top_k: number;
   repeat_penalty: number;
+
+  // System prompt configuration (Phase 2.3)
+  systemPromptLanguage: 'fr' | 'en';
+  customSystemPrompt?: string;
+  useCustomSystemPrompt: boolean;
 }
 
 export interface AvailableModel {
@@ -52,6 +57,10 @@ const DEFAULT_PARAMS: RAGQueryParams = {
   top_p: 0.85,
   top_k: 40,
   repeat_penalty: 1.1,
+
+  // System prompt (default: French)
+  systemPromptLanguage: 'fr',
+  useCustomSystemPrompt: false,
 };
 
 // MARK: - Store
@@ -88,6 +97,9 @@ export const useRAGQueryStore = create<RAGQueryState>()(
               top_p: DEFAULT_PARAMS.top_p,
               top_k: DEFAULT_PARAMS.top_k,
               repeat_penalty: DEFAULT_PARAMS.repeat_penalty,
+              systemPromptLanguage: ragConfig.systemPromptLanguage || DEFAULT_PARAMS.systemPromptLanguage,
+              customSystemPrompt: ragConfig.customSystemPrompt,
+              useCustomSystemPrompt: ragConfig.useCustomSystemPrompt || DEFAULT_PARAMS.useCustomSystemPrompt,
             },
           });
 
