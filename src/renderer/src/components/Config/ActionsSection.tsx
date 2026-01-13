@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { CollapsibleSection } from '../common/CollapsibleSection';
 
 export const ActionsSection: React.FC = () => {
+  const { t } = useTranslation('common');
   const [stats, setStats] = useState({ totalDocuments: 0, totalChunks: 0, databasePath: '' });
   const [isPurging, setIsPurging] = useState(false);
 
@@ -25,23 +27,17 @@ export const ActionsSection: React.FC = () => {
   };
 
   const handlePurgeDatabase = async () => {
-    const confirmMessage = `⚠️ ATTENTION ⚠️
-
-Cette action va supprimer DÉFINITIVEMENT:
-• ${stats.totalDocuments} document(s)
-• ${stats.totalChunks} chunk(s)
-• Tous les embeddings associés
-
-Vous devrez ré-indexer tous vos PDFs.
-
-Êtes-vous absolument sûr de vouloir continuer ?`;
+    const confirmMessage = t('actions.purgeDatabase.confirmMessage', {
+      totalDocuments: stats.totalDocuments,
+      totalChunks: stats.totalChunks
+    });
 
     if (!window.confirm(confirmMessage)) {
       return;
     }
 
     // Double confirmation
-    if (!window.confirm('Dernière confirmation: Cette action est IRRÉVERSIBLE. Continuer ?')) {
+    if (!window.confirm(t('actions.purgeDatabase.finalConfirm'))) {
       return;
     }
 
@@ -52,17 +48,17 @@ Vous devrez ré-indexer tous vos PDFs.
 
       if (result.success) {
         console.log('✅ Database purged successfully');
-        alert('✅ Base de données purgée avec succès!\n\nTous les documents et embeddings ont été supprimés.');
+        alert(t('actions.purgeDatabase.success'));
       } else {
         console.error('❌ Failed to purge database:', result.error);
-        alert(`❌ Erreur lors de la purge:\n${result.error}`);
+        alert(t('actions.purgeDatabase.error', { error: result.error }));
       }
 
       // Reload statistics to show empty database
       await loadStats();
     } catch (error) {
       console.error('Failed to purge database:', error);
-      alert('Erreur lors de la purge de la base de données');
+      alert(t('actions.purgeDatabase.error', { error: String(error) }));
     } finally {
       setIsPurging(false);
     }
@@ -79,25 +75,25 @@ Vous devrez ré-indexer tous vos PDFs.
   const handleCopyDatabasePath = () => {
     if (stats.databasePath) {
       navigator.clipboard.writeText(stats.databasePath);
-      alert('Chemin copié dans le presse-papier');
+      alert(t('actions.copyPath.success'));
     }
   };
 
   return (
-    <CollapsibleSection title="Actions & Maintenance" defaultExpanded={false}>
+    <CollapsibleSection title={t('actions.title')} defaultExpanded={false}>
       <div className="config-section">
         <div className="config-section-content">
           {/* Database Info */}
           <div className="config-field">
             <label className="config-label">
-              Base de données vectorielle
+              {t('actions.databaseInfo.title')}
             </label>
             <div className="config-description" style={{ marginTop: '8px' }}>
-              <strong>Documents indexés:</strong> {stats.totalDocuments}
+              <strong>{t('actions.databaseInfo.documentsIndexed')}:</strong> {stats.totalDocuments}
               <br />
-              <strong>Chunks stockés:</strong> {stats.totalChunks}
+              <strong>{t('actions.databaseInfo.chunksStored')}:</strong> {stats.totalChunks}
               <br />
-              <strong>Chemin:</strong>
+              <strong>{t('actions.databaseInfo.path')}:</strong>
               <div style={{
                 marginTop: '4px',
                 padding: '8px',
@@ -107,7 +103,7 @@ Vous devrez ré-indexer tous vos PDFs.
                 fontFamily: 'monospace',
                 wordBreak: 'break-all',
               }}>
-                {stats.databasePath || 'Chargement...'}
+                {stats.databasePath || t('actions.databaseInfo.loading')}
               </div>
               <div style={{ marginTop: '8px', display: 'flex', gap: '8px' }}>
                 <button
@@ -115,14 +111,14 @@ Vous devrez ré-indexer tous vos PDFs.
                   onClick={handleCopyDatabasePath}
                   disabled={!stats.databasePath}
                 >
-                  📋 Copier le chemin
+                  {t('actions.copyPath.button')}
                 </button>
                 <button
                   className="config-btn-small"
                   onClick={handleOpenDatabaseFolder}
                   disabled={!stats.databasePath}
                 >
-                  📂 Ouvrir le dossier
+                  {t('actions.openFolder.button')}
                 </button>
               </div>
             </div>
@@ -131,15 +127,15 @@ Vous devrez ré-indexer tous vos PDFs.
           {/* Purge Database */}
           <div className="config-field" style={{ marginTop: '24px' }}>
             <label className="config-label" style={{ color: '#f48771' }}>
-              ⚠️ Zone dangereuse
+              {t('actions.dangerZone')}
             </label>
             <div className="config-description">
-              <strong>Purger la base vectorielle</strong>
+              <strong>{t('actions.purgeDatabase.title')}</strong>
               <br />
               <small>
-                Supprime tous les documents, chunks et embeddings.
+                {t('actions.purgeDatabase.description')}
                 <br />
-                Cette action est irréversible!
+                {t('actions.purgeDatabase.warning')}
               </small>
             </div>
             <button
@@ -153,7 +149,7 @@ Vous devrez ré-indexer tous vos PDFs.
                 border: 'none',
               }}
             >
-              {isPurging ? '⏳ Purge en cours...' : '🗑️ Purger la base de données'}
+              {isPurging ? t('actions.purgeDatabase.inProgress') : t('actions.purgeDatabase.button')}
             </button>
           </div>
         </div>

@@ -26,14 +26,40 @@ export class EnhancedVectorStore {
   private useHNSW: boolean = true;
   private useHybrid: boolean = true;
 
+  // Rebuild status tracking
+  private isRebuilding: boolean = false;
+  private rebuildProgress: {
+    current: number;
+    total: number;
+    status: string;
+  } = { current: 0, total: 0, status: 'idle' };
+
+  // Callback for progress updates
+  private onRebuildProgress?: (progress: {
+    current: number;
+    total: number;
+    status: string;
+    percentage: number;
+  }) => void;
+
   constructor(projectPath: string) {
     console.log('🚀 Initializing Enhanced Vector Store...');
 
     // Initialize base vector store (SQLite)
     this.vectorStore = new VectorStore(projectPath);
 
-    // Initialize HNSW index
-    this.hnswStore = new HNSWVectorStore(projectPath);
+    // Detect embedding dimension from existing data
+    const embeddingDimension = this.vectorStore.getEmbeddingDimension();
+    const dimension = embeddingDimension || 768; // Default to 768 if no embeddings exist
+
+    if (embeddingDimension) {
+      console.log(`📏 Detected embedding dimension: ${dimension}`);
+    } else {
+      console.log(`📏 No existing embeddings found, using default dimension: ${dimension}`);
+    }
+
+    // Initialize HNSW index with detected dimension
+    this.hnswStore = new HNSWVectorStore(projectPath, dimension);
 
     // Initialize BM25 index
     this.bm25Index = new BM25Index();
@@ -47,26 +73,70 @@ export class EnhancedVectorStore {
   }
 
   /**
-   * Initialize all indexes
+   * Initialize all indexes (does NOT rebuild automatically)
+   * NOTE: HNSW index loading is synchronous and may block for large indexes
    */
   async initialize(): Promise<void> {
-    console.log('📥 Loading indexes...');
+    console.log('📥 Loading indexes (this may take a moment for large corpora)...');
+    const startTime = Date.now();
 
-    // Initialize HNSW
+    // Initialize HNSW (synchronous file read - may block!)
     await this.hnswStore.initialize();
 
-    // Load metadata if exists
+    // Load metadata if exists (synchronous JSON parse - may block!)
     await this.hnswStore.loadMetadata();
 
-    // If HNSW is empty but we have chunks in SQLite, rebuild
-    if (this.hnswStore.getSize() === 0) {
-      await this.rebuildIndexes();
-    } else {
-      // Rebuild BM25 from HNSW metadata
+    // Rebuild BM25 from HNSW metadata if available
+    if (this.hnswStore.getSize() > 0) {
       await this.rebuildBM25FromHNSW();
     }
 
-    console.log('✅ Indexes loaded');
+    const duration = Date.now() - startTime;
+    console.log(`✅ Indexes loaded in ${duration}ms`);
+  }
+
+  /**
+   * Set progress callback for rebuild operations
+   */
+  setRebuildProgressCallback(
+    callback: (progress: {
+      current: number;
+      total: number;
+      status: string;
+      percentage: number;
+    }) => void
+  ): void {
+    this.onRebuildProgress = callback;
+  }
+
+  /**
+   * Check if indexes need to be rebuilt
+   */
+  needsRebuild(): boolean {
+    const hnswSize = this.hnswStore.getSize();
+    const chunks = this.vectorStore.getAllChunksWithEmbeddings();
+    return hnswSize === 0 && chunks.length > 0;
+  }
+
+  /**
+   * Get rebuild status
+   */
+  getRebuildStatus(): {
+    isRebuilding: boolean;
+    current: number;
+    total: number;
+    status: string;
+    percentage: number;
+  } {
+    const percentage =
+      this.rebuildProgress.total > 0
+        ? Math.round((this.rebuildProgress.current / this.rebuildProgress.total) * 100)
+        : 0;
+    return {
+      isRebuilding: this.isRebuilding,
+      ...this.rebuildProgress,
+      percentage,
+    };
   }
 
   /**
@@ -119,8 +189,21 @@ export class EnhancedVectorStore {
 
     let results: SearchResult[];
 
-    if (this.useHNSW) {
+    // If rebuilding, throw error to avoid blocking
+    if (this.isRebuilding) {
+      const status = this.getRebuildStatus();
+      throw new Error(
+        `Search indexes are being rebuilt (${status.percentage}%). Please wait a moment and try again.`
+      );
+    }
+
+    // Check if HNSW is ready
+    const hnswSize = this.hnswStore.getSize();
+    const hnswReady = this.useHNSW && hnswSize > 0;
+
+    if (hnswReady) {
       // Use HNSW or hybrid search
+      console.log(`🚀 Using HNSW search (${hnswSize} indexed chunks)`);
       results = await this.hybridSearch.search(
         query,
         queryEmbedding,
@@ -129,8 +212,11 @@ export class EnhancedVectorStore {
         this.useHybrid
       );
     } else {
-      // Fallback to linear search (original VectorStore)
-      results = await this.vectorStore.search(queryEmbedding, k, documentIds);
+      // HNSW not available - return empty results instead of slow linear search
+      console.warn('⚠️  HNSW index empty - indexes may need to be rebuilt');
+      throw new Error(
+        'Search indexes are not available. Please wait for the project to finish loading.'
+      );
     }
 
     // Populate document information
@@ -148,37 +234,101 @@ export class EnhancedVectorStore {
   }
 
   /**
-   * Rebuild all indexes from SQLite
+   * Rebuild all indexes from SQLite with progress tracking
    */
   async rebuildIndexes(): Promise<void> {
+    if (this.isRebuilding) {
+      throw new Error('Rebuild already in progress');
+    }
+
+    this.isRebuilding = true;
     console.log('🔨 Rebuilding all indexes from SQLite...');
     const startTime = Date.now();
 
-    // Clear existing indexes
-    await this.hnswStore.clear();
-    this.bm25Index.clear();
+    try {
+      // Update progress: Starting
+      this.rebuildProgress = { current: 0, total: 100, status: 'Initializing...' };
+      this.notifyProgress();
 
-    // Get all chunks with embeddings from SQLite
-    const chunks = await this.vectorStore.getAllChunksWithEmbeddings();
+      // Clear existing indexes
+      await this.hnswStore.clear();
+      this.bm25Index.clear();
 
-    if (chunks.length === 0) {
-      console.log('⚠️  No chunks to index');
-      return;
+      // Update progress: Loading chunks
+      this.rebuildProgress = { current: 10, total: 100, status: 'Loading chunks from database...' };
+      this.notifyProgress();
+
+      // Get all chunks with embeddings from SQLite
+      const chunks = await this.vectorStore.getAllChunksWithEmbeddings();
+
+      if (chunks.length === 0) {
+        console.log('⚠️  No chunks to index');
+        this.rebuildProgress = { current: 100, total: 100, status: 'No chunks to index' };
+        this.notifyProgress();
+        return;
+      }
+
+      console.log(`📦 Found ${chunks.length} chunks to index`);
+
+      // Update progress: Building HNSW
+      this.rebuildProgress = {
+        current: 20,
+        total: 100,
+        status: `Building HNSW index (${chunks.length} chunks)...`,
+      };
+      this.notifyProgress();
+
+      // Add to HNSW (takes ~70% of time)
+      await this.hnswStore.addChunks(chunks);
+
+      // Update progress: Building BM25
+      this.rebuildProgress = {
+        current: 80,
+        total: 100,
+        status: `Building BM25 index (${chunks.length} chunks)...`,
+      };
+      this.notifyProgress();
+
+      // Add to BM25
+      this.bm25Index.addChunks(chunks.map((c) => c.chunk));
+
+      // Update progress: Saving
+      this.rebuildProgress = { current: 90, total: 100, status: 'Saving indexes...' };
+      this.notifyProgress();
+
+      // Save indexes
+      await this.save();
+
+      const duration = Date.now() - startTime;
+      console.log(`✅ Indexes rebuilt in ${duration}ms`);
+
+      // Update progress: Complete
+      this.rebuildProgress = { current: 100, total: 100, status: 'Rebuild complete' };
+      this.notifyProgress();
+    } catch (error) {
+      console.error('❌ Failed to rebuild indexes:', error);
+      this.rebuildProgress = { current: 0, total: 100, status: `Error: ${error.message}` };
+      this.notifyProgress();
+      throw error;
+    } finally {
+      this.isRebuilding = false;
     }
+  }
 
-    console.log(`📦 Found ${chunks.length} chunks to index`);
-
-    // Add to HNSW
-    await this.hnswStore.addChunks(chunks);
-
-    // Add to BM25
-    this.bm25Index.addChunks(chunks.map((c) => c.chunk));
-
-    // Save indexes
-    await this.save();
-
-    const duration = Date.now() - startTime;
-    console.log(`✅ Indexes rebuilt in ${duration}ms`);
+  /**
+   * Notify progress callback
+   */
+  private notifyProgress(): void {
+    if (this.onRebuildProgress) {
+      const percentage =
+        this.rebuildProgress.total > 0
+          ? Math.round((this.rebuildProgress.current / this.rebuildProgress.total) * 100)
+          : 0;
+      this.onRebuildProgress({
+        ...this.rebuildProgress,
+        percentage,
+      });
+    }
   }
 
   /**

@@ -65,6 +65,10 @@ export const ChatSendSchema = z.object({
       top_p: z.number().min(0).max(1).optional(),
       top_k: z.number().min(1).max(100).optional(),
       repeat_penalty: z.number().min(0).max(2).optional(),
+      // System prompt configuration (Phase 2.3)
+      systemPromptLanguage: z.enum(['fr', 'en']).optional(),
+      useCustomSystemPrompt: z.boolean().optional(),
+      customSystemPrompt: z.string().optional(),
     })
     .optional(),
 });

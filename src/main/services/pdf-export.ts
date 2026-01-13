@@ -12,6 +12,7 @@ export interface ExportOptions {
   content: string;
   outputPath?: string;
   bibliographyPath?: string;
+  cslPath?: string; // Path to CSL file for citation styling
   metadata?: {
     title?: string;
     author?: string;
@@ -668,9 +669,16 @@ export class PDFExportService {
       if (bibPath) {
         pandocArgs.push('--bibliography', bibPath);
         pandocArgs.push('--citeproc');
-        // Use a citation style without item numbers
-        pandocArgs.push('--metadata', 'reference-section-title=Références');
-        pandocArgs.push('--metadata', 'suppress-bibliography=false');
+
+        // Add CSL style if provided
+        if (options.cslPath && existsSync(options.cslPath)) {
+          pandocArgs.push('--csl', options.cslPath);
+          console.log('📚 Using CSL style:', options.cslPath);
+        } else {
+          // Use default citation style
+          pandocArgs.push('--metadata', 'reference-section-title=Références');
+          pandocArgs.push('--metadata', 'suppress-bibliography=false');
+        }
       }
 
       // Run pandoc

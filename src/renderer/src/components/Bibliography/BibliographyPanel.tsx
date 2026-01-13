@@ -7,12 +7,15 @@ import { CitationList } from './CitationList';
 import { CitationCard } from './CitationCard';
 import { CollapsibleSection } from '../common/CollapsibleSection';
 import { ZoteroImport } from './ZoteroImport';
+import { BibImportModeModal } from './BibImportModeModal';
+import { BibImportSummaryModal } from './BibImportSummaryModal';
 import './BibliographyPanel.css';
 
 export const BibliographyPanel: React.FC = () => {
   const { t } = useTranslation('common');
   const currentProject = useProjectStore((state) => state.currentProject);
   const {
+    citations,
     filteredCitations,
     searchQuery,
     searchCitations,
@@ -22,7 +25,15 @@ export const BibliographyPanel: React.FC = () => {
     sortOrder,
   } = useBibliographyStore();
 
-  const [showImportDialog, setShowImportDialog] = useState(false);
+  const [showModeModal, setShowModeModal] = useState(false);
+  const [showSummaryModal, setShowSummaryModal] = useState(false);
+  const [importSummary, setImportSummary] = useState({
+    mode: 'replace' as 'replace' | 'merge',
+    totalCitations: 0,
+    newCitations: 0,
+    duplicates: 0,
+  });
+  const [pendingFilePath, setPendingFilePath] = useState<string | null>(null);
 
   const handleImportBibTeX = async () => {
     try {
@@ -32,32 +43,86 @@ export const BibliographyPanel: React.FC = () => {
 
       if (!result.canceled && result.filePaths && result.filePaths.length > 0) {
         const sourcePath = result.filePaths[0];
+        setPendingFilePath(sourcePath);
 
-        // Load the bibliography into memory
-        await useBibliographyStore.getState().loadBibliography(sourcePath);
-
-        // If we have a project (non-notes), save the bibliography source configuration
-        if (currentProject && currentProject.type !== 'notes') {
-          // Copy the .bib file to the project directory
-          const bibFileName = sourcePath.split('/').pop() || 'bibliography.bib';
-          const targetPath = `${currentProject.path}/${bibFileName}`;
-
-          // Copy file to project directory
-          await window.electron.fs.copyFile(sourcePath, targetPath);
-
-          // Save the bibliography source to project.json
-          const projectJsonPath = `${currentProject.path}/project.json`;
-          await window.electron.project.setBibliographySource({
-            projectPath: projectJsonPath,
-            type: 'file',
-            filePath: bibFileName,
-          });
-
-          console.log('✅ Bibliography source saved to project');
+        // If we already have citations, show the mode selection modal
+        if (citations.length > 0) {
+          setShowModeModal(true);
+        } else {
+          // No citations yet, directly replace (= load)
+          await performImport(sourcePath, 'replace');
         }
       }
     } catch (error) {
       console.error('Failed to import BibTeX:', error);
+    }
+  };
+
+  const performImport = async (sourcePath: string, mode: 'replace' | 'merge') => {
+    try {
+      let newCitations = 0;
+      let duplicates = 0;
+      let total = 0;
+
+      if (mode === 'replace') {
+        // Replace: load bibliography (replaces all)
+        await useBibliographyStore.getState().loadBibliography(sourcePath);
+        total = useBibliographyStore.getState().citations.length;
+      } else {
+        // Merge: use mergeBibliography
+        const result = await useBibliographyStore.getState().mergeBibliography(sourcePath);
+        newCitations = result.newCitations;
+        duplicates = result.duplicates;
+        total = result.total;
+      }
+
+      // If we have a project (non-notes), save the bibliography source configuration
+      if (currentProject && currentProject.type !== 'notes') {
+        // Copy the .bib file to the project directory
+        const bibFileName = sourcePath.split('/').pop() || 'bibliography.bib';
+        const targetPath = `${currentProject.path}/${bibFileName}`;
+
+        // Copy file to project directory
+        await window.electron.fs.copyFile(sourcePath, targetPath);
+
+        // Save the bibliography source to project.json
+        const projectJsonPath = `${currentProject.path}/project.json`;
+        await window.electron.project.setBibliographySource({
+          projectPath: projectJsonPath,
+          type: 'file',
+          filePath: bibFileName,
+        });
+
+        console.log('✅ Bibliography source saved to project');
+      }
+
+      // Show summary modal
+      setImportSummary({
+        mode,
+        totalCitations: total,
+        newCitations,
+        duplicates,
+      });
+      setShowSummaryModal(true);
+    } catch (error) {
+      console.error('Failed to import BibTeX:', error);
+      alert(`Failed to import bibliography: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  };
+
+  const handleReplaceMode = async () => {
+    setShowModeModal(false);
+    if (pendingFilePath) {
+      await performImport(pendingFilePath, 'replace');
+      setPendingFilePath(null);
+    }
+  };
+
+  const handleMergeMode = async () => {
+    setShowModeModal(false);
+    if (pendingFilePath) {
+      await performImport(pendingFilePath, 'merge');
+      setPendingFilePath(null);
     }
   };
 
@@ -123,6 +188,28 @@ export const BibliographyPanel: React.FC = () => {
           )}
         </div>
       </CollapsibleSection>
+
+      {/* Import Mode Modal */}
+      <BibImportModeModal
+        isOpen={showModeModal}
+        onClose={() => {
+          setShowModeModal(false);
+          setPendingFilePath(null);
+        }}
+        onReplace={handleReplaceMode}
+        onMerge={handleMergeMode}
+        currentCitationCount={citations.length}
+      />
+
+      {/* Import Summary Modal */}
+      <BibImportSummaryModal
+        isOpen={showSummaryModal}
+        onClose={() => setShowSummaryModal(false)}
+        mode={importSummary.mode}
+        totalCitations={importSummary.totalCitations}
+        newCitations={importSummary.newCitations}
+        duplicates={importSummary.duplicates}
+      />
     </div>
   );
 };

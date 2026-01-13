@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 import { MainLayout } from './components/Layout/MainLayout';
 import { EditorPanel } from './components/Editor/EditorPanel';
+import { RebuildProgressModal } from './components/Project/RebuildProgressModal';
 import { ErrorFallback } from './components/ErrorFallback';
 import { useMenuShortcuts } from './hooks/useMenuShortcuts';
 import { useLanguageStore } from './stores/languageStore';
@@ -54,6 +55,7 @@ function App() {
       }}
     >
       <MainLayout centerPanel={<EditorPanel />} />
+      <RebuildProgressModal />
     </ErrorBoundary>
   );
 }

@@ -340,6 +340,38 @@ export class VectorStore {
     return rows.map((row) => this.parseChunkWithEmbedding(row as any));
   }
 
+  /**
+   * Get the dimension of embeddings stored in the database
+   * @returns The embedding dimension, or null if no embeddings exist
+   */
+  getEmbeddingDimension(): number | null {
+    try {
+      const stmt = this.db.prepare('SELECT embedding FROM chunks WHERE embedding IS NOT NULL LIMIT 1');
+      const row = stmt.get() as { embedding: Buffer } | undefined;
+
+      console.log('🔍 Checking embedding dimension...', {
+        hasRow: !!row,
+        hasEmbedding: row ? !!row.embedding : false,
+        embeddingType: row ? typeof row.embedding : 'N/A',
+        embeddingByteLength: row?.embedding ? row.embedding.byteLength : 0
+      });
+
+      if (!row || !row.embedding) {
+        console.log('⚠️  No embeddings found in database');
+        return null;
+      }
+
+      // Embedding is stored as Buffer, convert to Float32Array to get dimension
+      const embedding = new Float32Array(row.embedding.buffer, row.embedding.byteOffset, row.embedding.byteLength / 4);
+      const dimension = embedding.length;
+      console.log(`✅ Embedding dimension detected: ${dimension}`);
+      return dimension;
+    } catch (error) {
+      console.error('❌ Error detecting embedding dimension:', error);
+      return null;
+    }
+  }
+
   // MARK: - Search Operations
 
   search(

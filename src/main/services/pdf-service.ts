@@ -59,9 +59,18 @@ class PDFService {
   /**
    * Initialise le PDF Service pour un projet spécifique
    * @param projectPath Chemin absolu vers le dossier du projet
+   * @param onRebuildProgress Callback optionnel pour la progression du rebuild
    * @throws Error si projectPath n'est pas fourni ou si c'est un projet "notes"
    */
-  async init(projectPath: string) {
+  async init(
+    projectPath: string,
+    onRebuildProgress?: (progress: {
+      current: number;
+      total: number;
+      status: string;
+      percentage: number;
+    }) => void
+  ) {
     if (!projectPath) {
       throw new Error('PDF Service requires a project path');
     }
@@ -89,7 +98,24 @@ class PDFService {
       if (useEnhancedSearch) {
         console.log('🚀 [PDF-SERVICE] Using EnhancedVectorStore (HNSW + BM25)');
         this.vectorStore = new EnhancedVectorStore(projectPath);
+
+        // Set rebuild progress callback if provided
+        if (onRebuildProgress) {
+          this.vectorStore.setRebuildProgressCallback(onRebuildProgress);
+        }
+
         await this.vectorStore.initialize();
+
+        // Check if indexes need to be rebuilt - run in background to avoid blocking UI
+        if (this.vectorStore.needsRebuild()) {
+          console.log('🔨 [PDF-SERVICE] Indexes need rebuild, starting rebuild in background...');
+          // Don't await - let it run in background
+          this.vectorStore.rebuildIndexes().then(() => {
+            console.log('✅ [PDF-SERVICE] Indexes rebuilt successfully');
+          }).catch((error) => {
+            console.error('❌ [PDF-SERVICE] Rebuild failed:', error);
+          });
+        }
 
         // Configure search modes
         if (ragConfig.useHNSWIndex !== undefined) {
@@ -150,9 +176,31 @@ class PDFService {
     }
   }
 
-  async indexPDF(filePath: string, bibtexKey?: string, onProgress?: any) {
+  async extractPDFMetadata(filePath: string) {
+    // This doesn't require initialization since we're just extracting metadata
+    const PDFExtractor = (await import('../../../backend/core/pdf/PDFExtractor.js')).PDFExtractor;
+    const extractor = new PDFExtractor();
+
+    try {
+      const extracted = await extractor.extractFromPDF(filePath);
+      return {
+        title: extracted.title || filePath.split('/').pop()?.replace('.pdf', '') || 'Untitled',
+        author: extracted.metadata.creator,
+        pageCount: extracted.pages.length,
+      };
+    } catch (error) {
+      console.error('Failed to extract PDF metadata:', error);
+      // Fallback to filename
+      return {
+        title: filePath.split('/').pop()?.replace('.pdf', '') || 'Untitled',
+        pageCount: 0,
+      };
+    }
+  }
+
+  async indexPDF(filePath: string, bibtexKey?: string, onProgress?: any, customTitle?: string) {
     this.ensureInitialized();
-    return this.pdfIndexer!.indexPDF(filePath, bibtexKey, onProgress);
+    return this.pdfIndexer!.indexPDF(filePath, bibtexKey, onProgress, customTitle);
   }
 
   async search(query: string, options?: any) {

@@ -24,7 +24,7 @@ export function setupProjectHandlers() {
     return successResponse();
   });
 
-  ipcMain.handle('project:create', async (_event, data: unknown) => {
+  ipcMain.handle('project:create', async (event, data: unknown) => {
     console.log('📞 IPC Call: project:create', data);
     try {
       const validatedData = validate(ProjectCreateSchema, data);
@@ -36,7 +36,12 @@ export function setupProjectHandlers() {
         if (projectPath) {
           console.log('🔧 Initializing services for new project:', projectPath);
           await historyService.init(projectPath);
-          await pdfService.init(projectPath);
+
+          // Initialize PDF service with rebuild progress callback
+          await pdfService.init(projectPath, (progress) => {
+            event.sender.send('project:rebuild-progress', progress);
+          });
+
           console.log('✅ All services initialized successfully');
         }
       }
@@ -63,7 +68,7 @@ export function setupProjectHandlers() {
     }
   });
 
-  ipcMain.handle('project:load', async (_event, path: string) => {
+  ipcMain.handle('project:load', async (event, path: string) => {
     console.log('📞 IPC Call: project:load', { path });
     try {
       const result = await projectManager.loadProject(path);
@@ -74,7 +79,12 @@ export function setupProjectHandlers() {
         if (projectPath) {
           console.log('🔧 Initializing services for project:', projectPath);
           await historyService.init(projectPath);
-          await pdfService.init(projectPath);
+
+          // Initialize PDF service with rebuild progress callback
+          await pdfService.init(projectPath, (progress) => {
+            event.sender.send('project:rebuild-progress', progress);
+          });
+
           console.log('✅ All services initialized successfully');
         }
       }

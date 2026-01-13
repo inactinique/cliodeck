@@ -7,6 +7,7 @@ import { bibliographyService } from '../services/bibliography-service.js';
 import { chatService } from '../services/chat-service.js';
 import { zoteroService } from '../services/zotero-service.js';
 import { pdfExportService } from '../services/pdf-export.js';
+import { wordExportService } from '../services/word-export.js';
 import { revealJsExportService } from '../services/revealjs-export.js';
 import { historyService } from '../services/history-service.js';
 
@@ -185,6 +186,18 @@ export function setupIPCHandlers() {
       return result;
     } catch (error: any) {
       console.error('❌ project:set-bibliography-source error:', error);
+      return { success: false, error: error.message };
+    }
+  });
+
+  ipcMain.handle('project:set-csl-path', async (_event, data: any) => {
+    console.log('📞 IPC Call: project:set-csl-path', data);
+    try {
+      const result = await projectManager.setCSLPath(data);
+      console.log('📤 IPC Response: project:set-csl-path', result);
+      return result;
+    } catch (error: any) {
+      console.error('❌ project:set-csl-path error:', error);
       return { success: false, error: error.message };
     }
   });
@@ -713,6 +726,45 @@ export function setupIPCHandlers() {
       return result;
     } catch (error: any) {
       console.error('❌ pdf-export:export error:', error);
+      return { success: false, error: error.message };
+    }
+  });
+
+  // Word Export handlers
+  ipcMain.handle('word-export:export', async (event, options: any) => {
+    console.log('📞 IPC Call: word-export:export', {
+      projectType: options.projectType,
+      hasBibliography: !!options.bibliographyPath,
+      hasTemplate: !!options.templatePath,
+    });
+    try {
+      const window = BrowserWindow.fromWebContents(event.sender);
+
+      const result = await wordExportService.exportToWord(options, (progress) => {
+        if (window) {
+          window.webContents.send('word-export:progress', progress);
+        }
+      });
+
+      console.log('📤 IPC Response: word-export:export', {
+        success: result.success,
+        outputPath: result.outputPath,
+      });
+      return result;
+    } catch (error: any) {
+      console.error('❌ word-export:export error:', error);
+      return { success: false, error: error.message };
+    }
+  });
+
+  ipcMain.handle('word-export:find-template', async (_event, projectPath: string) => {
+    console.log('📞 IPC Call: word-export:find-template', { projectPath });
+    try {
+      const templatePath = await wordExportService.findTemplate(projectPath);
+      console.log('📤 IPC Response: word-export:find-template', { templatePath });
+      return { success: true, templatePath };
+    } catch (error: any) {
+      console.error('❌ word-export:find-template error:', error);
       return { success: false, error: error.message };
     }
   });

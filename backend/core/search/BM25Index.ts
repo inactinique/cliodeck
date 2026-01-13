@@ -24,6 +24,11 @@ export class BM25Index {
   private k1: number = 1.5; // Term frequency saturation parameter
   private b: number = 0.75; // Length normalization parameter
 
+  // Performance optimization: cache IDF values
+  private idfCache: Map<string, number> = new Map();
+  private avgDocLength: number = 0;
+  private isDirty: boolean = true; // Track if cache needs update
+
   constructor() {
     this.tfidf = new TfIdf();
     this.chunkMap = new Map();
@@ -36,6 +41,7 @@ export class BM25Index {
     const docIndex = this.tfidf.documents.length;
     this.tfidf.addDocument(this.preprocessText(chunk.content));
     this.chunkMap.set(docIndex, chunk);
+    this.isDirty = true; // Mark cache as dirty
   }
 
   /**
@@ -66,6 +72,11 @@ export class BM25Index {
       return [];
     }
 
+    // Update cache if needed (once per search, not per term!)
+    if (this.isDirty) {
+      this.updateCache();
+    }
+
     const scores: Array<{ index: number; score: number; chunk: DocumentChunk }> = [];
 
     // Calculate BM25 score for each document
@@ -76,19 +87,22 @@ export class BM25Index {
       }
 
       let score = 0;
+      const doc = this.tfidf.documents[docIndex];
+      const docLength = Object.keys(doc).length;
 
       for (const term of queryTerms) {
-        const tf = this.getTermFrequency(term, docIndex);
+        // Use lowercase for lookup
+        const termLower = term.toLowerCase();
+        const tf = doc[termLower] || 0;
+
         if (tf === 0) continue;
 
-        const idf = this.getIDF(term);
-        const docLength = this.tfidf.documents[docIndex].length;
-        const avgDocLength = this.getAverageDocLength();
+        const idf = this.idfCache.get(termLower) || 0;
 
         // BM25 formula
         const numerator = tf * (this.k1 + 1);
         const denominator =
-          tf + this.k1 * (1 - this.b + this.b * (docLength / avgDocLength));
+          tf + this.k1 * (1 - this.b + this.b * (docLength / this.avgDocLength));
         score += idf * (numerator / denominator);
       }
 
@@ -108,56 +122,58 @@ export class BM25Index {
   }
 
   /**
-   * Get term frequency in a document
+   * Update IDF cache and average doc length (called once when cache is dirty)
    */
-  private getTermFrequency(term: string, docIndex: number): number {
-    const doc = this.tfidf.documents[docIndex];
-    if (!doc) return 0;
+  private updateCache(): void {
+    const startTime = Date.now();
+    this.idfCache.clear();
 
-    let count = 0;
-    for (const key in doc) {
-      if (key.toLowerCase() === term.toLowerCase()) {
-        count = doc[key];
-        break;
-      }
-    }
-    return count;
-  }
-
-  /**
-   * Get inverse document frequency
-   */
-  private getIDF(term: string): number {
     const N = this.tfidf.documents.length;
-    let df = 0;
+    if (N === 0) {
+      this.avgDocLength = 0;
+      this.isDirty = false;
+      return;
+    }
+
+    // Build term document frequency map
+    const termDocFreq = new Map<string, number>();
+    let totalLength = 0;
 
     for (const doc of this.tfidf.documents) {
-      for (const key in doc) {
-        if (key.toLowerCase() === term.toLowerCase()) {
-          df++;
-          break;
-        }
+      const docLength = Object.keys(doc).length;
+      totalLength += docLength;
+
+      // Track which terms appear in this document
+      for (const term in doc) {
+        const termLower = term.toLowerCase();
+        termDocFreq.set(termLower, (termDocFreq.get(termLower) || 0) + 1);
       }
     }
 
-    // Avoid division by zero
-    if (df === 0) return 0;
+    // Calculate average document length
+    this.avgDocLength = totalLength / N;
 
-    // IDF formula: log((N - df + 0.5) / (df + 0.5))
-    return Math.log((N - df + 0.5) / (df + 0.5) + 1);
+    // Calculate IDF for all terms
+    for (const [term, df] of termDocFreq.entries()) {
+      // IDF formula: log((N - df + 0.5) / (df + 0.5))
+      const idf = Math.log((N - df + 0.5) / (df + 0.5) + 1);
+      this.idfCache.set(term, idf);
+    }
+
+    this.isDirty = false;
+
+    const duration = Date.now() - startTime;
+    console.log(`✅ BM25 cache updated: ${this.idfCache.size} terms indexed in ${duration}ms`);
   }
 
   /**
-   * Get average document length
+   * Get average document length (from cache)
    */
   private getAverageDocLength(): number {
-    if (this.tfidf.documents.length === 0) return 0;
-
-    const totalLength = this.tfidf.documents.reduce((sum: number, doc: any) => {
-      return sum + Object.keys(doc).length;
-    }, 0);
-
-    return totalLength / this.tfidf.documents.length;
+    if (this.isDirty) {
+      this.updateCache();
+    }
+    return this.avgDocLength;
   }
 
   /**
@@ -181,6 +197,9 @@ export class BM25Index {
   clear(): void {
     this.tfidf = new TfIdf();
     this.chunkMap.clear();
+    this.idfCache.clear();
+    this.avgDocLength = 0;
+    this.isDirty = true;
   }
 
   /**

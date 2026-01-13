@@ -53,9 +53,9 @@ export const ChatInterface: React.FC = () => {
       {/* Header */}
       <div className="chat-header">
         <div className="chat-title">
-          <h3>Assistant IA</h3>
+          <h3>{t('chat.aiAssistant')}</h3>
           <HelperTooltip
-            content="L'assistant utilise RAG pour rechercher dans vos PDFs indexés et répondre avec des sources précises."
+            content={t('chat.helpText')}
             onLearnMore={handleLearnMore}
           />
         </div>
@@ -73,10 +73,9 @@ export const ChatInterface: React.FC = () => {
       <div className="chat-messages">
         {messages.length === 0 ? (
           <div className="chat-empty">
-            <h4>{t('chat.askQuestion')}</h4>
+            <h4>{t('chat.emptyState.title')}</h4>
             <p>
-              L'assistant recherchera dans vos documents indexés pour vous fournir une réponse
-              avec sources.
+              {t('chat.emptyState.message')}
             </p>
           </div>
         ) : (

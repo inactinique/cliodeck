@@ -21,7 +21,7 @@ export const LLMConfigSection: React.FC<LLMConfigSectionProps> = ({
   };
 
   return (
-    <CollapsibleSection title="Configuration LLM" defaultExpanded={true}>
+    <CollapsibleSection title="Configuration LLM" defaultExpanded={false}>
       <div className="config-section">
         <div className="config-section-content">
           {/* Ollama URL */}

@@ -2,14 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { FileDown, X, AlertCircle, CheckCircle } from 'lucide-react';
 import { useProjectStore } from '../../stores/projectStore';
 import { useEditorStore } from '../../stores/editorStore';
-import './PDFExportModal.css';
+import './PDFExportModal.css'; // Reuse the same CSS
 
-interface PDFExportModalProps {
+interface WordExportModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-export const PDFExportModal: React.FC<PDFExportModalProps> = ({ isOpen, onClose }) => {
+export const WordExportModal: React.FC<WordExportModalProps> = ({ isOpen, onClose }) => {
   const { currentProject } = useProjectStore();
   const { content } = useEditorStore();
 
@@ -20,22 +20,17 @@ export const PDFExportModal: React.FC<PDFExportModalProps> = ({ isOpen, onClose 
   const [progress, setProgress] = useState({ stage: '', message: '', progress: 0 });
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
-  const [dependenciesChecked, setDependenciesChecked] = useState(false);
-  const [hasPandoc, setHasPandoc] = useState(false);
-  const [hasXelatex, setHasXelatex] = useState(false);
-
-  // Check dependencies on mount
-  useEffect(() => {
-    if (isOpen && !dependenciesChecked) {
-      checkDependencies();
-    }
-  }, [isOpen]);
+  const [hasTemplate, setHasTemplate] = useState(false);
+  const [templatePath, setTemplatePath] = useState<string | null>(null);
 
   // Initialize with project data
   useEffect(() => {
     if (currentProject && isOpen) {
       setTitle(currentProject.name);
-      setOutputPath(`${currentProject.path}/${currentProject.name}.pdf`);
+      setOutputPath(`${currentProject.path}/${currentProject.name}.docx`);
+
+      // Check for .dotx template in project folder
+      checkForTemplate();
     }
   }, [currentProject, isOpen]);
 
@@ -43,7 +38,7 @@ export const PDFExportModal: React.FC<PDFExportModalProps> = ({ isOpen, onClose 
   useEffect(() => {
     if (!isOpen) return;
 
-    const unsubscribe = window.electron.pdfExport.onProgress((progressData) => {
+    const unsubscribe = window.electron.wordExport.onProgress((progressData) => {
       setProgress(progressData);
     });
 
@@ -52,20 +47,22 @@ export const PDFExportModal: React.FC<PDFExportModalProps> = ({ isOpen, onClose 
     };
   }, [isOpen]);
 
-  const checkDependencies = async () => {
-    try {
-      const result = await window.electron.pdfExport.checkDependencies();
-      setHasPandoc(result.pandoc);
-      setHasXelatex(result.xelatex);
-      setDependenciesChecked(true);
+  const checkForTemplate = async () => {
+    if (!currentProject) return;
 
-      if (!result.pandoc || !result.xelatex) {
-        setError(
-          `Dépendances manquantes:\n${!result.pandoc ? '- Pandoc (installez avec: brew install pandoc)\n' : ''}${!result.xelatex ? '- XeLaTeX (installez avec: brew install --cask mactex)' : ''}`
-        );
+    try {
+      const result = await window.electron.wordExport.findTemplate(currentProject.path);
+      if (result.success && result.templatePath) {
+        setHasTemplate(true);
+        setTemplatePath(result.templatePath);
+        console.log('📝 Word template found:', result.templatePath);
+      } else {
+        setHasTemplate(false);
+        setTemplatePath(null);
       }
-    } catch (err: any) {
-      setError('Erreur lors de la vérification des dépendances: ' + err.message);
+    } catch (err) {
+      console.error('Failed to check for template:', err);
+      setHasTemplate(false);
     }
   };
 
@@ -74,7 +71,7 @@ export const PDFExportModal: React.FC<PDFExportModalProps> = ({ isOpen, onClose 
       const result = await window.electron.dialog.saveFile({
         defaultPath: outputPath,
         filters: [
-          { name: 'PDF', extensions: ['pdf'] },
+          { name: 'Word Document', extensions: ['docx'] },
           { name: 'Tous les fichiers', extensions: ['*'] },
         ],
       });
@@ -98,11 +95,6 @@ export const PDFExportModal: React.FC<PDFExportModalProps> = ({ isOpen, onClose 
       return;
     }
 
-    if (!hasPandoc || !hasXelatex) {
-      setError('Dépendances manquantes. Veuillez les installer avant de continuer.');
-      return;
-    }
-
     setIsExporting(true);
     setError(null);
     setSuccess(false);
@@ -121,35 +113,19 @@ export const PDFExportModal: React.FC<PDFExportModalProps> = ({ isOpen, onClose 
         }
       }
 
-      // For presentations, load Beamer configuration if it exists
-      let beamerConfig;
-      if (currentProject.type === 'presentation') {
-        try {
-          const beamerConfigPath = `${currentProject.path}/beamer-config.json`;
-          const configExists = await window.electron.fs.exists(beamerConfigPath);
-          if (configExists) {
-            const configContent = await window.electron.fs.readFile(beamerConfigPath);
-            beamerConfig = JSON.parse(configContent);
-            console.log('📊 Beamer configuration loaded:', beamerConfig);
-          }
-        } catch (err) {
-          console.warn('No Beamer config found, using defaults');
-        }
-      }
-
-      const result = await window.electron.pdfExport.export({
+      const result = await window.electron.wordExport.export({
         projectPath: currentProject.path,
         projectType: currentProject.type,
         content: exportContent,
         outputPath: outputPath,
         bibliographyPath: currentProject.bibliography,
         cslPath: currentProject.cslPath,
+        templatePath: templatePath || undefined,
         metadata: {
           title,
-          author: author || 'MDFocus',
+          author: author || 'mdFocus',
           date: new Date().toLocaleDateString('fr-FR'),
         },
-        beamerConfig,
       });
 
       if (result.success) {
@@ -188,24 +164,18 @@ export const PDFExportModal: React.FC<PDFExportModalProps> = ({ isOpen, onClose 
     <div className="pdf-export-modal" onClick={handleClose}>
       <div className="pdf-export-content" onClick={(e) => e.stopPropagation()}>
         <div className="pdf-export-header">
-          <h3>Export PDF</h3>
+          <h3>Export Word (.docx)</h3>
           <button className="close-btn" onClick={handleClose} disabled={isExporting}>
             <X size={20} />
           </button>
         </div>
 
         <div className="pdf-export-body">
-          {/* Dependency Check */}
-          {dependenciesChecked && (
-            <div className="dependency-status">
-              <div className={`dependency-item ${hasPandoc ? 'success' : 'error'}`}>
-                {hasPandoc ? <CheckCircle size={16} /> : <AlertCircle size={16} />}
-                <span>Pandoc {hasPandoc ? 'installé' : 'manquant'}</span>
-              </div>
-              <div className={`dependency-item ${hasXelatex ? 'success' : 'error'}`}>
-                {hasXelatex ? <CheckCircle size={16} /> : <AlertCircle size={16} />}
-                <span>XeLaTeX {hasXelatex ? 'installé' : 'manquant'}</span>
-              </div>
+          {/* Template Detection */}
+          {hasTemplate && templatePath && (
+            <div style={{ fontSize: '0.875rem', color: '#4CAF50', marginBottom: '1rem', padding: '0.75rem', backgroundColor: '#2a2a2a', borderRadius: '4px' }}>
+              <CheckCircle size={16} style={{ display: 'inline', marginRight: '0.5rem' }} />
+              Modèle Word détecté: <code style={{ color: '#4ec9b0' }}>{templatePath.split('/').pop()}</code>
             </div>
           )}
 
@@ -239,20 +209,6 @@ export const PDFExportModal: React.FC<PDFExportModalProps> = ({ isOpen, onClose 
             </div>
           )}
 
-          {/* Info about presentations */}
-          {currentProject?.type === 'presentation' && (
-            <div style={{ fontSize: '0.875rem', color: '#888', marginBottom: '1rem', padding: '0.75rem', backgroundColor: '#2a2a2a', borderRadius: '4px' }}>
-              🎬 Présentation Beamer : Le contenu sera lu depuis <code style={{ color: '#4ec9b0' }}>slides.md</code>
-              <br /><br />
-              <strong>Syntaxe :</strong>
-              <ul style={{ marginTop: '0.5rem', paddingLeft: '1.5rem' }}>
-                <li><code>#</code> Titre de slide (niveau 1)</li>
-                <li><code>##</code> Sous-titre (niveau 2)</li>
-                <li><code>::: notes</code> ... <code>:::</code> Notes de présentateur</li>
-              </ul>
-            </div>
-          )}
-
           <div className="form-field">
             <label>Fichier de sortie</label>
             <div className="path-selector">
@@ -260,7 +216,7 @@ export const PDFExportModal: React.FC<PDFExportModalProps> = ({ isOpen, onClose 
                 type="text"
                 value={outputPath}
                 onChange={(e) => setOutputPath(e.target.value)}
-                placeholder="/chemin/vers/fichier.pdf"
+                placeholder="/chemin/vers/fichier.docx"
                 disabled={isExporting}
               />
               <button onClick={handleSelectOutputPath} disabled={isExporting}>
@@ -291,7 +247,7 @@ export const PDFExportModal: React.FC<PDFExportModalProps> = ({ isOpen, onClose 
           {success && (
             <div className="export-success">
               <CheckCircle size={16} />
-              <span>Export réussi! PDF créé à: {outputPath}</span>
+              <span>Export réussi! Document Word créé à: {outputPath}</span>
             </div>
           )}
         </div>
@@ -303,7 +259,7 @@ export const PDFExportModal: React.FC<PDFExportModalProps> = ({ isOpen, onClose 
           <button
             className="btn-export"
             onClick={handleExport}
-            disabled={isExporting || !hasPandoc || !hasXelatex || !title}
+            disabled={isExporting || !title}
           >
             <FileDown size={16} />
             {isExporting ? 'Export en cours...' : 'Exporter'}

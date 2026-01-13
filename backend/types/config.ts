@@ -41,6 +41,11 @@ export interface RAGConfig {
   useAdaptiveChunking?: boolean; // Use structure-aware chunking
   useHNSWIndex?: boolean; // Use HNSW for fast search
   useHybridSearch?: boolean; // Combine dense (HNSW) + sparse (BM25)
+
+  // System prompt configuration (Phase 2.3)
+  systemPromptLanguage?: 'fr' | 'en'; // Language of the default system prompt
+  customSystemPrompt?: string; // Custom system prompt (optional)
+  useCustomSystemPrompt?: boolean; // Use custom prompt instead of default
 }
 
 export interface ZoteroConfig {
@@ -86,6 +91,9 @@ export const DEFAULT_CONFIG: AppConfig = {
     useAdaptiveChunking: true, // Structure-aware chunking
     useHNSWIndex: true, // Fast approximate search
     useHybridSearch: true, // Dense + sparse fusion
+    // System prompt configuration (default: French)
+    systemPromptLanguage: 'fr',
+    useCustomSystemPrompt: false,
   },
   editor: {
     fontSize: 14,

@@ -17,7 +17,48 @@
     "search": "Suchen",
     "refresh": "Aktualisieren",
     "test": "Testen",
-    "sync": "Synchronisieren"
+    "sync": "Synchronisieren",
+    "title": "Aktionen",
+    "dangerZone": "Gefahrenzone",
+    "purgeDatabase": {
+      "title": "Datenbank bereinigen",
+      "description": "Löscht alle Vektor-Chunks und setzt die Indizes zurück. PDFs müssen neu indexiert werden.",
+      "button": "Datenbank bereinigen",
+      "confirmTitle": "⚠️ WARNUNG - Unwiderrufliche Aktion",
+      "confirmMessage": "Diese Aktion wird:\n\n• ALLE Vektor-Embeddings löschen\n• ALLE Text-Chunks löschen\n• HNSW- und BM25-Indizes zerstören\n• Die Vektordatenbank vollständig zurücksetzen\n\nSie müssen ALLE Ihre PDFs neu indexieren.\n\nGeben Sie 'LÖSCHEN' ein, um zu bestätigen:",
+      "finalConfirm": "Letzte Bestätigung: Diese Aktion ist UNWIDERRUFLICH. Fortfahren?",
+      "purging": "Bereinigung läuft...",
+      "success": "Datenbank erfolgreich bereinigt",
+      "error": "Fehler bei der Bereinigung",
+      "cancelledNoMatch": "Bereinigung abgebrochen (falscher Bestätigungstext)",
+      "cancelled": "Bereinigung abgebrochen"
+    },
+    "rebuildIndexes": {
+      "title": "Indizes neu aufbauen",
+      "description": "Baut HNSW- und BM25-Indizes aus der vorhandenen SQLite-Datenbank neu auf. Nützlich bei beschädigten Indizes.",
+      "button": "Neu aufbauen",
+      "rebuilding": "Wird neu aufgebaut...",
+      "success": "Indizes erfolgreich neu aufgebaut",
+      "error": "Fehler beim Neuaufbau"
+    },
+    "optimizeDatabase": {
+      "title": "Datenbank optimieren",
+      "description": "Komprimiert die SQLite-Datenbank und optimiert die Leistung. Empfohlen nach dem Löschen vieler Dokumente.",
+      "button": "Optimieren",
+      "optimizing": "Wird optimiert...",
+      "success": "Datenbank optimiert. Gespart: {{saved}}",
+      "error": "Fehler bei der Optimierung"
+    },
+    "exportData": {
+      "title": "Daten exportieren",
+      "description": "Exportiert Projektkonfiguration und Metadaten (keine PDFs).",
+      "button": "Exportieren"
+    },
+    "importData": {
+      "title": "Daten importieren",
+      "description": "Importiert Konfiguration aus einem früheren Export.",
+      "button": "Importieren"
+    }
   },
   "settings": {
     "title": "Einstellungen",
@@ -28,7 +69,14 @@
     "selectLanguage": "Sprache auswählen",
     "tooltipSave": "Speichern",
     "tooltipReset": "Zurücksetzen",
-    "saving": "Wird gespeichert..."
+    "saving": "Wird gespeichert...",
+    "languageSelector": {
+      "label": "Sprache der Benutzeroberfläche auswählen",
+      "changeWarning": "Die Sprache wird beim nächsten Neustart der Anwendung angewendet.",
+      "fr": "Französisch",
+      "en": "Englisch",
+      "de": "Deutsch"
+    }
   },
   "editor": {
     "title": "Editor",
@@ -64,7 +112,21 @@
     "sortBy": "Sortieren nach:",
     "author": "Autor",
     "year": "Jahr",
-    "titleField": "Titel"
+    "titleField": "Titel",
+    "noCitations": "Keine Zitate verfügbar",
+    "importPrompt": "Importieren Sie eine BibTeX-Datei, um zu beginnen",
+    "pdfIndexed": "PDF indexiert:",
+    "indexError": "Fehler:",
+    "viewDetails": "Details anzeigen",
+    "copyKey": "Schlüssel kopieren",
+    "indexPDF": "PDF indexieren",
+    "openPDF": "PDF öffnen",
+    "keyCopied": "Schlüssel kopiert!",
+    "journal": "Zeitschrift:",
+    "publisher": "Verlag:",
+    "booktitle": "Buchtitel:",
+    "insertCitation": "Zitat einfügen",
+    "indexPDFButton": "PDF indizieren"
   },
   "project": {
     "title": "Projekt",
@@ -100,7 +162,16 @@
       "presentation": "Präsentation",
       "notes": "Notizen",
       "notesExisting": "Notizen (vorhandener Ordner)"
-    }
+    },
+    "settings": "Projekteinstellungen",
+    "citationStyle": "Zitierstil (CSL)",
+    "selectCSL": "Wählen Sie eine .csl-Datei",
+    "noCslSelected": "Kein Zitierstil ausgewählt",
+    "cslSelected": "CSL-Stil:",
+    "cslHelp": "Die CSL-Datei definiert das Zitat- und Literaturverzeichnisformat in PDF- und Word-Exporten",
+    "cslSelectError": "Fehler beim Auswählen der CSL-Datei",
+    "cslSaveError": "Fehler beim Speichern des CSL-Pfads",
+    "cslRemoveError": "Fehler beim Entfernen des CSL-Pfads"
   },
   "export": {
     "pdf": {
@@ -116,7 +187,20 @@
       "exporting": "Wird exportiert...",
       "success": "Export erfolgreich! PDF erstellt unter:",
       "error": "Exportfehler"
-    }
+    },
+    "word": {
+      "title": "Word-Export (.docx)",
+      "documentTitle": "Dokumenttitel",
+      "author": "Autor (optional)",
+      "templateDetected": "Word-Vorlage erkannt:",
+      "abstractNote": "Die Zusammenfassung wird automatisch gelesen von...",
+      "outputFile": "Ausgabedatei",
+      "exporting": "Wird exportiert...",
+      "success": "Export erfolgreich! Word-Dokument erstellt unter:",
+      "error": "Exportfehler"
+    },
+    "exportToPDF": "Als PDF exportieren",
+    "exportToWord": "Als Word exportieren"
   },
   "rag": {
     "title": "RAG-Konfiguration",
@@ -167,7 +251,30 @@
     "autoSync": "Auto-Sync",
     "testConnection": "Verbindung testen",
     "connectionSuccess": "Zotero-Verbindung erfolgreich!",
-    "connectionError": "Verbindung zu Zotero nicht möglich"
+    "connectionError": "Verbindung zu Zotero nicht möglich",
+    "import": {
+      "title": "Import aus Zotero",
+      "notConfigured": "Zotero ist nicht konfiguriert",
+      "configureFirst": "Bitte konfigurieren Sie zuerst Ihre Zotero-Verbindung in den Einstellungen.",
+      "goToSettings": "Zu den Einstellungen",
+      "loading": "Zotero-Sammlungen werden geladen...",
+      "loadError": "Fehler beim Laden der Zotero-Sammlungen",
+      "selectCollection": "Sammlung auswählen",
+      "selectPlaceholder": "Sammlung wählen...",
+      "options": "Import-Optionen",
+      "downloadPDFs": "Angehängte PDFs herunterladen",
+      "indexPDFs": "PDFs automatisch indexieren",
+      "mergeBibliography": "Mit vorhandener Bibliographie zusammenführen",
+      "startImport": "Import starten",
+      "importing": "Import läuft...",
+      "fetchingMetadata": "Metadaten werden abgerufen ({{current}}/{{total}})",
+      "downloadingPDFs": "PDFs werden heruntergeladen ({{current}}/{{total}})",
+      "indexingPDFs": "PDFs werden indexiert ({{current}}/{{total}})",
+      "successTitle": "✅ Import erfolgreich!",
+      "successMessage": "**{{items}} Referenzen** importiert\n**{{pdfs}} PDFs** heruntergeladen\n**{{indexed}} Dokumente** indexiert",
+      "errorTitle": "❌ Import-Fehler",
+      "close": "Schließen"
+    }
   },
   "suggestions": {
     "title": "Vorschläge",
@@ -196,7 +303,13 @@
     "excerpt": "Auszug:",
     "page": "Seite",
     "similarity": "Ähnlichkeit",
-    "openPDF": "PDF öffnen"
+    "openPDF": "PDF öffnen",
+    "aiAssistant": "KI-Assistent",
+    "helpText": "Der Assistent verwendet RAG (Retrieval-Augmented Generation), um Ihre Fragen basierend auf indexierten PDF-Dokumenten zu beantworten.",
+    "emptyState": {
+      "title": "Keine indexierten Dokumente",
+      "message": "Der Assistent durchsucht Ihre indexierten PDFs, um Ihre Fragen zu beantworten.\n\nIndexieren Sie PDFs, um zu beginnen."
+    }
   },
   "corpus": {
     "title": "Korpus",

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Citation, useBibliographyStore } from '../../stores/bibliographyStore';
 import './CitationCard.css';
 
@@ -7,6 +8,7 @@ interface CitationCardProps {
 }
 
 export const CitationCard: React.FC<CitationCardProps> = ({ citation }) => {
+  const { t } = useTranslation('common');
   const [isExpanded, setIsExpanded] = useState(false);
   const { selectCitation, insertCitation, indexPDFFromCitation } = useBibliographyStore();
 
@@ -17,9 +19,9 @@ export const CitationCard: React.FC<CitationCardProps> = ({ citation }) => {
   const handleIndexPDF = async () => {
     try {
       await indexPDFFromCitation(citation.id);
-      alert(`PDF indexé: ${citation.title}`);
+      alert(`${t('bibliography.pdfIndexed')} ${citation.title}`);
     } catch (error) {
-      alert(`Erreur: ${error}`);
+      alert(`${t('bibliography.indexError')} ${error}`);
     }
   };
 
@@ -47,30 +49,30 @@ export const CitationCard: React.FC<CitationCardProps> = ({ citation }) => {
         <div className="citation-details">
           {citation.journal && (
             <div className="detail-item">
-              <span className="detail-label">Journal:</span>
+              <span className="detail-label">{t('bibliography.journal')}</span>
               <span className="detail-value">{citation.journal}</span>
             </div>
           )}
           {citation.publisher && (
             <div className="detail-item">
-              <span className="detail-label">Éditeur:</span>
+              <span className="detail-label">{t('bibliography.publisher')}</span>
               <span className="detail-value">{citation.publisher}</span>
             </div>
           )}
           {citation.booktitle && (
             <div className="detail-item">
-              <span className="detail-label">Ouvrage:</span>
+              <span className="detail-label">{t('bibliography.booktitle')}</span>
               <span className="detail-value">{citation.booktitle}</span>
             </div>
           )}
 
           <div className="citation-actions">
             <button className="action-btn primary" onClick={handleInsert}>
-              ✍️ Insérer citation
+              ✍️ {t('bibliography.insertCitation')}
             </button>
             {hasPDF && (
               <button className="action-btn secondary" onClick={handleIndexPDF}>
-                🔍 Indexer PDF
+                🔍 {t('bibliography.indexPDFButton')}
               </button>
             )}
           </div>

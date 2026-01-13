@@ -8,7 +8,7 @@ export const UIConfigSection: React.FC = () => {
   const { density, setDensity } = useDensity();
 
   return (
-    <CollapsibleSection title={t('ui.title')} defaultExpanded={true}>
+    <CollapsibleSection title={t('ui.title')} defaultExpanded={false}>
       <div className="config-section">
         <div className="config-section-content">
           {/* Density */}

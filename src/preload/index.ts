@@ -18,12 +18,26 @@ const api = {
       filePath?: string;
       zoteroCollection?: string;
     }) => ipcRenderer.invoke('project:set-bibliography-source', data),
+    setCSLPath: (data: {
+      projectPath: string;
+      cslPath?: string;
+    }) => ipcRenderer.invoke('project:set-csl-path', data),
+    onRebuildProgress: (callback: (progress: {
+      current: number;
+      total: number;
+      status: string;
+      percentage: number;
+    }) => void) => {
+      ipcRenderer.on('project:rebuild-progress', (_event, progress) => callback(progress));
+    },
   },
 
   // PDF & Documents
   pdf: {
-    index: (filePath: string, bibtexKey?: string) =>
-      ipcRenderer.invoke('pdf:index', filePath, bibtexKey),
+    extractMetadata: (filePath: string) =>
+      ipcRenderer.invoke('pdf:extractMetadata', filePath),
+    index: (filePath: string, bibtexKey?: string, onProgress?: any, customTitle?: string) =>
+      ipcRenderer.invoke('pdf:index', filePath, bibtexKey, customTitle),
     search: (query: string, options?: any) =>
       ipcRenderer.invoke('pdf:search', query, options),
     delete: (documentId: string) =>
@@ -125,6 +139,30 @@ const api = {
       ipcRenderer.on('pdf-export:progress', listener);
       return () => ipcRenderer.removeListener('pdf-export:progress', listener);
     },
+  },
+
+  // Word Export
+  wordExport: {
+    export: (options: {
+      projectPath: string;
+      projectType: 'notes' | 'article' | 'book' | 'presentation';
+      content: string;
+      outputPath?: string;
+      bibliographyPath?: string;
+      cslPath?: string;
+      templatePath?: string;
+      metadata?: {
+        title?: string;
+        author?: string;
+        date?: string;
+      };
+    }) => ipcRenderer.invoke('word-export:export', options),
+    onProgress: (callback: (progress: any) => void) => {
+      const listener = (_event: any, progress: any) => callback(progress);
+      ipcRenderer.on('word-export:progress', listener);
+      return () => ipcRenderer.removeListener('word-export:progress', listener);
+    },
+    findTemplate: (projectPath: string) => ipcRenderer.invoke('word-export:find-template', projectPath),
   },
 
   // Reveal.js Export

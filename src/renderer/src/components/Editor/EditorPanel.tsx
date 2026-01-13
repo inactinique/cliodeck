@@ -1,12 +1,10 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { FileText, FolderOpen, Save, Link, BookOpen, Table, Superscript, Quote, CheckCircle, Lightbulb } from 'lucide-react';
+import { FileText, FolderOpen, Save, Link, BookOpen, Table, Superscript, Quote, CheckCircle } from 'lucide-react';
 // import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import { MarkdownEditor } from './MarkdownEditor';
 // import { MarkdownPreview } from './MarkdownPreview';
 import { DocumentStats } from './DocumentStats';
-import { CitationSuggestionsPanel } from './CitationSuggestionsPanel';
-// import { ContextualSuggestions } from './ContextualSuggestions';
 import { useEditorStore } from '../../stores/editorStore';
 import { useBibliographyStore } from '../../stores/bibliographyStore';
 import { logger } from '../../utils/logger';
@@ -14,34 +12,8 @@ import './EditorPanel.css';
 
 export const EditorPanel: React.FC = () => {
   const { t } = useTranslation('common');
-  const { showSuggestions, toggleSuggestions, loadFile, saveFile, setContent, content, insertFormatting } = useEditorStore();
+  const { loadFile, saveFile, setContent, content, insertFormatting } = useEditorStore();
   const { citations } = useBibliographyStore();
-
-  // Suggestions config - disabled while ContextualSuggestions is disabled
-  // const [suggestionsConfig, setSuggestionsConfig] = React.useState({
-  //   enableCitationSuggestions: true,
-  //   citationSuggestionDelay: 500,
-  //   maxCitationSuggestions: 5,
-  //   enableReformulationSuggestions: false,
-  //   reformulationDelay: 2000,
-  //   reformulationMinWords: 10,
-  //   showSuggestionsInline: true,
-  // });
-
-  // Load suggestions config on mount
-  // React.useEffect(() => {
-  //   const loadSuggestionsConfig = async () => {
-  //     try {
-  //       const config = await window.electron.config.get('suggestions');
-  //       if (config) {
-  //         setSuggestionsConfig(config);
-  //       }
-  //     } catch (error) {
-  //       console.error('Failed to load suggestions config:', error);
-  //     }
-  //   };
-  //   loadSuggestionsConfig();
-  // }, []);
 
   const handleNewFile = () => {
     logger.component('EditorPanel', 'handleNewFile clicked');
@@ -210,13 +182,6 @@ export const EditorPanel: React.FC = () => {
           <button className="toolbar-btn" onClick={handleCheckCitations} title={t('toolbar.checkCitations')}>
             <CheckCircle size={20} strokeWidth={1} />
           </button>
-          <button
-            className={`toolbar-btn ${showSuggestions ? 'active' : ''}`}
-            onClick={toggleSuggestions}
-            title={t('toolbar.citation')}
-          >
-            <Lightbulb size={20} strokeWidth={1} />
-          </button>
         </div>
 
         {/* Preview button - disabled
@@ -232,29 +197,11 @@ export const EditorPanel: React.FC = () => {
         */}
       </div>
 
-      {/* Editor with optional suggestions panel */}
-      <div className="editor-content" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-        <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
-          <div style={{ flex: showSuggestions ? '1 1 70%' : '1 1 100%', overflow: 'auto' }}>
-            <MarkdownEditor />
-          </div>
-          {showSuggestions && (
-            <div style={{ flex: '0 0 30%', minWidth: '300px', maxWidth: '400px' }}>
-              <CitationSuggestionsPanel />
-            </div>
-          )}
-        </div>
-
-        {/* Stats bar (always visible at the bottom) */}
+      {/* Editor content */}
+      <div className="editor-content">
+        <MarkdownEditor />
         <DocumentStats />
       </div>
-
-      {/* Contextual Suggestions - Disabled (overlay issues)
-      <ContextualSuggestions
-        content={content}
-        suggestionsConfig={suggestionsConfig}
-      />
-      */}
     </div>
   );
 };

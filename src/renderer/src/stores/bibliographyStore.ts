@@ -28,6 +28,7 @@ interface BibliographyState {
 
   // Actions
   loadBibliography: (filePath: string) => Promise<void>;
+  mergeBibliography: (filePath: string) => Promise<{ newCitations: number; duplicates: number; total: number }>;
   searchCitations: (query: string) => void;
   setSortBy: (field: 'author' | 'year' | 'title') => void;
   toggleSortOrder: () => void;
@@ -68,6 +69,63 @@ export const useBibliographyStore = create<BibliographyState>((set, get) => ({
       }
     } catch (error) {
       console.error('Failed to load bibliography:', error);
+      throw error;
+    }
+  },
+
+  mergeBibliography: async (filePath: string) => {
+    try {
+      const result = await window.electron.bibliography.load(filePath);
+
+      if (!result.success || !Array.isArray(result.citations)) {
+        console.error('Invalid response from bibliography.load:', result);
+        throw new Error(result.error || 'Failed to load bibliography');
+      }
+
+      const { citations: currentCitations } = get();
+      const newCitationsFromFile = result.citations;
+
+      // Build a Set of existing citation IDs for fast lookup
+      const existingIds = new Set(currentCitations.map(c => c.id));
+
+      // Separate new citations from duplicates
+      const newCitations: Citation[] = [];
+      let duplicatesCount = 0;
+
+      newCitationsFromFile.forEach((citation: Citation) => {
+        if (existingIds.has(citation.id)) {
+          duplicatesCount++;
+          console.log(`🔄 Duplicate found: ${citation.id} - ${citation.title}`);
+        } else {
+          newCitations.push(citation);
+        }
+      });
+
+      // Merge: existing + new (no duplicates)
+      const mergedCitations = [...currentCitations, ...newCitations];
+
+      console.log(`✅ Bibliography merge complete:`, {
+        existing: currentCitations.length,
+        fromFile: newCitationsFromFile.length,
+        newAdded: newCitations.length,
+        duplicates: duplicatesCount,
+        total: mergedCitations.length,
+      });
+
+      set({
+        citations: mergedCitations,
+        filteredCitations: mergedCitations,
+      });
+
+      get().applyFilters();
+
+      return {
+        newCitations: newCitations.length,
+        duplicates: duplicatesCount,
+        total: mergedCitations.length,
+      };
+    } catch (error) {
+      console.error('Failed to merge bibliography:', error);
       throw error;
     }
   },
