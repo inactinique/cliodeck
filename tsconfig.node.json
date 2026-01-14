@@ -14,9 +14,10 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["src/*"],
-      "@backend/*": ["backend/*"]
+      "@backend/*": ["backend/*"],
+      "@shared/*": ["src/shared/*"]
     }
   },
-  "include": ["src/main/**/*", "backend/**/*"],
+  "include": ["src/main/**/*", "src/shared/**/*", "backend/**/*"],
   "exclude": ["backend/__tests__/**/*"]
 }

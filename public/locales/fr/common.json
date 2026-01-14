@@ -244,6 +244,25 @@
     "connectionSuccess": "Connexion réussie !",
     "connectionError": "Erreur de connexion"
   },
+  "embeddedLLM": {
+    "title": "Modèle embarqué (Qwen)",
+    "loading": "Chargement...",
+    "loadError": "Erreur lors du chargement des informations",
+    "providerNote": "Le choix du provider (Ollama ou embarqué) se fait dans les paramètres RAG du chatbot.",
+    "modelsLabel": "Modèles disponibles",
+    "modelsHelp": "Téléchargez un modèle pour l'utiliser hors ligne",
+    "downloaded": "Téléchargé",
+    "download": "Télécharger",
+    "delete": "Supprimer",
+    "cancel": "Annuler",
+    "deleteConfirm": "Voulez-vous vraiment supprimer ce modèle ?",
+    "deleteError": "Erreur lors de la suppression du modèle",
+    "downloadError": "Erreur lors du téléchargement",
+    "startingDownload": "Préparation du téléchargement...",
+    "storageLabel": "Stockage",
+    "usedSpace": "Espace utilisé",
+    "location": "Emplacement"
+  },
   "zotero": {
     "title": "Configuration Zotero",
     "userId": "ID utilisateur",
@@ -345,5 +364,15 @@
     "markdown": "Markdown",
     "openError": "Erreur lors de l'ouverture du fichier",
     "saveError": "Erreur lors de la sauvegarde du fichier"
+  },
+  "ragSettings": {
+    "provider": "Provider LLM",
+    "providerAuto": "Auto (Ollama puis embarqué)",
+    "providerOllama": "Ollama uniquement",
+    "providerEmbedded": "Qwen embarqué",
+    "providerAutoDesc": "Essaie d'abord Ollama, utilise le modèle embarqué si Ollama n'est pas disponible",
+    "providerOllamaDesc": "Utilise exclusivement Ollama pour la génération (nécessite Ollama actif)",
+    "providerEmbeddedDesc": "Utilise le modèle embarqué Qwen (nécessite le téléchargement dans les paramètres)",
+    "notDownloaded": "non téléchargé"
   }
 }

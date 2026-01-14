@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { ChevronDown, ChevronUp, RotateCcw } from 'lucide-react';
-import { useRAGQueryStore } from '../../stores/ragQueryStore';
+import { useTranslation } from 'react-i18next';
+import { useRAGQueryStore, type LLMProvider } from '../../stores/ragQueryStore';
 import './RAGSettingsPanel.css';
 
 export const RAGSettingsPanel: React.FC = () => {
+  const { t } = useTranslation('common');
   const {
     params,
     availableModels,
@@ -16,7 +18,23 @@ export const RAGSettingsPanel: React.FC = () => {
   } = useRAGQueryStore();
 
   const [showAdvanced, setShowAdvanced] = useState(false);
+  const [isEmbeddedModelAvailable, setIsEmbeddedModelAvailable] = useState(false);
   const hasTriedLoading = useRef(false);
+
+  // Check if embedded model is downloaded
+  useEffect(() => {
+    const checkEmbeddedModel = async () => {
+      try {
+        const result = await window.electron.embeddedLLM.isDownloaded();
+        if (result?.success) {
+          setIsEmbeddedModelAvailable(result.downloaded);
+        }
+      } catch (error) {
+        console.warn('Could not check embedded model status:', error);
+      }
+    };
+    checkEmbeddedModel();
+  }, []);
 
   // Auto-retry loading models when panel becomes visible
   useEffect(() => {
@@ -58,7 +76,30 @@ export const RAGSettingsPanel: React.FC = () => {
 
       {isSettingsPanelOpen && (
         <div className="settings-content">
-          {/* Model Selection */}
+          {/* Provider Selection */}
+          <div className="setting-group">
+            <label htmlFor="provider-select">{t('ragSettings.provider')}</label>
+            <select
+              id="provider-select"
+              value={params.provider}
+              onChange={(e) => setParams({ provider: e.target.value as LLMProvider })}
+            >
+              <option value="auto">{t('ragSettings.providerAuto')}</option>
+              <option value="ollama">{t('ragSettings.providerOllama')}</option>
+              <option value="embedded" disabled={!isEmbeddedModelAvailable}>
+                {t('ragSettings.providerEmbedded')}
+                {!isEmbeddedModelAvailable && ` (${t('ragSettings.notDownloaded')})`}
+              </option>
+            </select>
+            <small className="setting-hint">
+              {params.provider === 'auto' && t('ragSettings.providerAutoDesc')}
+              {params.provider === 'ollama' && t('ragSettings.providerOllamaDesc')}
+              {params.provider === 'embedded' && t('ragSettings.providerEmbeddedDesc')}
+            </small>
+          </div>
+
+          {/* Model Selection (only for Ollama) */}
+          {(params.provider === 'ollama' || params.provider === 'auto') && (
           <div className="setting-group">
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <label htmlFor="model-select">
@@ -103,6 +144,7 @@ export const RAGSettingsPanel: React.FC = () => {
                 : `${availableModels.length} models available. Larger models are slower but better.`}
             </small>
           </div>
+          )}
 
           {/* Top K */}
           <div className="setting-group">

@@ -90,6 +90,64 @@
   color: var(--bg-app);
 }
 
+/* Scope Selector */
+.journal-scope-selector {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem var(--spacing-lg);
+  background-color: var(--bg-panel);
+  border-bottom: 1px solid var(--border-color);
+  gap: 1rem;
+}
+
+.scope-buttons {
+  display: flex;
+  gap: 0.25rem;
+  background-color: var(--bg-app);
+  padding: 0.25rem;
+  border-radius: var(--radius-sm);
+}
+
+.scope-buttons button {
+  background: transparent;
+  border: none;
+  padding: 0.4rem 0.75rem;
+  cursor: pointer;
+  border-radius: calc(var(--radius-sm) - 2px);
+  transition: all var(--transition-normal);
+  color: var(--text-tertiary);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.scope-buttons button:hover {
+  color: var(--text-secondary);
+}
+
+.scope-buttons button.active {
+  background-color: var(--color-accent);
+  color: var(--text-primary);
+}
+
+.hide-empty-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  color: var(--text-tertiary);
+  cursor: pointer;
+}
+
+.hide-empty-checkbox input {
+  cursor: pointer;
+  accent-color: var(--color-accent);
+}
+
+.hide-empty-checkbox:hover {
+  color: var(--text-secondary);
+}
+
 /* View Tabs */
 .journal-view-tabs {
   display: flex;
@@ -295,7 +353,7 @@
 .timeline-time {
   color: var(--text-tertiary);
   font-size: 0.8rem;
-  var(--text-primary)-space: nowrap;
+  white-space: nowrap;
 }
 
 .timeline-data {
@@ -307,6 +365,29 @@
   border-radius: var(--radius-sm);
   border: 1px solid var(--border-color);
   word-break: break-all;
+}
+
+.timeline-description {
+  color: var(--text-tertiary);
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+
+/* Event Display (human-readable format) */
+.event-display {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.event-label {
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.event-description {
+  font-size: 0.85rem;
+  color: var(--text-tertiary);
 }
 
 /* AI Operations Table */

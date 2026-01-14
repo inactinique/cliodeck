@@ -7,6 +7,14 @@ export interface LLMConfig {
   claudeModel?: string;
   openaiAPIKey?: string;
   openaiModel?: string;
+
+  // Embedded LLM configuration (Qwen2.5-0.5B or similar)
+  /** Provider for text generation: 'ollama', 'embedded', or 'auto' (try ollama first, then embedded) */
+  generationProvider?: 'ollama' | 'embedded' | 'auto';
+  /** ID of the embedded model (e.g., 'qwen2.5-0.5b') */
+  embeddedModelId?: string;
+  /** Path to the downloaded GGUF model file */
+  embeddedModelPath?: string;
 }
 
 export interface SummarizerConfig {
@@ -79,6 +87,9 @@ export const DEFAULT_CONFIG: AppConfig = {
     ollamaURL: 'http://127.0.0.1:11434',
     ollamaEmbeddingModel: 'nomic-embed-text',
     ollamaChatModel: 'gemma2:2b',
+    // Embedded LLM: auto mode (try Ollama first, fallback to embedded)
+    generationProvider: 'auto',
+    embeddedModelId: 'qwen2.5-0.5b',
   },
   rag: {
     topK: 10,

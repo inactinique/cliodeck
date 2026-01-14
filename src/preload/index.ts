@@ -218,6 +218,54 @@ const api = {
     },
   },
 
+  // Embedded LLM Management
+  embeddedLLM: {
+    /** Check if a model is downloaded */
+    isDownloaded: (modelId?: string) =>
+      ipcRenderer.invoke('embedded-llm:is-downloaded', modelId),
+    /** Get the path to a model (if downloaded) */
+    getModelPath: (modelId?: string) =>
+      ipcRenderer.invoke('embedded-llm:get-model-path', modelId),
+    /** List all available models with their download status */
+    listModels: () => ipcRenderer.invoke('embedded-llm:list-models'),
+    /** Get info about a specific model */
+    getModelInfo: (modelId?: string) =>
+      ipcRenderer.invoke('embedded-llm:get-model-info', modelId),
+    /** Download a model from HuggingFace */
+    download: (modelId?: string) =>
+      ipcRenderer.invoke('embedded-llm:download', modelId),
+    /** Cancel an ongoing download */
+    cancelDownload: () => ipcRenderer.invoke('embedded-llm:cancel-download'),
+    /** Delete a downloaded model */
+    deleteModel: (modelId?: string) =>
+      ipcRenderer.invoke('embedded-llm:delete-model', modelId),
+    /** Get disk space used by downloaded models */
+    getUsedSpace: () => ipcRenderer.invoke('embedded-llm:get-used-space'),
+    /** Get the models directory path */
+    getModelsDirectory: () => ipcRenderer.invoke('embedded-llm:get-models-directory'),
+    /** Check if a download is in progress */
+    isDownloading: () => ipcRenderer.invoke('embedded-llm:is-downloading'),
+    /** Set the preferred LLM provider */
+    setProvider: (provider: 'ollama' | 'embedded' | 'auto') =>
+      ipcRenderer.invoke('embedded-llm:set-provider', provider),
+    /** Get the current LLM provider setting */
+    getProvider: () => ipcRenderer.invoke('embedded-llm:get-provider'),
+    /** Listen for download progress updates */
+    onDownloadProgress: (callback: (progress: {
+      percent: number;
+      downloadedMB: number;
+      totalMB: number;
+      speed: string;
+      eta: string;
+      status: 'pending' | 'downloading' | 'verifying' | 'complete' | 'error' | 'cancelled';
+      message: string;
+    }) => void) => {
+      const listener = (_event: any, progress: any) => callback(progress);
+      ipcRenderer.on('embedded-llm:download-progress', listener);
+      return () => ipcRenderer.removeListener('embedded-llm:download-progress', listener);
+    },
+  },
+
   // History / Journal
   history: {
     getSessions: () => ipcRenderer.invoke('history:get-sessions'),
@@ -236,6 +284,10 @@ const api = {
       endDate?: Date;
       limit?: number;
     }) => ipcRenderer.invoke('history:search-events', filters),
+    // Project-wide data (all sessions)
+    getAllEvents: () => ipcRenderer.invoke('history:get-all-events'),
+    getAllAIOperations: () => ipcRenderer.invoke('history:get-all-ai-operations'),
+    getAllChatMessages: () => ipcRenderer.invoke('history:get-all-chat-messages'),
   },
 
   // IPC Renderer for menu shortcuts

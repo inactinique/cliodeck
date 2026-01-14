@@ -3,6 +3,7 @@ import { PDFIndexer } from '../../../backend/core/pdf/PDFIndexer.js';
 import { VectorStore } from '../../../backend/core/vector-store/VectorStore.js';
 import { EnhancedVectorStore } from '../../../backend/core/vector-store/EnhancedVectorStore.js';
 import { OllamaClient } from '../../../backend/core/llm/OllamaClient.js';
+import { LLMProviderManager, type LLMProvider } from '../../../backend/core/llm/LLMProviderManager.js';
 import { KnowledgeGraphBuilder } from '../../../backend/core/analysis/KnowledgeGraphBuilder.js';
 import { TopicModelingService } from '../../../backend/core/analysis/TopicModelingService.js';
 import { TextometricsService } from '../../../backend/core/analysis/TextometricsService.js';
@@ -54,6 +55,7 @@ class PDFService {
   private pdfIndexer: PDFIndexer | null = null;
   private vectorStore: VectorStore | EnhancedVectorStore | null = null;
   private ollamaClient: OllamaClient | null = null;
+  private llmProviderManager: LLMProviderManager | null = null;
   private currentProjectPath: string | null = null;
 
   /**
@@ -90,6 +92,19 @@ class PDFService {
         config.ollamaChatModel,
         config.ollamaEmbeddingModel
       );
+
+      // Initialiser le LLM Provider Manager (gère Ollama + modèle embarqué)
+      this.llmProviderManager = new LLMProviderManager({
+        provider: (config.generationProvider as LLMProvider) || 'auto',
+        embeddedModelPath: config.embeddedModelPath,
+        embeddedModelId: config.embeddedModelId,
+        ollamaURL: config.ollamaURL,
+        ollamaChatModel: config.ollamaChatModel,
+        ollamaEmbeddingModel: config.ollamaEmbeddingModel,
+      });
+
+      // Initialiser le manager (charge le modèle embarqué si disponible)
+      await this.llmProviderManager.initialize();
 
       // Initialiser VectorStore (Enhanced ou Standard selon config)
       const useEnhancedSearch =
@@ -332,6 +347,51 @@ class PDFService {
 
   getOllamaClient() {
     return this.ollamaClient;
+  }
+
+  /**
+   * Retourne le LLM Provider Manager pour la génération de texte
+   * Gère automatiquement le fallback entre Ollama et le modèle embarqué
+   */
+  getLLMProviderManager() {
+    return this.llmProviderManager;
+  }
+
+  /**
+   * Met à jour le modèle embarqué dans le LLMProviderManager
+   * Appelé après le téléchargement d'un nouveau modèle
+   */
+  async updateEmbeddedModel(modelPath: string, modelId?: string): Promise<boolean> {
+    if (!this.llmProviderManager) {
+      console.warn('⚠️  [PDF-SERVICE] LLMProviderManager not initialized, cannot update embedded model');
+      return false;
+    }
+
+    console.log(`🔄 [PDF-SERVICE] Updating embedded model: ${modelPath}`);
+    const success = await this.llmProviderManager.setEmbeddedModelPath(modelPath, modelId);
+
+    if (success) {
+      console.log('✅ [PDF-SERVICE] Embedded model updated successfully');
+    } else {
+      console.error('❌ [PDF-SERVICE] Failed to update embedded model');
+    }
+
+    return success;
+  }
+
+  /**
+   * Désactive le modèle embarqué dans le LLMProviderManager
+   * Appelé après la suppression d'un modèle
+   */
+  async disableEmbeddedModel(): Promise<void> {
+    if (!this.llmProviderManager) {
+      console.warn('⚠️  [PDF-SERVICE] LLMProviderManager not initialized');
+      return;
+    }
+
+    console.log('🔄 [PDF-SERVICE] Disabling embedded model');
+    await this.llmProviderManager.disableEmbedded();
+    console.log('✅ [PDF-SERVICE] Embedded model disabled');
   }
 
   getVectorStore() {
@@ -697,11 +757,18 @@ class PDFService {
   /**
    * Ferme le PDF Service et libère les ressources
    */
-  close() {
+  async close() {
     if (this.vectorStore) {
       console.log('🔒 Closing PDF Service vector store...');
       this.vectorStore.close();
       this.vectorStore = null;
+    }
+
+    // Libérer les ressources du LLM Provider Manager
+    if (this.llmProviderManager) {
+      console.log('🔒 Disposing LLM Provider Manager...');
+      await this.llmProviderManager.dispose();
+      this.llmProviderManager = null;
     }
 
     this.pdfIndexer = null;

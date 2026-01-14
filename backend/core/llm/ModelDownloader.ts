@@ -1,0 +1,415 @@
+/**
+ * Téléchargeur de modèles GGUF depuis HuggingFace
+ * Gère le téléchargement, la vérification et la suppression des modèles embarqués
+ */
+
+import path from 'path';
+import fs from 'fs';
+import {
+  EMBEDDED_MODELS,
+  DEFAULT_EMBEDDED_MODEL,
+  type EmbeddedModelInfo,
+} from './EmbeddedLLMClient.js';
+
+export interface DownloadProgress {
+  percent: number;
+  downloadedMB: number;
+  totalMB: number;
+  speed: string; // ex: "2.5 MB/s"
+  eta: string; // ex: "2:30"
+  status: 'pending' | 'downloading' | 'verifying' | 'complete' | 'error' | 'cancelled';
+  message: string;
+}
+
+export interface ModelStatus {
+  id: string;
+  name: string;
+  description: string;
+  sizeMB: number;
+  downloaded: boolean;
+  path?: string;
+}
+
+export class ModelDownloader {
+  private modelsDir: string;
+  private abortController: AbortController | null = null;
+  private isDownloading = false;
+
+  constructor(userDataPath: string) {
+    this.modelsDir = path.join(userDataPath, 'models');
+    // Créer le répertoire si nécessaire
+    if (!fs.existsSync(this.modelsDir)) {
+      fs.mkdirSync(this.modelsDir, { recursive: true });
+    }
+  }
+
+  /**
+   * Retourne le chemin où le modèle sera/est stocké
+   */
+  getModelPath(modelId: string = DEFAULT_EMBEDDED_MODEL): string {
+    const modelInfo = EMBEDDED_MODELS[modelId];
+    if (!modelInfo) {
+      throw new Error(`Unknown model: ${modelId}. Available: ${Object.keys(EMBEDDED_MODELS).join(', ')}`);
+    }
+    return path.join(this.modelsDir, modelInfo.filename);
+  }
+
+  /**
+   * Vérifie si un modèle est déjà téléchargé et valide
+   */
+  isModelDownloaded(modelId: string = DEFAULT_EMBEDDED_MODEL): boolean {
+    try {
+      const modelPath = this.getModelPath(modelId);
+      if (!fs.existsSync(modelPath)) {
+        return false;
+      }
+
+      const modelInfo = EMBEDDED_MODELS[modelId];
+      const stats = fs.statSync(modelPath);
+      const sizeMB = stats.size / (1024 * 1024);
+
+      // Tolérance de 5% sur la taille pour gérer les variations de compression
+      const isValid = sizeMB > modelInfo.sizeMB * 0.95;
+
+      if (!isValid) {
+        console.warn(
+          `⚠️ [DOWNLOAD] Model ${modelId} exists but size mismatch: ${sizeMB.toFixed(1)} MB vs expected ${modelInfo.sizeMB} MB`
+        );
+      }
+
+      return isValid;
+    } catch (error) {
+      console.error(`❌ [DOWNLOAD] Error checking model ${modelId}:`, error);
+      return false;
+    }
+  }
+
+  /**
+   * Retourne les infos d'un modèle
+   */
+  getModelInfo(modelId: string = DEFAULT_EMBEDDED_MODEL): EmbeddedModelInfo {
+    const info = EMBEDDED_MODELS[modelId];
+    if (!info) {
+      throw new Error(`Unknown model: ${modelId}`);
+    }
+    return info;
+  }
+
+  /**
+   * Liste tous les modèles disponibles avec leur statut
+   */
+  getAvailableModels(): ModelStatus[] {
+    return Object.entries(EMBEDDED_MODELS).map(([id, info]) => {
+      const downloaded = this.isModelDownloaded(id);
+      return {
+        id,
+        name: info.name,
+        description: info.description,
+        sizeMB: info.sizeMB,
+        downloaded,
+        path: downloaded ? this.getModelPath(id) : undefined,
+      };
+    });
+  }
+
+  /**
+   * Retourne le répertoire des modèles
+   */
+  getModelsDirectory(): string {
+    return this.modelsDir;
+  }
+
+  /**
+   * Vérifie si un téléchargement est en cours
+   */
+  isDownloadInProgress(): boolean {
+    return this.isDownloading;
+  }
+
+  /**
+   * Télécharge un modèle depuis HuggingFace
+   */
+  async downloadModel(
+    modelId: string = DEFAULT_EMBEDDED_MODEL,
+    onProgress: (progress: DownloadProgress) => void
+  ): Promise<string> {
+    if (this.isDownloading) {
+      throw new Error('A download is already in progress');
+    }
+
+    const modelInfo = EMBEDDED_MODELS[modelId];
+    if (!modelInfo) {
+      throw new Error(`Unknown model: ${modelId}`);
+    }
+
+    // Vérifier si déjà téléchargé
+    if (this.isModelDownloaded(modelId)) {
+      const existingPath = this.getModelPath(modelId);
+      onProgress({
+        percent: 100,
+        downloadedMB: modelInfo.sizeMB,
+        totalMB: modelInfo.sizeMB,
+        speed: '-',
+        eta: '-',
+        status: 'complete',
+        message: 'Modèle déjà téléchargé',
+      });
+      return existingPath;
+    }
+
+    const url = `https://huggingface.co/${modelInfo.repo}/resolve/main/${modelInfo.filename}`;
+    const destPath = this.getModelPath(modelId);
+
+    console.log(`📥 [DOWNLOAD] Starting download of ${modelInfo.name}`);
+    console.log(`   URL: ${url}`);
+    console.log(`   Destination: ${destPath}`);
+
+    this.isDownloading = true;
+    this.abortController = new AbortController();
+    const startTime = Date.now();
+
+    onProgress({
+      percent: 0,
+      downloadedMB: 0,
+      totalMB: modelInfo.sizeMB,
+      speed: '...',
+      eta: '...',
+      status: 'pending',
+      message: `Connexion à HuggingFace...`,
+    });
+
+    try {
+      const response = await fetch(url, {
+        signal: this.abortController.signal,
+        headers: {
+          'User-Agent': 'mdFocus/1.0',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const contentLength = response.headers.get('content-length');
+      const totalSize = contentLength ? parseInt(contentLength) : modelInfo.sizeMB * 1024 * 1024;
+      let downloadedSize = 0;
+      let lastTime = startTime;
+      let lastBytes = 0;
+
+      // Créer le stream de fichier
+      const fileStream = fs.createWriteStream(destPath);
+      const reader = response.body?.getReader();
+
+      if (!reader) {
+        throw new Error('No response body available');
+      }
+
+      onProgress({
+        percent: 0,
+        downloadedMB: 0,
+        totalMB: totalSize / (1024 * 1024),
+        speed: '...',
+        eta: '...',
+        status: 'downloading',
+        message: `Téléchargement de ${modelInfo.name}...`,
+      });
+
+      // Lire et écrire par chunks
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        fileStream.write(Buffer.from(value));
+        downloadedSize += value.length;
+
+        // Calculer vitesse et ETA toutes les 500ms
+        const now = Date.now();
+        const elapsed = (now - lastTime) / 1000;
+
+        if (elapsed >= 0.5) {
+          const bytesPerSec = (downloadedSize - lastBytes) / elapsed;
+          const speed = this.formatSpeed(bytesPerSec);
+          const remaining = totalSize - downloadedSize;
+          const eta = bytesPerSec > 0 ? this.formatETA(remaining / bytesPerSec) : '...';
+
+          lastTime = now;
+          lastBytes = downloadedSize;
+
+          const percent = (downloadedSize / totalSize) * 100;
+          onProgress({
+            percent,
+            downloadedMB: downloadedSize / (1024 * 1024),
+            totalMB: totalSize / (1024 * 1024),
+            speed,
+            eta,
+            status: 'downloading',
+            message: `${percent.toFixed(1)}% - ${speed} - ETA: ${eta}`,
+          });
+        }
+      }
+
+      // Fermer le fichier
+      await new Promise<void>((resolve, reject) => {
+        fileStream.end((err: Error | null | undefined) => {
+          if (err) reject(err);
+          else resolve();
+        });
+      });
+
+      // Vérification du fichier
+      onProgress({
+        percent: 100,
+        downloadedMB: totalSize / (1024 * 1024),
+        totalMB: totalSize / (1024 * 1024),
+        speed: '-',
+        eta: '-',
+        status: 'verifying',
+        message: 'Vérification du fichier...',
+      });
+
+      // Vérifier la taille du fichier téléchargé
+      const stats = fs.statSync(destPath);
+      const expectedMinSize = totalSize * 0.95;
+
+      if (stats.size < expectedMinSize) {
+        fs.unlinkSync(destPath);
+        throw new Error(
+          `Fichier incomplet: ${(stats.size / (1024 * 1024)).toFixed(1)} MB au lieu de ${(totalSize / (1024 * 1024)).toFixed(1)} MB`
+        );
+      }
+
+      onProgress({
+        percent: 100,
+        downloadedMB: stats.size / (1024 * 1024),
+        totalMB: totalSize / (1024 * 1024),
+        speed: '-',
+        eta: '-',
+        status: 'complete',
+        message: 'Téléchargement terminé!',
+      });
+
+      const duration = ((Date.now() - startTime) / 1000).toFixed(1);
+      console.log(`✅ [DOWNLOAD] Complete in ${duration}s: ${destPath}`);
+
+      return destPath;
+    } catch (error: any) {
+      // Nettoyage en cas d'erreur ou d'annulation
+      if (fs.existsSync(destPath)) {
+        try {
+          fs.unlinkSync(destPath);
+        } catch (cleanupError) {
+          console.warn('⚠️ [DOWNLOAD] Could not clean up partial file:', cleanupError);
+        }
+      }
+
+      if (error.name === 'AbortError') {
+        onProgress({
+          percent: 0,
+          downloadedMB: 0,
+          totalMB: modelInfo.sizeMB,
+          speed: '-',
+          eta: '-',
+          status: 'cancelled',
+          message: 'Téléchargement annulé',
+        });
+        throw new Error('Téléchargement annulé par l\'utilisateur');
+      }
+
+      onProgress({
+        percent: 0,
+        downloadedMB: 0,
+        totalMB: modelInfo.sizeMB,
+        speed: '-',
+        eta: '-',
+        status: 'error',
+        message: `Erreur: ${error.message}`,
+      });
+
+      console.error('❌ [DOWNLOAD] Error:', error);
+      throw error;
+    } finally {
+      this.isDownloading = false;
+      this.abortController = null;
+    }
+  }
+
+  /**
+   * Annule un téléchargement en cours
+   */
+  cancelDownload(): boolean {
+    if (this.abortController && this.isDownloading) {
+      this.abortController.abort();
+      console.log('⚠️ [DOWNLOAD] Download cancelled by user');
+      return true;
+    }
+    return false;
+  }
+
+  /**
+   * Supprime un modèle téléchargé
+   */
+  deleteModel(modelId: string = DEFAULT_EMBEDDED_MODEL): boolean {
+    try {
+      const modelPath = this.getModelPath(modelId);
+      if (fs.existsSync(modelPath)) {
+        fs.unlinkSync(modelPath);
+        console.log(`🗑️ [DOWNLOAD] Deleted model: ${modelPath}`);
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error(`❌ [DOWNLOAD] Error deleting model ${modelId}:`, error);
+      return false;
+    }
+  }
+
+  /**
+   * Calcule l'espace disque utilisé par les modèles
+   */
+  getUsedSpace(): { totalMB: number; models: Array<{ id: string; sizeMB: number }> } {
+    const models: Array<{ id: string; sizeMB: number }> = [];
+    let totalMB = 0;
+
+    for (const modelId of Object.keys(EMBEDDED_MODELS)) {
+      if (this.isModelDownloaded(modelId)) {
+        const modelPath = this.getModelPath(modelId);
+        const stats = fs.statSync(modelPath);
+        const sizeMB = stats.size / (1024 * 1024);
+        models.push({ id: modelId, sizeMB });
+        totalMB += sizeMB;
+      }
+    }
+
+    return { totalMB, models };
+  }
+
+  /**
+   * Formate une vitesse en bytes/sec vers une chaîne lisible
+   */
+  private formatSpeed(bytesPerSec: number): string {
+    if (bytesPerSec > 1024 * 1024) {
+      return `${(bytesPerSec / (1024 * 1024)).toFixed(1)} MB/s`;
+    }
+    if (bytesPerSec > 1024) {
+      return `${(bytesPerSec / 1024).toFixed(0)} KB/s`;
+    }
+    return `${bytesPerSec.toFixed(0)} B/s`;
+  }
+
+  /**
+   * Formate un temps en secondes vers mm:ss
+   */
+  private formatETA(seconds: number): string {
+    if (!isFinite(seconds) || seconds < 0 || seconds > 86400) {
+      return '...';
+    }
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    if (mins > 60) {
+      const hours = Math.floor(mins / 60);
+      const remainingMins = mins % 60;
+      return `${hours}h${remainingMins.toString().padStart(2, '0')}`;
+    }
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  }
+}

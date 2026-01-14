@@ -1,3 +1,6 @@
+// Console filter must be imported first to filter logs in production
+import '../shared/console-filter.js';
+
 import { app, BrowserWindow, ipcMain } from 'electron';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -35,12 +38,18 @@ function createWindow() {
 
   // En dev : charger depuis Vite
   // En production : charger depuis dist
-  if (process.env.NODE_ENV === 'development') {
+  const isDev = process.env.NODE_ENV === 'development';
+  const debugEnabled = process.env.MDFOCUS_DEBUG === '1' || process.env.DEBUG === '1';
+
+  if (isDev) {
     mainWindow.loadURL('http://localhost:5173');
     mainWindow.webContents.openDevTools();
   } else {
     mainWindow.loadFile(path.join(__dirname, '../../../dist/renderer/index.html'));
-    mainWindow.webContents.openDevTools(); // Temporaire pour debug
+    // DevTools only in production if MDFOCUS_DEBUG=1 or DEBUG=1
+    if (debugEnabled) {
+      mainWindow.webContents.openDevTools();
+    }
   }
 
   mainWindow.on('closed', () => {
