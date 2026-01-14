@@ -14,13 +14,21 @@ export const JournalPanel: React.FC = () => {
     aiOperations,
     chatMessages,
     statistics,
+    allEvents,
+    allAIOperations,
+    allChatMessages,
     loading,
     error,
+    hideEmptySessions,
+    viewScope,
     loadSessions,
     selectSession,
     loadStatistics,
     exportReport,
     clearError,
+    setHideEmptySessions,
+    setViewScope,
+    loadAllProjectData,
   } = useJournalStore();
 
   const [viewMode, setViewMode] = useState<'sessions' | 'timeline' | 'ai-ops' | 'chat'>(
@@ -33,9 +41,26 @@ export const JournalPanel: React.FC = () => {
     loadStatistics();
   }, [loadSessions, loadStatistics]);
 
+  // Load project data when switching to project scope
+  useEffect(() => {
+    if (viewScope === 'project') {
+      loadAllProjectData();
+    }
+  }, [viewScope, loadAllProjectData]);
+
   const handleLearnMore = () => {
     window.dispatchEvent(new CustomEvent('show-methodology-modal', { detail: { feature: 'journal' } }));
   };
+
+  // Filter sessions based on hideEmptySessions option
+  const displayedSessions = hideEmptySessions
+    ? sessions.filter((s) => s.eventCount > 0)
+    : sessions;
+
+  // Get data based on view scope
+  const currentEvents = viewScope === 'project' ? allEvents : events;
+  const currentAIOperations = viewScope === 'project' ? allAIOperations : aiOperations;
+  const currentChatMessages = viewScope === 'project' ? allChatMessages : chatMessages;
 
   if (loading && sessions.length === 0) {
     return (
@@ -76,32 +101,62 @@ export const JournalPanel: React.FC = () => {
         </div>
       )}
 
+      {/* Scope selector (Session vs Project) */}
+      <div className="journal-scope-selector">
+        <div className="scope-buttons">
+          <button
+            className={viewScope === 'session' ? 'active' : ''}
+            onClick={() => setViewScope('session')}
+          >
+            Par session
+          </button>
+          <button
+            className={viewScope === 'project' ? 'active' : ''}
+            onClick={() => setViewScope('project')}
+          >
+            Vue d'ensemble du projet
+          </button>
+        </div>
+        {viewScope === 'session' && (
+          <label className="hide-empty-checkbox">
+            <input
+              type="checkbox"
+              checked={hideEmptySessions}
+              onChange={(e) => setHideEmptySessions(e.target.checked)}
+            />
+            Masquer les sessions vides
+          </label>
+        )}
+      </div>
+
       {/* View tabs */}
       <div className="journal-view-tabs">
-        <button
-          className={viewMode === 'sessions' ? 'active' : ''}
-          onClick={() => setViewMode('sessions')}
-        >
-          Sessions
-        </button>
+        {viewScope === 'session' && (
+          <button
+            className={viewMode === 'sessions' ? 'active' : ''}
+            onClick={() => setViewMode('sessions')}
+          >
+            Sessions
+          </button>
+        )}
         <button
           className={viewMode === 'timeline' ? 'active' : ''}
           onClick={() => setViewMode('timeline')}
-          disabled={!selectedSession}
+          disabled={viewScope === 'session' && !selectedSession}
         >
           Timeline
         </button>
         <button
           className={viewMode === 'ai-ops' ? 'active' : ''}
           onClick={() => setViewMode('ai-ops')}
-          disabled={!selectedSession}
+          disabled={viewScope === 'session' && !selectedSession}
         >
           Opérations IA
         </button>
         <button
           className={viewMode === 'chat' ? 'active' : ''}
           onClick={() => setViewMode('chat')}
-          disabled={!selectedSession}
+          disabled={viewScope === 'session' && !selectedSession}
         >
           Historique Chat
         </button>
@@ -109,17 +164,29 @@ export const JournalPanel: React.FC = () => {
 
       {/* Content */}
       <div className="journal-content">
-        {viewMode === 'sessions' && (
+        {/* Sessions view (only in session scope) */}
+        {viewScope === 'session' && viewMode === 'sessions' && (
           <div className="sessions-list">
-            {sessions.length === 0 ? (
+            {displayedSessions.length === 0 ? (
               <div className="empty-state">
-                <p>Aucune session enregistrée</p>
-                <p className="help-text">
-                  Les sessions sont créées automatiquement lorsque vous ouvrez un projet.
-                </p>
+                {hideEmptySessions && sessions.length > 0 ? (
+                  <>
+                    <p>Toutes les sessions sont vides</p>
+                    <p className="help-text">
+                      Décochez "Masquer les sessions vides" pour voir toutes les sessions.
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <p>Aucune session enregistrée</p>
+                    <p className="help-text">
+                      Les sessions sont créées automatiquement lorsque vous ouvrez un projet.
+                    </p>
+                  </>
+                )}
               </div>
             ) : (
-              sessions.map((session) => (
+              displayedSessions.map((session) => (
                 <div
                   key={session.id}
                   className={`session-card ${selectedSession?.id === session.id ? 'selected' : ''}`}
@@ -172,14 +239,33 @@ export const JournalPanel: React.FC = () => {
           </div>
         )}
 
-        {viewMode === 'timeline' && selectedSession && <SessionTimeline events={events} />}
-
-        {viewMode === 'ai-ops' && selectedSession && (
-          <AIOperationsTable operations={aiOperations} />
+        {/* Timeline view */}
+        {viewMode === 'timeline' && (viewScope === 'project' || selectedSession) && (
+          <SessionTimeline
+            events={currentEvents}
+            title={viewScope === 'project' ? 'Timeline complète du projet' : 'Timeline de la session'}
+          />
         )}
 
-        {viewMode === 'chat' && selectedSession && (
-          <ChatHistoryView messages={chatMessages} />
+        {/* AI Operations view */}
+        {viewMode === 'ai-ops' && (viewScope === 'project' || selectedSession) && (
+          <AIOperationsTable operations={currentAIOperations} />
+        )}
+
+        {/* Chat History view */}
+        {viewMode === 'chat' && (viewScope === 'project' || selectedSession) && (
+          <ChatHistoryView messages={currentChatMessages} />
+        )}
+
+        {/* Empty state for project view when in sessions tab */}
+        {viewScope === 'project' && viewMode === 'sessions' && (
+          <div className="empty-state">
+            <p>Sélectionnez une vue ci-dessus</p>
+            <p className="help-text">
+              En mode "Vue d'ensemble du projet", vous pouvez voir la timeline, les opérations IA
+              et l'historique de chat agrégés pour toutes les sessions.
+            </p>
+          </div>
         )}
       </div>
     </div>

@@ -645,6 +645,91 @@ export class HistoryManager {
     }));
   }
 
+  // ==========================================================================
+  // Project-wide Query Methods (all sessions)
+  // ==========================================================================
+
+  getAllEvents(): HistoryEvent[] {
+    const stmt = this.db.prepare(`
+      SELECT * FROM events ORDER BY timestamp DESC
+    `);
+    const rows = stmt.all() as any[];
+
+    return rows.map((row) => ({
+      id: row.id,
+      sessionId: row.session_id,
+      eventType: row.event_type,
+      timestamp: new Date(row.timestamp),
+      eventData: row.event_data ? JSON.parse(row.event_data) : undefined,
+    }));
+  }
+
+  getAllAIOperations(): AIOperation[] {
+    const stmt = this.db.prepare(`
+      SELECT * FROM ai_operations ORDER BY timestamp DESC
+    `);
+    const rows = stmt.all() as any[];
+
+    return rows.map((row) => this.parseAIOperation(row));
+  }
+
+  getAllChatMessages(): ChatMessage[] {
+    const stmt = this.db.prepare(`
+      SELECT * FROM chat_messages ORDER BY timestamp DESC
+    `);
+    const rows = stmt.all() as any[];
+
+    return rows.map((row) => ({
+      id: row.id,
+      sessionId: row.session_id,
+      role: row.role,
+      content: row.content,
+      sources: row.sources_json ? JSON.parse(row.sources_json) : undefined,
+      timestamp: new Date(row.timestamp),
+    }));
+  }
+
+  getAllDocumentOperations(): DocumentOperation[] {
+    const stmt = this.db.prepare(`
+      SELECT * FROM document_operations ORDER BY timestamp DESC
+    `);
+    const rows = stmt.all() as any[];
+
+    return rows.map((row) => ({
+      id: row.id,
+      sessionId: row.session_id,
+      operationType: row.operation_type,
+      filePath: row.file_path,
+      timestamp: new Date(row.timestamp),
+      wordsAdded: row.words_added,
+      wordsDeleted: row.words_deleted,
+      charactersAdded: row.characters_added,
+      charactersDeleted: row.characters_deleted,
+      contentHash: row.content_hash,
+    }));
+  }
+
+  getAllPDFOperations(): PDFOperation[] {
+    const stmt = this.db.prepare(`
+      SELECT * FROM pdf_operations ORDER BY timestamp DESC
+    `);
+    const rows = stmt.all() as any[];
+
+    return rows.map((row) => ({
+      id: row.id,
+      sessionId: row.session_id,
+      operationType: row.operation_type,
+      documentId: row.document_id,
+      timestamp: new Date(row.timestamp),
+      durationMs: row.duration_ms,
+      filePath: row.file_path,
+      pageCount: row.page_count,
+      chunksCreated: row.chunks_created,
+      citationsExtracted: row.citations_extracted,
+      metadata: row.metadata ? JSON.parse(row.metadata) : undefined,
+    }));
+  }
+
   private parseAIOperation(row: any): AIOperation {
     return {
       id: row.id,

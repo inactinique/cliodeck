@@ -39,6 +39,7 @@ export function setupChatHandlers() {
 
       // Load RAG config and merge with passed options
       const ragConfig = configManager.getRAGConfig();
+      const llmConfig = configManager.getLLMConfig();
       const enrichedOptions = {
         context: validatedData.options?.context,
         topK: validatedData.options?.topK || ragConfig.topK,
@@ -46,6 +47,8 @@ export function setupChatHandlers() {
         useGraphContext: ragConfig.useGraphContext || false,
         additionalGraphDocs: ragConfig.additionalGraphDocs || 3,
         window,
+        // Provider selection (from RAG settings panel)
+        provider: validatedData.options?.provider || llmConfig.generationProvider || 'auto',
         // Per-query parameters (from RAG settings panel)
         model: validatedData.options?.model,
         timeout: validatedData.options?.timeout,

@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { RotateCcw, Save } from 'lucide-react';
 import { RAGConfigSection } from './RAGConfigSection';
 import { LLMConfigSection } from './LLMConfigSection';
+import { EmbeddedLLMSection } from './EmbeddedLLMSection';
 import { EditorConfigSection, type EditorConfig } from './EditorConfigSection';
 import { UIConfigSection } from './UIConfigSection';
 import { LanguageConfigSection } from './LanguageConfigSection';
@@ -243,6 +244,8 @@ export const ConfigPanel: React.FC = () => {
           availableModels={availableModels}
           onRefreshModels={() => {/* TODO */}}
         />
+
+        <EmbeddedLLMSection />
 
         <EditorConfigSection
           config={editorConfig}

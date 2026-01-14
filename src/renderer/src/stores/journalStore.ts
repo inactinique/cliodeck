@@ -68,9 +68,16 @@ interface JournalState {
   chatMessages: ChatMessage[];
   statistics: HistoryStatistics | null;
 
+  // Project-wide data (all sessions aggregated)
+  allEvents: HistoryEvent[];
+  allAIOperations: AIOperation[];
+  allChatMessages: ChatMessage[];
+
   // UI State
   loading: boolean;
   error: string | null;
+  hideEmptySessions: boolean;
+  viewScope: 'session' | 'project'; // 'session' = per-session view, 'project' = all sessions
 
   // Filters
   filters: {
@@ -91,6 +98,9 @@ interface JournalState {
   setFilters: (filters: Partial<JournalState['filters']>) => void;
   searchEvents: () => Promise<void>;
   clearError: () => void;
+  setHideEmptySessions: (hide: boolean) => void;
+  setViewScope: (scope: 'session' | 'project') => void;
+  loadAllProjectData: () => Promise<void>;
 }
 
 // ============================================================================
@@ -105,8 +115,13 @@ export const useJournalStore = create<JournalState>((set, get) => ({
   aiOperations: [],
   chatMessages: [],
   statistics: null,
+  allEvents: [],
+  allAIOperations: [],
+  allChatMessages: [],
   loading: false,
   error: null,
+  hideEmptySessions: false,
+  viewScope: 'session',
   filters: {},
 
   // Load all sessions
@@ -267,5 +282,60 @@ export const useJournalStore = create<JournalState>((set, get) => ({
   // Clear error
   clearError: () => {
     set({ error: null });
+  },
+
+  // Toggle hide empty sessions
+  setHideEmptySessions: (hide: boolean) => {
+    set({ hideEmptySessions: hide });
+  },
+
+  // Set view scope (session or project)
+  setViewScope: (scope: 'session' | 'project') => {
+    set({ viewScope: scope });
+    if (scope === 'project') {
+      get().loadAllProjectData();
+    }
+  },
+
+  // Load all project data (all sessions aggregated)
+  loadAllProjectData: async () => {
+    set({ loading: true });
+    try {
+      const [eventsResult, aiOpsResult, chatResult] = await Promise.all([
+        window.electron.history.getAllEvents(),
+        window.electron.history.getAllAIOperations(),
+        window.electron.history.getAllChatMessages(),
+      ]);
+
+      const allEvents = eventsResult.success
+        ? eventsResult.events.map((e: any) => ({
+            ...e,
+            timestamp: new Date(e.timestamp),
+          }))
+        : [];
+
+      const allAIOperations = aiOpsResult.success
+        ? aiOpsResult.operations.map((op: any) => ({
+            ...op,
+            timestamp: new Date(op.timestamp),
+          }))
+        : [];
+
+      const allChatMessages = chatResult.success
+        ? chatResult.messages.map((msg: any) => ({
+            ...msg,
+            timestamp: new Date(msg.timestamp),
+          }))
+        : [];
+
+      set({
+        allEvents,
+        allAIOperations,
+        allChatMessages,
+        loading: false,
+      });
+    } catch (error: any) {
+      set({ error: error.message, loading: false });
+    }
   },
 }));

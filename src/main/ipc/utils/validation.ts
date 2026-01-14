@@ -59,6 +59,8 @@ export const ChatSendSchema = z.object({
       includeSummaries: z.boolean().optional(),
       useGraphContext: z.boolean().optional(),
       additionalGraphDocs: z.number().min(0).max(10).optional(),
+      // Provider selection
+      provider: z.enum(['ollama', 'embedded', 'auto']).optional(),
       model: z.string().optional(),
       timeout: z.number().min(1000).optional(),
       temperature: z.number().min(0).max(2).optional(),

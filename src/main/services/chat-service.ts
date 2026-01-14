@@ -15,6 +15,9 @@ interface EnrichedRAGOptions {
   additionalGraphDocs?: number;   // Nombre de documents liés à inclure
   window?: BrowserWindow;         // Fenêtre pour streaming
 
+  // Provider selection
+  provider?: 'ollama' | 'embedded' | 'auto';  // LLM provider to use
+
   // Per-query parameters
   model?: string;                 // Override chat model
   timeout?: number;               // Timeout in milliseconds
@@ -135,11 +138,30 @@ class ChatService {
     const queryHash = hashString(message);
 
     try {
-      // Obtenir le client Ollama
-      const ollamaClient = pdfService.getOllamaClient();
-      if (!ollamaClient) {
-        throw new Error('Ollama client not initialized');
+      // Obtenir le LLM Provider Manager (gère Ollama + modèle embarqué)
+      const llmProviderManager = pdfService.getLLMProviderManager();
+      if (!llmProviderManager) {
+        throw new Error('LLM Provider Manager not initialized. Load a project first.');
       }
+
+      // Appliquer le provider sélectionné par l'utilisateur (from RAG settings)
+      if (options.provider) {
+        console.log(`🔧 [CHAT] Setting provider preference: ${options.provider}`);
+        llmProviderManager.setProvider(options.provider);
+      }
+
+      // Vérifier qu'au moins un provider est disponible
+      const activeProvider = await llmProviderManager.getActiveProvider();
+      if (!activeProvider) {
+        throw new Error(
+          'Aucun LLM disponible.\n\n' +
+          'Options:\n' +
+          '1. Installez et démarrez Ollama (https://ollama.ai)\n' +
+          '2. Téléchargez le modèle embarqué dans Paramètres → LLM'
+        );
+      }
+
+      console.log(`🤖 [CHAT] Using LLM provider: ${llmProviderManager.getActiveProviderName()}`);
 
       let fullResponse = '';
       let searchResults: any[] = [];
@@ -294,6 +316,14 @@ class ChatService {
         promptPreview: systemPrompt.substring(0, 100) + '...',
       });
 
+      // Build generation options (commun aux deux cas)
+      const generationOptions = {
+        temperature: options.temperature,
+        top_p: options.top_p,
+        top_k: options.top_k,
+        repeat_penalty: options.repeat_penalty,
+      };
+
       // Stream la réponse avec contexte RAG si disponible
       if (searchResults.length > 0) {
         console.log('✅ [RAG DETAILED DEBUG] Generating response WITH context:', {
@@ -302,27 +332,21 @@ class ChatService {
           avgSimilarity: (searchResults.reduce((sum, r) => sum + r.similarity, 0) / searchResults.length).toFixed(4),
           mode: 'RAG_WITH_SOURCES',
           projectContextLoaded: !!projectContext,
-          model: options.model || ollamaClient.chatModel,
+          provider: llmProviderManager.getActiveProviderName(),
           timeout: options.timeout || 600000,
         });
 
-        // Build generation options
-        const generationOptions = {
-          temperature: options.temperature,
-          top_p: options.top_p,
-          top_k: options.top_k,
-          repeat_penalty: options.repeat_penalty,
-        };
-
-        // Utiliser generateResponseStreamWithSources pour RAG
-        const generator = ollamaClient.generateResponseStreamWithSources(
+        // Utiliser LLMProviderManager pour la génération (Ollama ou embarqué)
+        const generator = llmProviderManager.generateWithSources(
           message,
           searchResults,
           projectContext,
-          options.model,      // Model override
-          options.timeout,    // Timeout override
-          generationOptions,  // Generation parameters
-          systemPrompt        // System prompt (Phase 2.3)
+          {
+            model: options.model,
+            timeout: options.timeout,
+            generationOptions,
+            systemPrompt,
+          }
         );
         this.currentStream = generator;
 
@@ -344,21 +368,16 @@ class ChatService {
           warning: 'This response will be GENERIC and NOT based on your documents!',
         });
 
-        // Build generation options
-        const generationOptions = {
-          temperature: options.temperature,
-          top_p: options.top_p,
-          top_k: options.top_k,
-          repeat_penalty: options.repeat_penalty,
-        };
-
-        const generator = ollamaClient.generateResponseStream(
+        // Utiliser LLMProviderManager pour la génération sans sources
+        const generator = llmProviderManager.generateWithoutSources(
           message,
           [],
-          options.model,      // Model override
-          options.timeout,    // Timeout override
-          generationOptions,  // Generation parameters
-          systemPrompt        // System prompt (Phase 2.3)
+          {
+            model: options.model,
+            timeout: options.timeout,
+            generationOptions,
+            systemPrompt,
+          }
         );
         this.currentStream = generator;
 
@@ -386,7 +405,7 @@ class ChatService {
       if (hm) {
         // Build query params for history
         const queryParams = {
-          model: options.model || pdfService.getOllamaClient()?.chatModel || 'unknown',
+          model: options.model || llmProviderManager.getActiveProviderName(),
           topK: options.topK,
           timeout: options.timeout || 600000,
           temperature: options.temperature,
@@ -427,8 +446,6 @@ class ChatService {
 
         // Log RAG operation if context was used
         if (options.context && searchResults.length > 0) {
-          const ollamaClient = pdfService.getOllamaClient();
-
           hm.logAIOperation({
             operationType: 'rag_query',
             durationMs: totalDuration,
@@ -440,10 +457,10 @@ class ChatService {
               sourcesFound: searchResults.length,
               relatedDocumentsFound: relatedDocuments.length,
             },
-            modelName: ollamaClient?.chatModel || 'unknown',
+            modelName: llmProviderManager.getActiveProviderName(),
             modelParameters: {
-              temperature: 0.1,
-              // Add other parameters if accessible
+              temperature: options.temperature || 0.1,
+              provider: activeProvider,
             },
             outputText: fullResponse,
             outputMetadata: {

@@ -143,5 +143,57 @@ export function setupHistoryHandlers() {
     }
   });
 
+  // Project-wide data (all sessions aggregated)
+  ipcMain.handle('history:get-all-events', async () => {
+    console.log('📞 IPC Call: history:get-all-events');
+    try {
+      const hm = historyService.getHistoryManager();
+      if (!hm || !hm.isDatabaseOpen()) {
+        return { ...errorResponse('No project open or database closed'), events: [] };
+      }
+
+      const events = hm.getAllEvents();
+      console.log('📤 IPC Response: history:get-all-events', { count: events.length });
+      return successResponse({ events });
+    } catch (error: any) {
+      console.error('❌ history:get-all-events error:', error);
+      return { ...errorResponse(error), events: [] };
+    }
+  });
+
+  ipcMain.handle('history:get-all-ai-operations', async () => {
+    console.log('📞 IPC Call: history:get-all-ai-operations');
+    try {
+      const hm = historyService.getHistoryManager();
+      if (!hm || !hm.isDatabaseOpen()) {
+        return { ...errorResponse('No project open or database closed'), operations: [] };
+      }
+
+      const operations = hm.getAllAIOperations();
+      console.log('📤 IPC Response: history:get-all-ai-operations', { count: operations.length });
+      return successResponse({ operations });
+    } catch (error: any) {
+      console.error('❌ history:get-all-ai-operations error:', error);
+      return { ...errorResponse(error), operations: [] };
+    }
+  });
+
+  ipcMain.handle('history:get-all-chat-messages', async () => {
+    console.log('📞 IPC Call: history:get-all-chat-messages');
+    try {
+      const hm = historyService.getHistoryManager();
+      if (!hm || !hm.isDatabaseOpen()) {
+        return { ...errorResponse('No project open or database closed'), messages: [] };
+      }
+
+      const messages = hm.getAllChatMessages();
+      console.log('📤 IPC Response: history:get-all-chat-messages', { count: messages.length });
+      return successResponse({ messages });
+    } catch (error: any) {
+      console.error('❌ history:get-all-chat-messages error:', error);
+      return { ...errorResponse(error), messages: [] };
+    }
+  });
+
   console.log('✅ History handlers registered');
 }

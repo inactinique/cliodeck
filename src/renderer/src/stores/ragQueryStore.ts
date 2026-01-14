@@ -3,9 +3,14 @@ import { persist } from 'zustand/middleware';
 
 // MARK: - Types
 
+export type LLMProvider = 'ollama' | 'embedded' | 'auto';
+
 export interface RAGQueryParams {
+  // Provider selection
+  provider: LLMProvider;
+
   // Core parameters
-  model: string;
+  model: string; // Ollama model name (used when provider is 'ollama' or 'auto')
   topK: number;
   timeout: number; // in milliseconds
 
@@ -48,6 +53,7 @@ interface RAGQueryState {
 
 // Default values - will be loaded from global config on first run
 const DEFAULT_PARAMS: RAGQueryParams = {
+  provider: 'auto',
   model: 'gemma2:2b',
   topK: 10,
   timeout: 600000, // 10 minutes
@@ -90,6 +96,7 @@ export const useRAGQueryStore = create<RAGQueryState>()(
 
           set({
             params: {
+              provider: (llmConfig.generationProvider as LLMProvider) || DEFAULT_PARAMS.provider,
               model: llmConfig.ollamaChatModel || DEFAULT_PARAMS.model,
               topK: ragConfig.topK || DEFAULT_PARAMS.topK,
               timeout: DEFAULT_PARAMS.timeout,

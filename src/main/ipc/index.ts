@@ -17,6 +17,7 @@ import { setupExportHandlers } from './handlers/export-handlers.js';
 import { setupCorpusHandlers } from './handlers/corpus-handlers.js';
 import { setupHistoryHandlers } from './handlers/history-handlers.js';
 import { setupTopicModelingHandlers } from './handlers/topic-modeling-handlers.js';
+import { setupEmbeddedLLMHandlers } from './handlers/embedded-llm-handlers.js';
 
 /**
  * Setup all IPC handlers
@@ -33,8 +34,9 @@ import { setupTopicModelingHandlers } from './handlers/topic-modeling-handlers.j
  * - Export (PDF + RevealJS) (3 handlers)
  * - Corpus analysis and knowledge graph (7 handlers)
  * - History and session tracking (7 handlers)
+ * - Embedded LLM management (10 handlers)
  *
- * Total: 53 IPC handlers
+ * Total: 63 IPC handlers
  */
 export function setupIPCHandlers() {
   console.log('🔧 Setting up modular IPC handlers...');
@@ -52,6 +54,7 @@ export function setupIPCHandlers() {
   setupCorpusHandlers();
   setupHistoryHandlers();
   setupTopicModelingHandlers();
+  setupEmbeddedLLMHandlers();
 
   console.log('✅ All IPC handlers registered successfully');
 }
