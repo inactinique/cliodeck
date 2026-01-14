@@ -91,6 +91,8 @@ export const CorpusExplorerPanel: React.FC = () => {
   const [selectedNode, setSelectedNode] = useState<GraphNode | null>(null);
   const [expandedTopic, setExpandedTopic] = useState<number | null>(null);
   const [numTopics, setNumTopics] = useState<number>(10); // Nombre de topics souhaités
+  const [graphSimilarityThreshold, setGraphSimilarityThreshold] = useState<number>(0.7);
+  const [regeneratingGraph, setRegeneratingGraph] = useState(false);
 
   // Filters
   const [filters, setFilters] = useState({
@@ -125,6 +127,18 @@ export const CorpusExplorerPanel: React.FC = () => {
     setError(null);
 
     try {
+      // Charger la configuration pour récupérer le seuil de similarité
+      let configuredThreshold = 0.7;
+      try {
+        const ragConfig = await window.electron.config.get('rag');
+        if (ragConfig?.explorationSimilarityThreshold) {
+          configuredThreshold = ragConfig.explorationSimilarityThreshold;
+          setGraphSimilarityThreshold(configuredThreshold);
+        }
+      } catch (configErr) {
+        console.warn('Could not load RAG config, using default threshold:', configErr);
+      }
+
       // Charger les statistiques
       const statsResult = await window.electron.corpus.getStatistics();
       if (statsResult.success) {
@@ -133,10 +147,10 @@ export const CorpusExplorerPanel: React.FC = () => {
         console.warn('Failed to load statistics:', statsResult.error);
       }
 
-      // Charger le graphe
+      // Charger le graphe avec le seuil configuré
       const graphResult = await window.electron.corpus.getGraph({
         includeSimilarityEdges: true,
-        similarityThreshold: 0.7,
+        similarityThreshold: configuredThreshold,
         includeAuthorNodes: false,
         computeLayout: true,
       });
@@ -182,6 +196,31 @@ export const CorpusExplorerPanel: React.FC = () => {
       setError(err.message || 'Failed to load corpus data');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const regenerateGraph = async () => {
+    setRegeneratingGraph(true);
+    try {
+      const graphResult = await window.electron.corpus.getGraph({
+        includeSimilarityEdges: true,
+        similarityThreshold: graphSimilarityThreshold,
+        includeAuthorNodes: false,
+        computeLayout: true,
+      });
+
+      if (graphResult.success) {
+        setFullGraphData(graphResult.graph);
+        setGraphData(graphResult.graph);
+        console.log(`✅ Graph regenerated with threshold ${graphSimilarityThreshold}`);
+      } else {
+        throw new Error(graphResult.error || 'Failed to regenerate graph');
+      }
+    } catch (err: any) {
+      console.error('Error regenerating graph:', err);
+      alert('Erreur lors de la regénération du graphe: ' + err.message);
+    } finally {
+      setRegeneratingGraph(false);
     }
   };
 
@@ -878,6 +917,31 @@ export const CorpusExplorerPanel: React.FC = () => {
       {/* Graphe de connaissances */}
       <CollapsibleSection title="Graphe de connaissances" defaultExpanded={true}>
         <div className="graph-container">
+          {/* Contrôles de regénération */}
+          <div className="graph-controls" style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '10px', padding: '8px', backgroundColor: 'var(--bg-secondary)', borderRadius: '4px' }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.9em' }}>
+              Seuil de similarité:
+              <input
+                type="range"
+                min="0.5"
+                max="0.95"
+                step="0.05"
+                value={graphSimilarityThreshold}
+                onChange={(e) => setGraphSimilarityThreshold(parseFloat(e.target.value))}
+                style={{ width: '100px' }}
+              />
+              <span style={{ minWidth: '40px' }}>{graphSimilarityThreshold.toFixed(2)}</span>
+            </label>
+            <button
+              onClick={regenerateGraph}
+              disabled={regeneratingGraph}
+              className="reload-topics-btn"
+              title="Regénérer le graphe avec le nouveau seuil de similarité"
+            >
+              {regeneratingGraph ? 'Génération...' : 'Regénérer le graphe'}
+            </button>
+          </div>
+
           <div className="graph-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
             <div className="graph-legend">
               <div className="legend-item">

@@ -88,7 +88,7 @@ export class KnowledgeGraphBuilder {
   async buildGraph(options: GraphBuildOptions = {}): Promise<Graph> {
     const {
       includeSimilarityEdges = true,
-      similarityThreshold = 0.5,
+      similarityThreshold = 0.7,
       includeAuthorNodes = false,
       computeLayout = true,
     } = options;

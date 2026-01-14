@@ -224,7 +224,9 @@
     "graphSimilarityThreshold": "Graph similarity threshold",
     "additionalGraphDocs": "Additional graph documents",
     "includeSummaries": "Include summaries in RAG",
-    "enableTopicModeling": "Enable topic modeling"
+    "enableTopicModeling": "Enable topic modeling",
+    "explorationSimilarityThreshold": "Similarity threshold (Exploration)",
+    "explorationSimilarityThresholdHelp": "Minimum score to create similarity links in the exploration graph"
   },
   "llm": {
     "title": "LLM Configuration",

@@ -224,7 +224,9 @@
     "graphSimilarityThreshold": "Graph-Ähnlichkeitsschwelle",
     "additionalGraphDocs": "Zusätzliche Graph-Dokumente",
     "includeSummaries": "Zusammenfassungen in RAG einbeziehen",
-    "enableTopicModeling": "Themenmodellierung aktivieren"
+    "enableTopicModeling": "Themenmodellierung aktivieren",
+    "explorationSimilarityThreshold": "Ähnlichkeitsschwelle (Exploration)",
+    "explorationSimilarityThresholdHelp": "Mindestwert für Ähnlichkeitsverbindungen im Explorationsgraphen"
   },
   "llm": {
     "title": "LLM-Konfiguration",

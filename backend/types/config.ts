@@ -31,6 +31,9 @@ export interface RAGConfig {
   graphSimilarityThreshold?: number;
   additionalGraphDocs?: number;
 
+  // Exploration graph
+  explorationSimilarityThreshold?: number; // Seuil pour les arêtes de similarité dans le graphe d'exploration
+
   // RAG enrichment
   includeSummaries?: boolean; // Use summaries in RAG instead of chunks
 
@@ -91,6 +94,8 @@ export const DEFAULT_CONFIG: AppConfig = {
     useAdaptiveChunking: true, // Structure-aware chunking
     useHNSWIndex: true, // Fast approximate search
     useHybridSearch: true, // Dense + sparse fusion
+    // Exploration graph
+    explorationSimilarityThreshold: 0.7, // Seuil de similarité pour le graphe d'exploration
     // System prompt configuration (default: French)
     systemPromptLanguage: 'fr',
     useCustomSystemPrompt: false,

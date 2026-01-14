@@ -27,6 +27,9 @@ export interface RAGConfig {
   graphSimilarityThreshold: number;
   additionalGraphDocs: number;
 
+  // Exploration graph
+  explorationSimilarityThreshold: number;
+
   // RAG enrichment
   includeSummaries: boolean; // Use summaries in RAG instead of chunks
 
@@ -54,6 +57,7 @@ export const ConfigPanel: React.FC = () => {
     useGraphContext: false,
     graphSimilarityThreshold: 0.7,
     additionalGraphDocs: 3,
+    explorationSimilarityThreshold: 0.7,
     includeSummaries: true,
     enableTopicModeling: false,
   });
@@ -116,6 +120,7 @@ export const ConfigPanel: React.FC = () => {
           useGraphContext: false,
           graphSimilarityThreshold: 0.7,
           additionalGraphDocs: 3,
+          explorationSimilarityThreshold: 0.7,
           includeSummaries: true,
           enableTopicModeling: false,
           ...rag, // Override with saved values
@@ -174,6 +179,7 @@ export const ConfigPanel: React.FC = () => {
         useGraphContext: false,
         graphSimilarityThreshold: 0.7,
         additionalGraphDocs: 3,
+        explorationSimilarityThreshold: 0.7,
         includeSummaries: true,
         enableTopicModeling: false,
       });

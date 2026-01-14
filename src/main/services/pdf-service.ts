@@ -367,10 +367,14 @@ class PDFService {
   async buildKnowledgeGraph(options?: any) {
     this.ensureInitialized();
 
+    // Récupérer le seuil de similarité depuis la configuration utilisateur
+    const ragConfig = configManager.get('rag');
+    const defaultThreshold = ragConfig?.explorationSimilarityThreshold ?? 0.7;
+
     const graphBuilder = new KnowledgeGraphBuilder(this.vectorStore!);
     const graph = await graphBuilder.buildGraph({
       includeSimilarityEdges: options?.includeSimilarityEdges !== false,
-      similarityThreshold: options?.similarityThreshold || 0.7,
+      similarityThreshold: options?.similarityThreshold ?? defaultThreshold,
       includeAuthorNodes: options?.includeAuthorNodes || false,
       computeLayout: options?.computeLayout !== false,
     });

@@ -49,6 +49,10 @@ export const RAGConfigSection: React.FC<RAGConfigSectionProps> = ({ config, onCh
     onChange({ ...config, enableTopicModeling: value });
   };
 
+  const handleExplorationSimilarityThresholdChange = (value: number) => {
+    onChange({ ...config, explorationSimilarityThreshold: value });
+  };
+
   return (
     <CollapsibleSection title="Configuration RAG" defaultExpanded={false}>
       <div className="config-section">
@@ -331,6 +335,47 @@ export const RAGConfigSection: React.FC<RAGConfigSectionProps> = ({ config, onCh
                 Si activé, utilise les résumés de documents au lieu des chunks détaillés
                 <br />
                 ⚠️ Nécessite que la génération de résumés soit activée
+              </small>
+            </div>
+          </div>
+
+          {/* Exploration Similarity Threshold */}
+          <div className="config-field">
+            <label className="config-label">
+              Seuil de similarité (Exploration)
+              <span className="config-help">
+                Score minimum pour créer des liens de similarité dans le graphe d'exploration
+              </span>
+            </label>
+            <div className="config-input-group">
+              <input
+                type="range"
+                min="0.5"
+                max="0.95"
+                step="0.05"
+                value={config.explorationSimilarityThreshold}
+                onChange={(e) => handleExplorationSimilarityThresholdChange(parseFloat(e.target.value))}
+                className="config-slider"
+              />
+              <input
+                type="number"
+                min="0.5"
+                max="0.95"
+                step="0.05"
+                value={config.explorationSimilarityThreshold}
+                onChange={(e) => handleExplorationSimilarityThresholdChange(parseFloat(e.target.value))}
+                className="config-number"
+              />
+            </div>
+            <div className="config-description">
+              Valeur actuelle: {config.explorationSimilarityThreshold.toFixed(2)}
+              <br />
+              <small>
+                • 0.5-0.6: Plus de connexions, graphe dense
+                <br />
+                • 0.7: Équilibre (recommandé)
+                <br />
+                • 0.8-0.95: Connexions très fortes uniquement
               </small>
             </div>
           </div>

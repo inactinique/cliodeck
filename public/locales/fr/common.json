@@ -224,7 +224,9 @@
     "graphSimilarityThreshold": "Seuil similarité graphe",
     "additionalGraphDocs": "Documents graphe additionnels",
     "includeSummaries": "Inclure résumés dans RAG",
-    "enableTopicModeling": "Activer modélisation thématique"
+    "enableTopicModeling": "Activer modélisation thématique",
+    "explorationSimilarityThreshold": "Seuil de similarité (Exploration)",
+    "explorationSimilarityThresholdHelp": "Score minimum pour créer des liens de similarité dans le graphe d'exploration"
   },
   "llm": {
     "title": "Configuration LLM",
