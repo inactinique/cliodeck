@@ -311,6 +311,9 @@ export const ProjectPanel: React.FC = () => {
           <div className="create-project-content" onClick={(e) => e.stopPropagation()}>
             <h3>{t('project.createNewProject')}</h3>
 
+            {/* Project type selector hidden for v1.0 - only article type available */}
+            {/* Book and Presentation types need more testing before release */}
+            {/*
             <div className="form-field">
               <label>{t('project.projectType')}</label>
               <select
@@ -318,11 +321,11 @@ export const ProjectPanel: React.FC = () => {
                 onChange={(e) => setNewProjectType(e.target.value as any)}
               >
                 <option value="article">{t('project.types.article')}</option>
-                {/* Book type hidden for v1.0 - needs more testing */}
-                {/* <option value="book">{t('project.types.book')}</option> */}
+                <option value="book">{t('project.types.book')}</option>
                 <option value="presentation">{t('project.types.presentation')}</option>
               </select>
             </div>
+            */}
 
             <div className="form-field">
               <label>{t('project.projectName')}</label>
