@@ -39,6 +39,25 @@ MDFOCUS_LOG_LEVEL=debug /path/to/mdFocus
 DEBUG=1 /path/to/mdFocus
 ```
 
+## DevTools en production
+
+Par défaut, les DevTools d'Electron sont **désactivés** en production.
+
+Pour les activer, utilisez les mêmes variables d'environnement :
+
+```bash
+# macOS / Linux
+MDFOCUS_DEBUG=1 /path/to/mdFocus.app/Contents/MacOS/mdFocus
+
+# Windows
+set MDFOCUS_DEBUG=1
+"C:\Program Files\mdFocus\mdFocus.exe"
+```
+
+Cela active à la fois :
+- Les logs de debug (`console.log`, `console.info`)
+- Les DevTools d'Electron
+
 ## Logger centralisé (pour les développeurs)
 
 Pour les nouveaux développements, utilisez le logger centralisé au lieu de `console.log` :
