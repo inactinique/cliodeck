@@ -407,12 +407,35 @@ $body$
 
 export class PDFExportService {
   /**
+   * Get the extended PATH for macOS that includes Homebrew and MacTeX paths
+   * GUI apps on macOS don't inherit the user's shell PATH
+   */
+  private getExtendedPath(): string {
+    const currentPath = process.env.PATH || '';
+    const additionalPaths = [
+      '/opt/homebrew/bin',           // Homebrew on Apple Silicon
+      '/usr/local/bin',              // Homebrew on Intel Mac
+      '/Library/TeX/texbin',         // MacTeX
+      '/usr/texbin',                 // Older MacTeX location
+      '/opt/local/bin',              // MacPorts
+    ];
+
+    // Add paths that aren't already in PATH
+    const pathsToAdd = additionalPaths.filter(p => !currentPath.includes(p));
+    return [...pathsToAdd, currentPath].join(':');
+  }
+
+  /**
    * Check if pandoc and xelatex are available
    */
   async checkDependencies(): Promise<{ pandoc: boolean; xelatex: boolean }> {
+    const extendedPath = this.getExtendedPath();
+
     const checkCommand = async (command: string): Promise<boolean> => {
       return new Promise((resolve) => {
-        const proc = spawn('which', [command]);
+        const proc = spawn('which', [command], {
+          env: { ...process.env, PATH: extendedPath }
+        });
         proc.on('close', (code) => resolve(code === 0));
       });
     };
@@ -684,11 +707,14 @@ export class PDFExportService {
       // Run pandoc
       onProgress?.({ stage: 'converting', message: 'Conversion en LaTeX...', progress: 40 });
 
+      const extendedPath = this.getExtendedPath();
+
       await new Promise<void>((resolve, reject) => {
         console.log('📄 Running pandoc:', 'pandoc', pandocArgs.join(' '));
 
         const pandoc = spawn('pandoc', pandocArgs, {
           cwd: tempDir,
+          env: { ...process.env, PATH: extendedPath },
         });
 
         let stderr = '';

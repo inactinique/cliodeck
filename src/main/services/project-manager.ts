@@ -1,7 +1,8 @@
 // @ts-nocheck
-import { writeFile, readFile, mkdir } from 'fs/promises';
+import { writeFile, readFile, mkdir, copyFile } from 'fs/promises';
 import { existsSync } from 'fs';
 import path from 'path';
+import { dirname, basename, join } from 'path';
 import crypto from 'crypto';
 import { configManager } from './config-manager.js';
 
@@ -322,21 +323,58 @@ N'oubliez pas de mentionner les perspectives futures.
   async setCSLPath(data: {
     projectPath: string;
     cslPath?: string;
-  }) {
+  }): Promise<{ success: boolean; cslPath?: string; error?: string }> {
     try {
+      console.log('📝 setCSLPath called with:', data);
+
+      // Validate projectPath
+      if (!data.projectPath) {
+        throw new Error('Project path is required');
+      }
+
+      if (!existsSync(data.projectPath)) {
+        throw new Error(`Project file not found: ${data.projectPath}`);
+      }
+
       const projectContent = await readFile(data.projectPath, 'utf-8');
       const project: Project = JSON.parse(projectContent);
+      const projectDir = dirname(data.projectPath);
 
-      project.cslPath = data.cslPath;
+      let finalCslPath = data.cslPath;
+
+      // If a CSL file is provided, copy it to project if it's external
+      if (data.cslPath && existsSync(data.cslPath)) {
+        const cslFileName = basename(data.cslPath);
+        const projectCslPath = join(projectDir, cslFileName);
+
+        // Check if CSL file is outside the project directory
+        if (!data.cslPath.startsWith(projectDir)) {
+          console.log('📋 Copying CSL file to project directory...');
+          console.log('   Source:', data.cslPath);
+          console.log('   Destination:', projectCslPath);
+
+          try {
+            await copyFile(data.cslPath, projectCslPath);
+            finalCslPath = projectCslPath;
+            console.log('✅ CSL file copied successfully');
+          } catch (copyError: any) {
+            console.error('❌ Failed to copy CSL file:', copyError);
+            // Fall back to using the original path
+            finalCslPath = data.cslPath;
+          }
+        }
+      }
+
+      project.cslPath = finalCslPath;
       project.updatedAt = new Date().toISOString();
 
       await writeFile(data.projectPath, JSON.stringify(project, null, 2));
 
-      console.log('✅ CSL path configured:', data.cslPath);
-      return { success: true };
-    } catch (error) {
+      console.log('✅ CSL path configured:', finalCslPath);
+      return { success: true, cslPath: finalCslPath };
+    } catch (error: any) {
       console.error('❌ Failed to set CSL path:', error);
-      return { success: false, error: error.message };
+      return { success: false, error: error.message || 'Unknown error' };
     }
   }
 }

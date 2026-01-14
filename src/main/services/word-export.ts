@@ -1,6 +1,8 @@
-import { writeFile, readFile } from 'fs/promises';
+import { writeFile, readFile, mkdir, rm } from 'fs/promises';
 import { join, dirname, extname } from 'path';
 import { existsSync } from 'fs';
+import { spawn } from 'child_process';
+import { tmpdir } from 'os';
 import {
   Document,
   Packer,
@@ -45,7 +47,7 @@ export interface WordExportOptions {
 }
 
 interface WordExportProgress {
-  stage: 'preparing' | 'parsing' | 'generating' | 'template' | 'complete';
+  stage: 'preparing' | 'parsing' | 'generating' | 'template' | 'pandoc' | 'complete';
   message: string;
   progress: number;
 }
@@ -352,7 +354,170 @@ export class WordExportService {
   private parser = new MarkdownToWordParser();
 
   /**
+   * Get the extended PATH for macOS that includes Homebrew and MacTeX paths
+   * GUI apps on macOS don't inherit the user's shell PATH
+   */
+  private getExtendedPath(): string {
+    const currentPath = process.env.PATH || '';
+    const additionalPaths = [
+      '/opt/homebrew/bin',           // Homebrew on Apple Silicon
+      '/usr/local/bin',              // Homebrew on Intel Mac
+      '/Library/TeX/texbin',         // MacTeX
+      '/usr/texbin',                 // Older MacTeX location
+      '/opt/local/bin',              // MacPorts
+    ];
+
+    // Add paths that aren't already in PATH
+    const pathsToAdd = additionalPaths.filter(p => !currentPath.includes(p));
+    return [...pathsToAdd, currentPath].join(':');
+  }
+
+  /**
+   * Check if pandoc is available
+   */
+  private async checkPandoc(): Promise<boolean> {
+    const extendedPath = this.getExtendedPath();
+    return new Promise((resolve) => {
+      const proc = spawn('which', ['pandoc'], {
+        env: { ...process.env, PATH: extendedPath }
+      });
+      proc.on('close', (code) => resolve(code === 0));
+    });
+  }
+
+  /**
+   * Export markdown to Word using pandoc (for bibliography support)
+   */
+  private async exportWithPandoc(
+    options: WordExportOptions,
+    outputPath: string,
+    onProgress?: (progress: WordExportProgress) => void
+  ): Promise<{ success: boolean; outputPath?: string; error?: string }> {
+    const tempDir = join(tmpdir(), `mdfocus-word-export-${Date.now()}`);
+    await mkdir(tempDir, { recursive: true });
+
+    try {
+      onProgress?.({
+        stage: 'pandoc',
+        message: 'Préparation de la conversion pandoc...',
+        progress: 30,
+      });
+
+      // Write content to temp file
+      const inputPath = join(tempDir, 'input.md');
+
+      // Build YAML frontmatter for metadata
+      let yamlFrontmatter = '---\n';
+      if (options.metadata?.title) {
+        yamlFrontmatter += `title: "${options.metadata.title}"\n`;
+      }
+      if (options.metadata?.author) {
+        yamlFrontmatter += `author: "${options.metadata.author}"\n`;
+      }
+      if (options.metadata?.date) {
+        yamlFrontmatter += `date: "${options.metadata.date}"\n`;
+      }
+      if (options.metadata?.abstract) {
+        yamlFrontmatter += `abstract: |\n  ${options.metadata.abstract.replace(/\n/g, '\n  ')}\n`;
+      }
+      yamlFrontmatter += '---\n\n';
+
+      const fullContent = yamlFrontmatter + options.content;
+      await writeFile(inputPath, fullContent);
+
+      // Build pandoc arguments
+      const pandocArgs = [
+        inputPath,
+        '-o', outputPath,
+        '--from', 'markdown',
+        '--to', 'docx',
+      ];
+
+      // Add bibliography and CSL if provided
+      const bibPath = options.bibliographyPath;
+      if (bibPath && existsSync(bibPath)) {
+        pandocArgs.push('--bibliography', bibPath);
+        pandocArgs.push('--citeproc');
+        console.log('📚 Using bibliography:', bibPath);
+
+        // Add CSL style if provided
+        if (options.cslPath && existsSync(options.cslPath)) {
+          pandocArgs.push('--csl', options.cslPath);
+          console.log('📚 Using CSL style:', options.cslPath);
+        }
+
+        // Add reference section title
+        pandocArgs.push('--metadata', 'reference-section-title=Références');
+      }
+
+      // Add reference doc (template) if provided
+      if (options.templatePath && existsSync(options.templatePath)) {
+        pandocArgs.push('--reference-doc', options.templatePath);
+        console.log('📝 Using Word template:', options.templatePath);
+      }
+
+      onProgress?.({
+        stage: 'pandoc',
+        message: 'Conversion avec pandoc...',
+        progress: 50,
+      });
+
+      const extendedPath = this.getExtendedPath();
+
+      // Run pandoc
+      await new Promise<void>((resolve, reject) => {
+        console.log('📄 Running pandoc:', 'pandoc', pandocArgs.join(' '));
+
+        const pandoc = spawn('pandoc', pandocArgs, {
+          cwd: tempDir,
+          env: { ...process.env, PATH: extendedPath },
+        });
+
+        let stderr = '';
+
+        pandoc.stderr.on('data', (data) => {
+          stderr += data.toString();
+          console.log('📄 Pandoc output:', data.toString());
+        });
+
+        pandoc.on('close', (code) => {
+          if (code === 0) {
+            resolve();
+          } else {
+            reject(new Error(`Pandoc failed with code ${code}:\n${stderr}`));
+          }
+        });
+
+        pandoc.on('error', (err) => {
+          reject(new Error(`Failed to start pandoc: ${err.message}`));
+        });
+      });
+
+      onProgress?.({
+        stage: 'complete',
+        message: 'Export Word terminé!',
+        progress: 100,
+      });
+
+      // Cleanup temp directory
+      await rm(tempDir, { recursive: true, force: true });
+
+      console.log('✅ Word document exported successfully with pandoc:', outputPath);
+      return { success: true, outputPath };
+    } catch (error: any) {
+      // Cleanup on error
+      try {
+        await rm(tempDir, { recursive: true, force: true });
+      } catch {}
+
+      console.error('❌ Pandoc Word export failed:', error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  /**
    * Export markdown to Word document (.docx)
+   * Uses pandoc when bibliography is available for proper citation processing
    */
   async exportToWord(
     options: WordExportOptions,
@@ -375,10 +540,33 @@ export class WordExportService {
         if (existsSync(abstractPath)) {
           const abstractContent = await readFile(abstractPath, 'utf-8');
           abstract = abstractContent.replace(/^#\s*Résumé\s*\n*/i, '').trim();
+          options.metadata = { ...options.metadata, abstract };
           console.log('📄 Abstract loaded from file:', abstractPath);
         }
       }
 
+      // Determine output path
+      const outputPath =
+        options.outputPath ||
+        join(
+          dirname(options.projectPath),
+          `${options.metadata?.title || 'output'}.docx`
+        );
+
+      // Check if we should use pandoc (when bibliography is present)
+      const hasBibliography = options.bibliographyPath && existsSync(options.bibliographyPath);
+      const hasPandoc = await this.checkPandoc();
+
+      if (hasBibliography && hasPandoc) {
+        console.log('📚 Bibliography detected, using pandoc for export...');
+        return await this.exportWithPandoc(options, outputPath, onProgress);
+      }
+
+      if (hasBibliography && !hasPandoc) {
+        console.warn('⚠️ Bibliography present but pandoc not found. Citations will not be processed.');
+      }
+
+      // Fall back to native docx generation (without bibliography processing)
       onProgress?.({
         stage: 'parsing',
         message: 'Analyse du contenu Markdown...',
@@ -526,14 +714,6 @@ export class WordExportService {
         description: abstract || '',
         sections,
       });
-
-      // Determine output path
-      const outputPath =
-        options.outputPath ||
-        join(
-          dirname(options.projectPath),
-          `${options.metadata?.title || 'output'}.docx`
-        );
 
       // Check if template is provided or exists
       let finalBuffer: Buffer;

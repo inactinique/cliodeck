@@ -47,17 +47,23 @@ export const CSLSettings: React.FC<CSLSettingsProps> = ({
     try {
       const projectJsonPath = `${projectPath}/project.json`;
 
-      // Save the CSL path to project.json
-      await window.electron.project.setCSLPath({
+      // Save the CSL path to project.json (will copy file if external)
+      const result = await window.electron.project.setCSLPath({
         projectPath: projectJsonPath,
         cslPath: path,
       });
 
-      setCSLPath(path);
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to save CSL path');
+      }
+
+      // Use the final path (may be copied to project)
+      const finalPath = result.cslPath || path;
+      setCSLPath(finalPath);
       onCSLChange?.();
 
-      console.log('✅ CSL path saved:', path);
-    } catch (error) {
+      console.log('✅ CSL path saved:', finalPath);
+    } catch (error: any) {
       console.error('Failed to save CSL path:', error);
       alert(t('project.cslSaveError') || 'Error saving CSL path');
     } finally {
