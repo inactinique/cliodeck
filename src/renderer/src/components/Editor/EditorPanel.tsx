@@ -2,7 +2,7 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { FileText, FolderOpen, Save, Link, BookOpen, Table, Superscript, Quote, CheckCircle } from 'lucide-react';
 // import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
-import { MarkdownEditor } from './MarkdownEditor';
+import { MilkdownEditor } from './MilkdownEditor';
 // import { MarkdownPreview } from './MarkdownPreview';
 import { DocumentStats } from './DocumentStats';
 import { useEditorStore } from '../../stores/editorStore';
@@ -199,7 +199,7 @@ export const EditorPanel: React.FC = () => {
 
       {/* Editor content */}
       <div className="editor-content">
-        <MarkdownEditor />
+        <MilkdownEditor />
         <DocumentStats />
       </div>
     </div>

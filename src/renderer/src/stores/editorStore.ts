@@ -1,4 +1,6 @@
 import { create } from 'zustand';
+import type { Editor } from '@milkdown/kit/core';
+import { editorViewCtx } from '@milkdown/kit/core';
 import { logger } from '../utils/logger';
 
 // MARK: - Types
@@ -25,6 +27,9 @@ interface EditorState {
   // Preview
   showPreview: boolean;
 
+  // Milkdown editor reference
+  milkdownEditor: Editor | null;
+
   // Actions
   setContent: (content: string) => void;
   loadFile: (filePath: string) => Promise<void>;
@@ -35,10 +40,12 @@ interface EditorState {
 
   updateSettings: (settings: Partial<EditorSettings>) => void;
   togglePreview: () => void;
+  toggleStats: () => void;
 
   insertText: (text: string) => void;
   insertCitation: (citationKey: string) => void;
   insertFormatting: (type: 'bold' | 'italic' | 'link' | 'citation' | 'table' | 'footnote' | 'blockquote') => void;
+  insertTextAtCursor: (text: string) => void;
 }
 
 // MARK: - Default settings
@@ -61,6 +68,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   isDirty: false,
   settings: DEFAULT_SETTINGS,
   showPreview: false,
+  milkdownEditor: null,
 
   setContent: (content: string) => {
     set({
@@ -156,6 +164,11 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     }));
   },
 
+  toggleStats: () => {
+    // Stats are always visible in the new editor, this is a no-op for compatibility
+    logger.store('Editor', 'toggleStats called (no-op)');
+  },
+
   insertText: (text: string) => {
     set((state) => ({
       content: state.content + text,
@@ -213,9 +226,53 @@ export const useEditorStore = create<EditorState>((set, get) => ({
         break;
     }
 
-    set({
-      content: content + textToInsert,
-      isDirty: true,
-    });
+    // Try to insert at cursor position using Milkdown editor
+    const editor = get().milkdownEditor;
+    if (editor) {
+      try {
+        editor.action((ctx) => {
+          const view = ctx.get(editorViewCtx);
+          const { state } = view;
+          const { tr, selection } = state;
+          tr.insertText(textToInsert, selection.from, selection.to);
+          view.dispatch(tr);
+          view.focus();
+        });
+        set({ isDirty: true });
+      } catch (error) {
+        // Fallback: append to content
+        logger.error('Editor', 'Failed to insert at cursor, appending to content');
+        set({
+          content: content + textToInsert,
+          isDirty: true,
+        });
+      }
+    } else {
+      // No Milkdown editor, append to content
+      set({
+        content: content + textToInsert,
+        isDirty: true,
+      });
+    }
+  },
+
+  insertTextAtCursor: (text: string) => {
+    logger.store('Editor', 'insertTextAtCursor called', { text });
+    const editor = get().milkdownEditor;
+    if (editor) {
+      try {
+        editor.action((ctx) => {
+          const view = ctx.get(editorViewCtx);
+          const { state } = view;
+          const { tr, selection } = state;
+          tr.insertText(text, selection.from, selection.to);
+          view.dispatch(tr);
+          view.focus();
+        });
+        set({ isDirty: true });
+      } catch (error) {
+        logger.error('Editor', 'Failed to insert text at cursor');
+      }
+    }
   },
 }));
