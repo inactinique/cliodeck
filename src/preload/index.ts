@@ -72,7 +72,9 @@ const api = {
       ipcRenderer.invoke('editor:save-file', filePath, content),
     insertText: (text: string) => ipcRenderer.invoke('editor:insert-text', text),
     onInsertText: (callback: (text: string) => void) => {
-      ipcRenderer.on('editor:insert-text-command', (_event, text) => callback(text));
+      const listener = (_event: any, text: string) => callback(text);
+      ipcRenderer.on('editor:insert-text-command', listener);
+      return () => ipcRenderer.removeListener('editor:insert-text-command', listener);
     },
   },
 

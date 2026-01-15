@@ -195,7 +195,8 @@ export const MilkdownEditor: React.FC = () => {
       });
     };
 
-    window.electron.editor.onInsertText(handler);
+    const cleanup = window.electron.editor.onInsertText(handler);
+    return cleanup;
   }, [safeEditorAction]);
 
   // Handle citation autocomplete detection
