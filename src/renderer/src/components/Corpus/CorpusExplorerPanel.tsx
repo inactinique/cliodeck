@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import ForceGraph2D from 'react-force-graph-2d';
 import { CollapsibleSection } from '../common/CollapsibleSection';
 import { TopicTimeline } from './TopicTimeline';
@@ -79,6 +80,7 @@ interface TopicAnalysisResult {
 }
 
 export const CorpusExplorerPanel: React.FC = () => {
+  const { t } = useTranslation();
   const { currentProject } = useProjectStore();
   const [statistics, setStatistics] = useState<CorpusStatistics | null>(null);
   const [graphData, setGraphData] = useState<GraphData | null>(null);
@@ -218,7 +220,7 @@ export const CorpusExplorerPanel: React.FC = () => {
       }
     } catch (err: any) {
       console.error('Error regenerating graph:', err);
-      alert('Erreur lors de la regénération du graphe: ' + err.message);
+      alert(t('corpus.graphRegenerateError') + ': ' + err.message);
     } finally {
       setRegeneratingGraph(false);
     }
@@ -249,20 +251,20 @@ export const CorpusExplorerPanel: React.FC = () => {
         }
       } else {
         console.error('Failed to load topics:', result.error);
-        const errorMsg = result.error || 'Erreur inconnue';
+        const errorMsg = result.error || '';
         if (errorMsg.includes('not available') || errorMsg.includes('not start') || errorMsg.includes('timeout')) {
-          alert('Le service de topic modeling n\'est pas disponible.\n\nPour l\'activer, ouvrez les Paramètres et installez l\'environnement Python dans la section "Topic Modeling".');
+          alert(t('corpus.topicServiceUnavailable'));
         } else {
-          alert('Erreur lors de l\'analyse des topics: ' + errorMsg);
+          alert(t('corpus.topicAnalysisErrorGeneric') + ': ' + errorMsg);
         }
       }
     } catch (err: any) {
       console.error('Error loading topics:', err);
-      const errorMsg = err.message || 'Erreur inconnue';
+      const errorMsg = err.message || '';
       if (errorMsg.includes('not available') || errorMsg.includes('not start') || errorMsg.includes('timeout')) {
-        alert('Le service de topic modeling n\'est pas disponible.\n\nPour l\'activer, ouvrez les Paramètres et installez l\'environnement Python dans la section "Topic Modeling".');
+        alert(t('corpus.topicServiceUnavailable'));
       } else {
-        alert('Erreur lors de l\'analyse des topics: ' + errorMsg);
+        alert(t('corpus.topicAnalysisErrorGeneric') + ': ' + errorMsg);
       }
     } finally {
       setLoadingTopics(false);
@@ -601,8 +603,8 @@ export const CorpusExplorerPanel: React.FC = () => {
       <div className="corpus-explorer-panel">
         <div className="corpus-empty">
           <div className="empty-icon">📁</div>
-          <h3>Aucun projet</h3>
-          <p>Ouvrez ou créez un projet pour explorer le corpus.</p>
+          <h3>{t('corpus.noProject')}</h3>
+          <p>{t('corpus.openOrCreateProject')}</p>
         </div>
       </div>
     );
@@ -613,7 +615,7 @@ export const CorpusExplorerPanel: React.FC = () => {
       <div className="corpus-explorer-panel">
         <div className="corpus-loading">
           <div className="loading-spinner"></div>
-          <p>Chargement du corpus...</p>
+          <p>{t('corpus.loading')}</p>
         </div>
       </div>
     );
@@ -623,9 +625,9 @@ export const CorpusExplorerPanel: React.FC = () => {
     return (
       <div className="corpus-explorer-panel">
         <div className="corpus-error">
-          <h3>Erreur</h3>
+          <h3>{t('corpus.error')}</h3>
           <p>{error}</p>
-          <button onClick={loadCorpusData}>Réessayer</button>
+          <button onClick={loadCorpusData}>{t('corpus.retry')}</button>
         </div>
       </div>
     );
@@ -636,9 +638,9 @@ export const CorpusExplorerPanel: React.FC = () => {
       <div className="corpus-explorer-panel">
         <div className="corpus-empty">
           <div className="empty-icon">📊</div>
-          <h3>Corpus vide</h3>
+          <h3>{t('corpus.emptyCorpus')}</h3>
           <p>
-            Indexez au moins 2 documents PDF pour visualiser le graphe de connaissances.
+            {t('corpus.indexDocuments')}
           </p>
         </div>
       </div>
@@ -654,24 +656,24 @@ export const CorpusExplorerPanel: React.FC = () => {
       {/* Header */}
       <div className="corpus-header">
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <h3>Exploration de Corpus</h3>
+          <h3>{t('corpus.exploration')}</h3>
           <HelperTooltip
-            content="Topic modeling et analyse thématique. Nécessite un corpus d'au moins 15-20 documents pour être pertinent."
+            content={t('corpus.tooltipHelp')}
             onLearnMore={handleLearnMore}
           />
         </div>
       </div>
 
       {/* Filtres */}
-      <CollapsibleSection title="Filtres" defaultExpanded={false}>
+      <CollapsibleSection title={t('corpus.filters')} defaultExpanded={false}>
         <div className="filters-container">
           <div className="filter-group">
-            <label>Année:</label>
+            <label>{t('corpus.year')}</label>
             <select
               value={filters.year || ''}
               onChange={(e) => setFilters({ ...filters, year: e.target.value ? parseInt(e.target.value) : null })}
             >
-              <option value="">Toutes</option>
+              <option value="">{t('corpus.allYears')}</option>
               {getAvailableYears().map((year) => (
                 <option key={year} value={year}>
                   {year}
@@ -681,12 +683,12 @@ export const CorpusExplorerPanel: React.FC = () => {
           </div>
 
           <div className="filter-group">
-            <label>Auteur:</label>
+            <label>{t('corpus.author')}</label>
             <select
               value={filters.author || ''}
               onChange={(e) => setFilters({ ...filters, author: e.target.value || null })}
             >
-              <option value="">Tous</option>
+              <option value="">{t('corpus.allAuthors')}</option>
               {getAvailableAuthors().map((author) => (
                 <option key={author} value={author}>
                   {author}
@@ -696,12 +698,12 @@ export const CorpusExplorerPanel: React.FC = () => {
           </div>
 
           <div className="filter-group">
-            <label>Langue:</label>
+            <label>{t('corpus.language')}</label>
             <select
               value={filters.language || ''}
               onChange={(e) => setFilters({ ...filters, language: e.target.value || null })}
             >
-              <option value="">Toutes</option>
+              <option value="">{t('corpus.allLanguages')}</option>
               {(statistics?.languages || []).map((lang) => (
                 <option key={lang} value={lang}>
                   {lang}
@@ -711,13 +713,13 @@ export const CorpusExplorerPanel: React.FC = () => {
           </div>
 
           <div className="filter-group">
-            <label>Topic:</label>
+            <label>{t('corpus.topic')}</label>
             <select
               value={filters.topic !== null ? filters.topic : ''}
               onChange={(e) => setFilters({ ...filters, topic: e.target.value ? parseInt(e.target.value) : null })}
               disabled={!topicAnalysis}
             >
-              <option value="">Tous</option>
+              <option value="">{t('corpus.allTopics')}</option>
               {(topicAnalysis?.topics || []).map((topic) => (
                 <option key={topic.id} value={topic.id}>
                   Topic {topic.id}: {topic.keywords.slice(0, 3).join(', ')}
@@ -727,38 +729,38 @@ export const CorpusExplorerPanel: React.FC = () => {
           </div>
 
           <button onClick={clearFilters} className="clear-filters-btn">
-            Réinitialiser filtres
+            {t('corpus.resetFilters')}
           </button>
         </div>
       </CollapsibleSection>
 
       {/* Statistiques globales */}
-      <CollapsibleSection title="Statistiques" defaultExpanded={true}>
+      <CollapsibleSection title={t('corpus.statistics')} defaultExpanded={true}>
         <div className="corpus-stats">
           <div className="stat-card">
             <div className="stat-value">{statistics.documentCount}</div>
-            <div className="stat-label">Documents</div>
+            <div className="stat-label">{t('corpus.documents')}</div>
           </div>
           <div className="stat-card">
             <div className="stat-value">{statistics.totalCitationsExtracted}</div>
-            <div className="stat-label">Citations extraites</div>
+            <div className="stat-label">{t('corpus.extractedCitations')}</div>
             <div className="stat-detail">
-              {statistics.citationCount} internes ({Math.round((statistics.citationCount / Math.max(statistics.totalCitationsExtracted, 1)) * 100)}%)
+              {statistics.citationCount} {t('corpus.internalCitations')} ({Math.round((statistics.citationCount / Math.max(statistics.totalCitationsExtracted, 1)) * 100)}%)
             </div>
           </div>
           <div className="stat-card">
             <div className="stat-value">{statistics.authorCount}</div>
-            <div className="stat-label">Auteurs</div>
+            <div className="stat-label">{t('corpus.authors')}</div>
           </div>
           <div className="stat-card">
             <div className="stat-value">{statistics.languageCount}</div>
-            <div className="stat-label">Langues</div>
+            <div className="stat-label">{t('corpus.languages')}</div>
           </div>
         </div>
 
         {statistics.yearRange && (
           <div className="stat-info">
-            <span className="stat-info-label">Période:</span>
+            <span className="stat-info-label">{t('corpus.period')}</span>
             <span className="stat-info-value">
               {statistics.yearRange.min} - {statistics.yearRange.max}
             </span>
@@ -767,7 +769,7 @@ export const CorpusExplorerPanel: React.FC = () => {
 
         {statistics.languages && statistics.languages.length > 0 && (
           <div className="stat-info">
-            <span className="stat-info-label">Langues:</span>
+            <span className="stat-info-label">{t('corpus.languages')}:</span>
             <span className="stat-info-value">
               {statistics.languages.join(', ')}
             </span>
@@ -776,18 +778,18 @@ export const CorpusExplorerPanel: React.FC = () => {
       </CollapsibleSection>
 
       {/* Textométrie */}
-      <CollapsibleSection title="Textométrie" defaultExpanded={false}>
+      <CollapsibleSection title={t('corpus.textometrics')} defaultExpanded={false}>
         <TextometricsPanel />
       </CollapsibleSection>
 
       {/* Topics */}
-      <CollapsibleSection title="Analyse thématique (BERTopic)" defaultExpanded={false}>
+      <CollapsibleSection title={t('corpus.topicAnalysis')} defaultExpanded={false}>
         {!topicAnalysis ? (
           <div className="topics-empty">
-            <p>Aucune analyse thématique disponible.</p>
+            <p>{t('corpus.noTopicAnalysis')}</p>
             <div className="topics-config">
               <label>
-                Nombre de topics:
+                {t('corpus.numTopics')}
                 <input
                   type="number"
                   min="2"
@@ -799,23 +801,23 @@ export const CorpusExplorerPanel: React.FC = () => {
               </label>
             </div>
             <button onClick={loadTopics} disabled={loadingTopics} className="load-topics-btn">
-              {loadingTopics ? 'Analyse en cours...' : 'Analyser les topics'}
+              {loadingTopics ? t('corpus.analyzing') : t('corpus.analyzeTopics')}
             </button>
             <p className="topics-help">
-              L'analyse thématique nécessite au moins 5 documents indexés.
+              {t('corpus.topicHelp')}
             </p>
           </div>
         ) : (
           <div className="topics-list">
             <div className="topics-header">
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                <span>{topicAnalysis.topics?.length || 0} topics identifiés</span>
+                <span>{t('corpus.topicsIdentified', { count: topicAnalysis.topics?.length || 0 })}</span>
                 {topicAnalysis.statistics && (
                   <span style={{ fontSize: '0.85em', color: '#666' }}>
-                    {topicAnalysis.statistics.numDocumentsInTopics}/{topicAnalysis.statistics.totalDocuments} documents analysés
+                    {t('corpus.documentsAnalyzed', { analyzed: topicAnalysis.statistics.numDocumentsInTopics, total: topicAnalysis.statistics.totalDocuments })}
                     {topicAnalysis.statistics.numOutliers > 0 && (
                       <span style={{ marginLeft: '0.5rem' }}>
-                        ({topicAnalysis.statistics.numOutliers} outliers)
+                        ({topicAnalysis.statistics.numOutliers} {t('corpus.outliers')})
                       </span>
                     )}
                   </span>
@@ -823,7 +825,7 @@ export const CorpusExplorerPanel: React.FC = () => {
               </div>
               <div className="topics-actions">
                 <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.9em' }}>
-                  Nb topics:
+                  {t('corpus.nbTopics')}
                   <input
                     type="number"
                     min="2"
@@ -835,15 +837,15 @@ export const CorpusExplorerPanel: React.FC = () => {
                   />
                 </label>
                 <button onClick={loadTopics} disabled={loadingTopics} className="reload-topics-btn">
-                  {loadingTopics ? 'Analyse...' : 'Réanalyser'}
+                  {loadingTopics ? t('corpus.analyzing') : t('corpus.reanalyze')}
                 </button>
-                <button onClick={exportTopicsAsJSON} className="export-btn" title="Exporter en JSON">
+                <button onClick={exportTopicsAsJSON} className="export-btn" title="JSON">
                   📥 JSON
                 </button>
-                <button onClick={exportTopicsAsCSV} className="export-btn" title="Exporter en CSV">
+                <button onClick={exportTopicsAsCSV} className="export-btn" title="CSV">
                   📥 CSV
                 </button>
-                <button onClick={exportTopicsAsMarkdown} className="export-btn" title="Exporter en Markdown">
+                <button onClick={exportTopicsAsMarkdown} className="export-btn" title="Markdown">
                   📥 MD
                 </button>
               </div>
@@ -853,7 +855,7 @@ export const CorpusExplorerPanel: React.FC = () => {
             {topicTimeline && topicTimeline.length > 0 && (
               <div className="topic-timeline-section">
                 <h4 style={{ margin: '10px 0', fontSize: '14px', fontWeight: 500 }}>
-                  Évolution temporelle des topics
+                  {t('corpus.topicTimeline')}
                 </h4>
                 <TopicTimeline timelineData={topicTimeline} topics={topicAnalysis.topics} />
               </div>
@@ -873,7 +875,7 @@ export const CorpusExplorerPanel: React.FC = () => {
                     onClick={() => setFilters({ ...filters, topic: filters.topic === topic.id ? null : topic.id })}
                   >
                     <span className="topic-id">Topic {topic.id}</span>
-                    <span className="topic-size">{topic.size} documents</span>
+                    <span className="topic-size">{topic.size} {t('corpus.topicDocuments')}</span>
                   </div>
                   <div className="topic-keywords">
                     {topic.keywords.slice(0, 5).map((keyword, idx) => (
@@ -889,7 +891,7 @@ export const CorpusExplorerPanel: React.FC = () => {
                       setExpandedTopic(isExpanded ? null : topic.id);
                     }}
                   >
-                    {isExpanded ? '▼ Masquer documents' : `▶ Voir ${topicDocs.length} documents`}
+                    {isExpanded ? `▼ ${t('corpus.hideDocuments')}` : `▶ ${t('corpus.showDocuments', { count: topicDocs.length })}`}
                   </button>
 
                   {isExpanded && (
@@ -915,12 +917,12 @@ export const CorpusExplorerPanel: React.FC = () => {
       </CollapsibleSection>
 
       {/* Graphe de connaissances */}
-      <CollapsibleSection title="Graphe de connaissances" defaultExpanded={true}>
+      <CollapsibleSection title={t('corpus.knowledgeGraph')} defaultExpanded={true}>
         <div className="graph-container">
           {/* Contrôles de regénération */}
           <div className="graph-controls" style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '10px', padding: '8px', backgroundColor: 'var(--bg-secondary)', borderRadius: '4px' }}>
             <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.9em' }}>
-              Seuil de similarité:
+              {t('corpus.similarityThreshold')}
               <input
                 type="range"
                 min="0.5"
@@ -936,9 +938,9 @@ export const CorpusExplorerPanel: React.FC = () => {
               onClick={regenerateGraph}
               disabled={regeneratingGraph}
               className="reload-topics-btn"
-              title="Regénérer le graphe avec le nouveau seuil de similarité"
+              title={t('corpus.regenerateGraph')}
             >
-              {regeneratingGraph ? 'Génération...' : 'Regénérer le graphe'}
+              {regeneratingGraph ? t('corpus.regenerating') : t('corpus.regenerateGraph')}
             </button>
           </div>
 
@@ -946,19 +948,19 @@ export const CorpusExplorerPanel: React.FC = () => {
             <div className="graph-legend">
               <div className="legend-item">
                 <span className="legend-color" style={{ backgroundColor: '#FF6B6B' }}></span>
-                <span>Citations</span>
+                <span>{t('corpus.citations')}</span>
               </div>
               <div className="legend-item">
                 <span className="legend-color" style={{ backgroundColor: '#50C878' }}></span>
-                <span>Similarité</span>
+                <span>{t('corpus.similarity')}</span>
               </div>
               <div className="legend-item">
                 <span className="legend-color" style={{ backgroundColor: '#9B59B6' }}></span>
-                <span>Co-citations</span>
+                <span>{t('corpus.coCitations')}</span>
               </div>
             </div>
-            <button onClick={exportGraphAsGEXF} className="export-btn" title="Exporter le graphe pour Gephi">
-              📥 Exporter GEXF
+            <button onClick={exportGraphAsGEXF} className="export-btn" title={t('corpus.exportGEXF')}>
+              📥 {t('corpus.exportGEXF')}
             </button>
           </div>
 
@@ -995,29 +997,29 @@ export const CorpusExplorerPanel: React.FC = () => {
 
           {selectedNode && (
             <div className="node-details">
-              <h4>Détails du nœud</h4>
+              <h4>{t('corpus.nodeDetails')}</h4>
               <div className="node-info">
                 <div className="node-info-row">
-                  <span className="node-info-label">Titre:</span>
+                  <span className="node-info-label">{t('corpus.nodeTitle')}</span>
                   <span className="node-info-value">
                     {selectedNode.metadata?.title || selectedNode.label}
                   </span>
                 </div>
                 {selectedNode.metadata?.author && (
                   <div className="node-info-row">
-                    <span className="node-info-label">Auteur:</span>
+                    <span className="node-info-label">{t('corpus.nodeAuthor')}</span>
                     <span className="node-info-value">{selectedNode.metadata.author}</span>
                   </div>
                 )}
                 {selectedNode.metadata?.year && (
                   <div className="node-info-row">
-                    <span className="node-info-label">Année:</span>
+                    <span className="node-info-label">{t('corpus.nodeYear')}</span>
                     <span className="node-info-value">{selectedNode.metadata.year}</span>
                   </div>
                 )}
                 {selectedNode.centrality !== undefined && (
                   <div className="node-info-row">
-                    <span className="node-info-label">Centralité:</span>
+                    <span className="node-info-label">{t('corpus.nodeCentrality')}</span>
                     <span className="node-info-value">
                       {selectedNode.centrality.toFixed(2)}
                     </span>
@@ -1025,12 +1027,12 @@ export const CorpusExplorerPanel: React.FC = () => {
                 )}
                 {selectedNode.community !== undefined && (
                   <div className="node-info-row">
-                    <span className="node-info-label">Communauté:</span>
+                    <span className="node-info-label">{t('corpus.nodeCommunity')}</span>
                     <span className="node-info-value">{selectedNode.community}</span>
                   </div>
                 )}
               </div>
-              <button onClick={() => setSelectedNode(null)}>Fermer</button>
+              <button onClick={() => setSelectedNode(null)}>{t('corpus.close')}</button>
             </div>
           )}
         </div>
@@ -1039,11 +1041,11 @@ export const CorpusExplorerPanel: React.FC = () => {
       {/* Info sur le graphe */}
       <div className="graph-info">
         <div className="graph-info-item">
-          <span className="graph-info-label">Nœuds:</span>
+          <span className="graph-info-label">{t('corpus.nodes')}</span>
           <span className="graph-info-value">{graphData.nodes.length}</span>
         </div>
         <div className="graph-info-item">
-          <span className="graph-info-label">Liens:</span>
+          <span className="graph-info-label">{t('corpus.links')}</span>
           <span className="graph-info-value">{graphData.edges.length}</span>
         </div>
       </div>

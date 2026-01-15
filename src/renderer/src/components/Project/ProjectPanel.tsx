@@ -129,7 +129,7 @@ export const ProjectPanel: React.FC = () => {
       await loadFile(filePath);
     } catch (error: any) {
       console.error('Failed to load file:', error);
-      alert('Erreur lors de l\'ouverture du fichier: ' + error.message);
+      alert(t('toolbar.openError') + ': ' + error.message);
     }
   };
 

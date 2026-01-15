@@ -1,184 +1,184 @@
-# Guide d'utilisation des modèles Word (.dotx)
+# Guide for Using Word Templates (.dotx)
 
-## 📝 Vue d'ensemble
+## Overview
 
-ClioDesk supporte l'utilisation de modèles Word personnalisés (fichiers `.dotx`) pour l'export de vos documents. Cette fonctionnalité vous permet d'appliquer votre propre mise en forme, styles et structure à vos exports Word.
+ClioDesk supports using custom Word templates (.dotx files) for document export. This feature allows you to apply your own formatting, styles, and structure to your Word exports.
 
-## 🚀 Utilisation basique
+## Basic Usage
 
-### 1. Détection automatique
+### 1. Automatic Detection
 
-Pour utiliser un modèle Word, placez simplement un fichier `.dotx` dans le dossier de votre projet ClioDesk :
+To use a Word template, simply place a `.dotx` file in your ClioDesk project folder:
 
 ```
-mon_projet/
+my_project/
 ├── .cliodesk/
 ├── document.md
 ├── bibliography.bib
-└── mon_modele.dotx  ← Votre modèle Word
+└── my_template.dotx  ← Your Word template
 ```
 
-ClioDesk détectera automatiquement le modèle et vous informera lors de l'export.
+ClioDesk will automatically detect the template and inform you during export.
 
-### 2. Export avec modèle
+### 2. Export with Template
 
-Lors de l'export Word :
-1. Ouvrez le panneau **Projet** (📁)
-2. Cliquez sur **Export Word (.docx)**
-3. Si un modèle est détecté, vous verrez un message : ✅ **Modèle Word détecté: mon_modele.dotx**
-4. Remplissez les informations (titre, auteur)
-5. Cliquez sur **Exporter**
+When exporting to Word:
+1. Open the **Project** panel
+2. Click **Export Word (.docx)**
+3. If a template is detected, you'll see a message: **Word template detected: my_template.dotx**
+4. Fill in the information (title, author)
+5. Click **Export**
 
-Le document généré utilisera les styles et la mise en forme de votre modèle.
+The generated document will use the styles and formatting from your template.
 
-## 📋 Création d'un modèle avec placeholders
+## Creating a Template with Placeholders
 
-ClioDesk utilise `docxtemplater` pour fusionner votre contenu avec le modèle. Vous pouvez créer un modèle avec des placeholders pour un contrôle précis :
+ClioDesk uses `docxtemplater` to merge your content with the template. You can create a template with placeholders for precise control:
 
-### Placeholders disponibles
+### Available Placeholders
 
-| Placeholder | Description | Exemple |
+| Placeholder | Description | Example |
 |-------------|-------------|---------|
-| `{title}` | Titre du document | "Mon article scientifique" |
-| `{author}` | Auteur du document | "Marie Dupont" |
-| `{date}` | Date d'export | "11/01/2026" |
-| `{content}` | Contenu Markdown converti | Tout votre document.md |
-| `{abstract}` | Résumé (si fichier abstract.md existe) | Votre résumé |
+| `{title}` | Document title | "My Scientific Article" |
+| `{author}` | Document author | "John Smith" |
+| `{date}` | Export date | "01/11/2026" |
+| `{content}` | Converted Markdown content | Your entire document.md |
+| `{abstract}` | Abstract (if abstract.md file exists) | Your summary |
 
-### Exemple de modèle
+### Template Example
 
-Créez un document Word et insérez ces placeholders :
+Create a Word document and insert these placeholders:
 
 ```
 ═══════════════════════════════════════════════════
                     {title}
 
-                 Par {author}
+                 By {author}
                     {date}
 ═══════════════════════════════════════════════════
 
-RÉSUMÉ
+ABSTRACT
 
 {abstract}
 
 
-CONTENU
+CONTENT
 
 {content}
 ```
 
-Enregistrez ce document au format `.dotx` (Fichier → Enregistrer en tant que modèle Word).
+Save this document as `.dotx` format (File → Save As → Word Template).
 
-## 🎨 Styles et mise en forme
+## Styles and Formatting
 
-### Styles automatiques
+### Automatic Styles
 
-Si votre modèle contient des styles nommés, ClioDesk les appliquera automatiquement :
+If your template contains named styles, ClioDesk will automatically apply them:
 
-- **Titre 1** → `Heading1` ou `Titre 1`
-- **Titre 2** → `Heading2` ou `Titre 2`
-- **Titre 3** → `Heading3` ou `Titre 3`
-- **Normal** → Style de paragraphe par défaut
-- **Citation** → Citations et blockquotes
+- **Heading 1** → `Heading1` or `Titre 1`
+- **Heading 2** → `Heading2` or `Titre 2`
+- **Heading 3** → `Heading3` or `Titre 3`
+- **Normal** → Default paragraph style
+- **Quote** → Citations and blockquotes
 
-### En-têtes et pieds de page
+### Headers and Footers
 
-Votre modèle peut inclure :
-- ✅ En-têtes personnalisés
-- ✅ Pieds de page personnalisés
-- ✅ Numérotation de pages
-- ✅ Logo ou image institutionnelle
+Your template can include:
+- Custom headers
+- Custom footers
+- Page numbering
+- Institutional logo or image
 
-**Note** : Si votre modèle n'a pas d'en-tête/pied de page, ClioDesk utilisera ceux par défaut (titre dans l'en-tête, numéro de page dans le pied de page).
+**Note**: If your template doesn't have headers/footers, ClioDesk will use defaults (title in header, page number in footer).
 
-## 🔧 Comportement en cas d'erreur
+## Error Handling Behavior
 
-Si le modèle ne peut pas être chargé (fichier corrompu, placeholders incorrects, etc.), ClioDesk :
-1. ⚠️ Affichera un avertissement dans les logs
-2. 🔄 Basculera automatiquement vers la génération standard
-3. ✅ Créera quand même votre document (sans appliquer le modèle)
+If the template cannot be loaded (corrupted file, incorrect placeholders, etc.), ClioDesk will:
+1. Display a warning in logs
+2. Automatically fall back to standard generation
+3. Still create your document (without applying the template)
 
-Vous ne perdrez jamais votre export !
+You'll never lose your export!
 
-## 📚 Cas d'usage
+## Use Cases
 
-### Thèses et mémoires universitaires
+### University Theses and Dissertations
 
-Créez un modèle avec :
-- Page de garde institutionnelle
-- Déclaration sur l'honneur
-- Table des matières (générée par Word)
-- Styles de titres conformes aux exigences
+Create a template with:
+- Institutional title page
+- Declaration of honor
+- Table of contents (generated by Word)
+- Heading styles conforming to requirements
 
-### Articles scientifiques
+### Scientific Articles
 
-Utilisez un modèle respectant :
-- Format de revue spécifique (APA, Vancouver, etc.)
-- Marges et espacements requis
-- En-tête avec titre courant
+Use a template respecting:
+- Specific journal format (APA, Vancouver, etc.)
+- Required margins and spacing
+- Header with running title
 
-### Rapports professionnels
+### Professional Reports
 
-Incluez dans votre modèle :
-- Logo d'entreprise
-- Charte graphique
-- Pied de page avec informations légales
+Include in your template:
+- Company logo
+- Brand guidelines
+- Footer with legal information
 
-## ⚙️ Paramètres avancés
+## Advanced Settings
 
-### Plusieurs modèles
+### Multiple Templates
 
-Si vous avez plusieurs fichiers `.dotx` dans votre projet, ClioDesk utilisera le **premier trouvé** (ordre alphabétique).
+If you have multiple `.dotx` files in your project, ClioDesk will use the **first found** (alphabetical order).
 
-**Recommandation** : N'utilisez qu'un seul modèle par projet.
+**Recommendation**: Use only one template per project.
 
-### Modèles par type de projet
+### Templates by Project Type
 
-Vous pouvez créer des modèles spécifiques selon le type de projet :
+You can create specific templates based on project type:
 
 ```
-modeles/
-├── article_template.dotx  ← Pour les articles
-├── book_template.dotx     ← Pour les livres
-└── notes_template.dotx    ← Pour les notes
+templates/
+├── article_template.dotx  ← For articles
+├── book_template.dotx     ← For books
+└── notes_template.dotx    ← For notes
 ```
 
-Copiez le modèle approprié dans votre projet avant l'export.
+Copy the appropriate template to your project before export.
 
-## 🐛 Dépannage
+## Troubleshooting
 
-### Le modèle n'est pas détecté
+### Template Not Detected
 
-- ✅ Vérifiez que le fichier a bien l'extension `.dotx` (pas `.docx`)
-- ✅ Assurez-vous que le fichier est dans le **dossier racine** du projet (pas dans `.cliodesk/`)
-- ✅ Redémarrez ClioDesk si nécessaire
+- Verify the file has `.dotx` extension (not `.docx`)
+- Make sure the file is in the project **root folder** (not in `.cliodesk/`)
+- Restart ClioDesk if necessary
 
-### Le contenu n'apparaît pas
+### Content Doesn't Appear
 
-Si vous utilisez des placeholders :
-- ✅ Vérifiez l'orthographe : `{content}` et non `{contenu}`
-- ✅ Utilisez des accolades simples, pas doubles
-- ✅ Pas d'espace : `{title}` et non `{ title }`
+If using placeholders:
+- Check spelling: `{content}` not `{contenu}`
+- Use single braces, not double
+- No spaces: `{title}` not `{ title }`
 
-### Mise en forme incorrecte
+### Incorrect Formatting
 
-- ✅ Vérifiez que vos styles Word sont bien nommés (Titre 1, Titre 2, etc.)
-- ✅ Testez le modèle en créant manuellement un document Word avec
-- ✅ Assurez-vous que le modèle n'est pas corrompu
+- Verify your Word styles are properly named (Heading 1, Heading 2, etc.)
+- Test the template by manually creating a Word document
+- Make sure the template isn't corrupted
 
-## 📖 Ressources
+## Resources
 
-- [Documentation docxtemplater](https://docxtemplater.com/)
-- [Créer un modèle Word - Microsoft](https://support.microsoft.com/fr-fr/office/cr%C3%A9er-un-mod%C3%A8le-86a1d089-5ae2-4d53-9042-1191bce57deb)
+- [docxtemplater Documentation](https://docxtemplater.com/)
+- [Creating a Word Template - Microsoft](https://support.microsoft.com/en-us/office/create-a-template-86a1d089-5ae2-4d53-9042-1191bce57deb)
 
-## 🆘 Support
+## Support
 
-En cas de problème :
-1. Consultez les logs de ClioDesk (Panneau Journal)
-2. Vérifiez que votre modèle s'ouvre correctement dans Word
-3. Essayez d'exporter sans modèle pour vérifier que le problème vient du modèle
+If you encounter issues:
+1. Check ClioDesk logs (Journal Panel)
+2. Verify your template opens correctly in Word
+3. Try exporting without a template to confirm the issue is with the template
 
 ---
 
-**Version** : 1.0.0
-**Dernière mise à jour** : Janvier 2026
+**Version**: 1.0.0
+**Last updated**: January 2026

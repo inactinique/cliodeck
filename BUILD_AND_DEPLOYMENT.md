@@ -1,29 +1,29 @@
-# Guide de Build et Déploiement - ClioDesk
+# Build and Deployment Guide - ClioDesk
 
-Ce document explique comment compiler, packager et déployer ClioDesk pour différentes plateformes.
+This document explains how to compile, package, and deploy ClioDesk for different platforms.
 
-## Table des matières
+## Table of Contents
 
-- [Prérequis](#prérequis)
+- [Prerequisites](#prerequisites)
 - [Installation](#installation)
-- [Développement](#développement)
-- [Build et Packaging](#build-et-packaging)
-- [Installation Utilisateur](#installation-utilisateur)
-- [Configuration Initiale](#configuration-initiale)
-- [Problèmes Courants](#problèmes-courants)
-- [Distribution et Releases](#distribution-et-releases)
+- [Development](#development)
+- [Build and Packaging](#build-and-packaging)
+- [User Installation](#user-installation)
+- [Initial Configuration](#initial-configuration)
+- [Common Issues](#common-issues)
+- [Distribution and Releases](#distribution-and-releases)
 
 ---
 
-## Prérequis
+## Prerequisites
 
-### Développement
+### Development
 
-- **Node.js** 18+ et npm
-- **Python** 3.9+ (pour better-sqlite3 et services Python)
-- **Ollama** installé localement pour les tests
+- **Node.js** 18+ and npm
+- **Python** 3.9+ (for better-sqlite3 and Python services)
+- **Ollama** installed locally for testing
 
-### Plateformes spécifiques
+### Platform-Specific
 
 **Linux:**
 ```bash
@@ -36,64 +36,64 @@ xcode-select --install
 ```
 
 **Windows:**
-- Visual Studio Build Tools ou Visual Studio Community
-- Python 3.9+ avec pip
+- Visual Studio Build Tools or Visual Studio Community
+- Python 3.9+ with pip
 
 ---
 
 ## Installation
 
-### Installation des dépendances
+### Installing Dependencies
 
 ```bash
 npm install
 ```
 
-Cette commande installe toutes les dépendances Node.js et compile automatiquement les modules natifs (better-sqlite3, hnswlib-node, etc.).
+This command installs all Node.js dependencies and automatically compiles native modules (better-sqlite3, hnswlib-node, etc.).
 
-### Installation des dépendances Python (Topic Modeling)
+### Installing Python Dependencies (Topic Modeling)
 
-Les services Python sont utilisés pour le topic modeling. Pour l'environnement de développement:
+Python services are used for topic modeling. For the development environment:
 
 ```bash
 cd backend/python-services/topic-modeling
 python3 -m venv .venv
 source .venv/bin/activate  # Linux/macOS
-# Ou: .venv\Scripts\activate  # Windows
+# Or: .venv\Scripts\activate  # Windows
 
 pip install -r requirements.txt
 ```
 
 ---
 
-## Développement
+## Development
 
-### Mode développement avec hot reload
+### Development Mode with Hot Reload
 
 ```bash
 npm run dev
 ```
 
-Cette commande lance en parallèle:
-- Main process TypeScript en mode watch
-- Preload script en mode watch
-- Renderer (React) avec Vite hot reload
+This command launches in parallel:
+- Main process TypeScript in watch mode
+- Preload script in watch mode
+- Renderer (React) with Vite hot reload
 
-### Démarrer l'application
+### Start the Application
 
-Dans un autre terminal:
+In another terminal:
 
 ```bash
 npm start
 ```
 
-### Mode développement complet (tout-en-un)
+### Full Development Mode (All-in-One)
 
 ```bash
 npm run dev:full
 ```
 
-Lance le build watch ET l'application automatiquement après 3 secondes.
+Launches build watch AND the application automatically after 3 seconds.
 
 ### Tests
 
@@ -111,7 +111,7 @@ npm run test:ui
 npm run test:coverage
 ```
 
-### Linting et Type Checking
+### Linting and Type Checking
 
 ```bash
 # Linter
@@ -123,87 +123,87 @@ npm run typecheck
 
 ---
 
-## Build et Packaging
+## Build and Packaging
 
-### Build sans packaging
+### Build Without Packaging
 
 ```bash
 npm run build
 ```
 
-Compile:
+Compiles:
 - Main process TypeScript → `dist/src/main/`
 - Preload script → `dist/src/preload/`
 - Renderer React → `dist/src/renderer/`
 
-### Build avec packaging
+### Build with Packaging
 
-#### Toutes plateformes
+#### All Platforms
 
 ```bash
 npm run build:all
 ```
 
-Crée les installeurs pour toutes les plateformes configurées dans `package.json`.
+Creates installers for all platforms configured in `package.json`.
 
-#### Plateformes spécifiques
+#### Specific Platforms
 
 ```bash
 # Linux (AppImage + deb)
 npm run build:linux
 
-# macOS (DMG pour Intel et Apple Silicon)
+# macOS (DMG for Intel and Apple Silicon)
 npm run build:mac
 
 # Windows (NSIS installer)
 npm run build:win
 ```
 
-#### Build macOS par architecture
+#### macOS Build by Architecture
 
 ```bash
-# Intel uniquement
+# Intel only
 npm run build:mac-intel
 
-# Apple Silicon uniquement
+# Apple Silicon only
 npm run build:mac-arm
 
 # Universal (Intel + Apple Silicon)
 npm run build:mac-universal
 ```
 
-#### Build sans installer (pour tests)
+#### Build Without Installer (for Testing)
 
 ```bash
 npm run build:dir
 ```
 
-Crée un dossier exécutable non packagé dans `release/`.
+Creates an unpackaged executable folder in `release/`.
 
-### Structure de build
+### Build Structure
 
 ```
 cliodesk/
-├── dist/                    # Code compilé
+├── dist/                    # Compiled code
 │   ├── src/
 │   │   ├── main/           # Main process JS
 │   │   ├── preload/        # Preload script JS
 │   │   └── renderer/       # React build
-├── release/                # Installeurs
+├── release/                # Installers
 │   ├── ClioDesk-1.0.0.AppImage
 │   ├── ClioDesk-1.0.0.dmg
 │   ├── ClioDesk-1.0.0.deb
 │   └── ClioDesk Setup 1.0.0.exe
-└── build/                  # Assets pour packaging
+└── build/                  # Packaging assets
     ├── icon.png
     ├── icon.icns
     └── icon.ico
 ```
 
-### Packaging multi-plateforme
+### Cross-Platform Packaging
 
-**Linux → tous OS:**
-Possible avec Docker:
+**Linux → all OS:**
+Possible with Docker:
 
 ```bash
 docker run --rm -v $(pwd):/project electronuserland/builder:wine \
@@ -211,19 +211,19 @@ docker run --rm -v $(pwd):/project electronuserland/builder:wine \
 ```
 
 **macOS → macOS/Linux/Windows:**
-macOS peut builder pour toutes les plateformes nativement.
+macOS can build for all platforms natively.
 
-**Windows → Windows uniquement:**
-Windows ne peut builder que pour Windows.
+**Windows → Windows only:**
+Windows can only build for Windows.
 
 ---
 
-## Installation Utilisateur
+## User Installation
 
-### Prérequis utilisateur
+### User Prerequisites
 
-1. **Ollama installé** sur la machine
-2. **Modèles téléchargés**:
+1. **Ollama installed** on the machine
+2. **Models downloaded**:
    ```bash
    ollama pull nomic-embed-text
    ollama pull gemma2:2b
@@ -231,163 +231,163 @@ Windows ne peut builder que pour Windows.
 
 ### Linux
 
-**AppImage (recommandé):**
+**AppImage (recommended):**
 ```bash
-# Télécharger depuis GitHub Releases
+# Download from GitHub Releases
 wget https://github.com/inactinique/cliodesk/releases/latest/download/ClioDesk-1.0.0.AppImage
 
-# Rendre exécutable
+# Make executable
 chmod +x ClioDesk-1.0.0.AppImage
 
-# Lancer
+# Launch
 ./ClioDesk-1.0.0.AppImage
 ```
 
 **Debian/Ubuntu (.deb):**
 ```bash
 sudo dpkg -i ClioDesk-1.0.0.deb
-sudo apt-get install -f  # Corriger les dépendances si nécessaire
+sudo apt-get install -f  # Fix dependencies if necessary
 cliodesk
 ```
 
 ### macOS
 
-1. Télécharger le fichier DMG depuis GitHub Releases
-2. Double-cliquer pour monter l'image disque
-3. Glisser ClioDesk vers le dossier Applications
-4. Lancer depuis Launchpad ou Applications
+1. Download the DMG file from GitHub Releases
+2. Double-click to mount the disk image
+3. Drag ClioDesk to the Applications folder
+4. Launch from Launchpad or Applications
 
-**Première ouverture:**
-Si macOS affiche "app cannot be opened because it is from an unidentified developer":
+**First launch:**
+If macOS displays "app cannot be opened because it is from an unidentified developer":
 ```bash
 xattr -cr /Applications/ClioDesk.app
 ```
 
-Ou: Clic droit → Ouvrir → Confirmer
+Or: Right-click → Open → Confirm
 
 ### Windows
 
-1. Télécharger `ClioDesk-Setup-1.0.0.exe` depuis GitHub Releases
-2. Double-cliquer sur l'installeur
-3. Suivre l'assistant d'installation
-4. Lancer depuis le menu Démarrer ou le raccourci bureau
+1. Download `ClioDesk-Setup-1.0.0.exe` from GitHub Releases
+2. Double-click the installer
+3. Follow the installation wizard
+4. Launch from Start menu or desktop shortcut
 
 ---
 
-## Configuration Initiale
+## Initial Configuration
 
-### 1. Vérifier Ollama
+### 1. Verify Ollama
 
-Au premier lancement, ClioDesk vérifie automatiquement la connexion Ollama.
+On first launch, ClioDesk automatically checks the Ollama connection.
 
-**Si Ollama n'est pas détecté:**
+**If Ollama is not detected:**
 
-1. Installer Ollama: https://ollama.ai/download
-2. Démarrer le service:
+1. Install Ollama: https://ollama.ai/download
+2. Start the service:
    ```bash
    # Linux/macOS
    ollama serve
 
-   # Windows: Ollama démarre automatiquement comme service
+   # Windows: Ollama starts automatically as a service
    ```
 
-3. Vérifier que le service fonctionne:
+3. Verify the service is working:
    ```bash
    curl http://localhost:11434/api/tags
    ```
 
-### 2. Télécharger les modèles
+### 2. Download Models
 
 ```bash
-# Modèle d'embeddings (OBLIGATOIRE)
+# Embedding model (REQUIRED)
 ollama pull nomic-embed-text
 
-# Modèle de chat (RECOMMANDÉ)
+# Chat model (RECOMMENDED)
 ollama pull gemma2:2b
 
-# Alternatives pour le chat
-ollama pull mistral:7b-instruct    # Plus précis mais plus lourd
-ollama pull llama3.1:8b            # Très performant
+# Chat alternatives
+ollama pull mistral:7b-instruct    # More accurate but heavier
+ollama pull llama3.1:8b            # Very performant
 ```
 
-### 3. Configuration Zotero (optionnel)
+### 3. Zotero Configuration (optional)
 
-Pour synchroniser avec Zotero:
+To sync with Zotero:
 
-1. **Obtenir une clé API:**
-   - Aller sur https://www.zotero.org/settings/keys/new
+1. **Get an API key:**
+   - Go to https://www.zotero.org/settings/keys/new
    - Permissions: Read library, Write library
-   - Copier la clé générée
+   - Copy the generated key
 
-2. **Configurer dans ClioDesk:**
+2. **Configure in ClioDesk:**
    - Settings → Zotero Integration
-   - User ID: votre user ID Zotero (visible dans l'URL de votre bibliothèque)
-   - API Key: coller la clé
-   - Test Connection pour vérifier
+   - User ID: your Zotero user ID (visible in your library URL)
+   - API Key: paste the key
+   - Test Connection to verify
 
-3. **Synchroniser:**
-   - Sélectionner une collection Zotero
-   - Cliquer "Sync"
-   - Attendre le téléchargement des PDFs et du fichier BibTeX
+3. **Sync:**
+   - Select a Zotero collection
+   - Click "Sync"
+   - Wait for PDFs and BibTeX file download
 
 ---
 
-## Problèmes Courants
+## Common Issues
 
-### Développement
+### Development
 
-#### Erreur "incompatible architecture" sur macOS
+#### "Incompatible architecture" error on macOS
 
-**Symptôme:**
+**Symptom:**
 ```
 mach-o file, but is an incompatible architecture (have 'arm64', need 'x86_64')
 ```
 
-**Cause:** Les modules natifs (better-sqlite3, hnswlib-node) sont compilés pour la mauvaise architecture.
+**Cause:** Native modules (better-sqlite3, hnswlib-node) are compiled for the wrong architecture.
 
 **Solution:**
 ```bash
-# Reconstruire pour votre architecture
+# Rebuild for your architecture
 npm run rebuild:native
 
-# Ou spécifiquement:
+# Or specifically:
 npm run rebuild:x64      # Intel
 npm run rebuild:arm64    # Apple Silicon
 ```
 
-Le script `scripts/after-pack.cjs` reconstruit automatiquement les modules natifs lors du packaging.
+The script `scripts/after-pack.cjs` automatically rebuilds native modules during packaging.
 
-#### better-sqlite3 ne compile pas
+#### better-sqlite3 doesn't compile
 
 ```bash
 npm rebuild better-sqlite3 --build-from-source
 ```
 
-Si le problème persiste, vérifier que Python et les build tools sont installés.
+If the issue persists, verify that Python and build tools are installed.
 
-#### hnswlib-node ne compile pas
+#### hnswlib-node doesn't compile
 
 ```bash
-# Installer les outils de build C++
+# Install C++ build tools
 # macOS:
 xcode-select --install
 
 # Linux:
 sudo apt-get install build-essential
 
-# Puis:
+# Then:
 npm rebuild hnswlib-node --build-from-source
 ```
 
-#### Service Python topic modeling ne démarre pas
+#### Python topic modeling service doesn't start
 
-**Port déjà utilisé:**
+**Port already in use:**
 ```bash
-# Tuer le processus sur le port 8001
+# Kill process on port 8001
 lsof -ti:8001 | xargs kill -9
 ```
 
-**Dépendances Python manquantes:**
+**Missing Python dependencies:**
 ```bash
 cd backend/python-services/topic-modeling
 source .venv/bin/activate
@@ -396,87 +396,87 @@ pip install -r requirements.txt
 
 ### Production
 
-#### Ollama ne démarre pas
+#### Ollama doesn't start
 
 **Linux:**
 ```bash
-# Vérifier le statut
+# Check status
 systemctl status ollama
 
-# Démarrer manuellement
+# Start manually
 ollama serve
 ```
 
 **macOS:**
 ```bash
-# Vérifier si le processus tourne
+# Check if process is running
 ps aux | grep ollama
 
-# Démarrer manuellement
+# Start manually
 ollama serve
 ```
 
 **Windows:**
 ```bash
-# Ouvrir services.msc
-# Vérifier le service "Ollama"
+# Open services.msc
+# Check "Ollama" service
 ```
 
-#### Embeddings trop lents
+#### Slow embeddings
 
-1. **Utiliser la config CPU optimisée:**
+1. **Use CPU optimized config:**
    - Settings → RAG → Chunking: CPU Optimized
 
-2. **Réduire topK:**
-   - Settings → RAG → Top K: 5 (au lieu de 10)
+2. **Reduce topK:**
+   - Settings → RAG → Top K: 5 (instead of 10)
 
-3. **Utiliser un modèle plus léger:**
+3. **Use a lighter model:**
    ```bash
-   ollama pull gemma2:2b  # Au lieu de mistral:7b
+   ollama pull gemma2:2b  # Instead of mistral:7b
    ```
 
-#### Chat ne répond pas
+#### Chat doesn't respond
 
-1. **Vérifier Ollama:**
+1. **Check Ollama:**
    ```bash
    curl http://localhost:11434/api/tags
    ```
 
-2. **Vérifier que le modèle de chat est installé:**
+2. **Verify chat model is installed:**
    ```bash
    ollama list
    ```
 
-3. **Changer le modèle:**
+3. **Change model:**
    - Settings → LLM → Chat Model
-   - Sélectionner un modèle installé
+   - Select an installed model
 
-#### PDFs mal indexés
+#### Poorly indexed PDFs
 
-**Texte extrait vide:**
-- Le PDF est image-only (pas de texte sélectionnable)
-- Solution: Utiliser un OCR externe puis réimporter
+**Empty extracted text:**
+- The PDF is image-only (no selectable text)
+- Solution: Use external OCR then reimport
 
-**Mauvaise qualité d'extraction:**
-- Le PDF est mal formaté ou corrompu
-- Vérifier le PDF dans un lecteur externe
+**Poor extraction quality:**
+- The PDF is poorly formatted or corrupted
+- Check the PDF in an external reader
 
-#### Sync Zotero échoue
+#### Zotero sync fails
 
-1. Vérifier que la clé API est valide
-2. Vérifier que le User ID est correct
-3. Vérifier la connexion internet
-4. Consulter les logs pour plus de détails
+1. Verify API key is valid
+2. Verify User ID is correct
+3. Check internet connection
+4. Check logs for more details
 
-### Logs de debug
+### Debug Logs
 
-**Emplacements:**
+**Locations:**
 
 - Linux: `~/.config/ClioDesk/logs/`
 - macOS: `~/Library/Logs/ClioDesk/`
 - Windows: `%APPDATA%\ClioDesk\logs\`
 
-**Consulter les logs:**
+**View logs:**
 ```bash
 # Linux
 cat ~/.config/ClioDesk/logs/main.log
@@ -490,14 +490,14 @@ type %APPDATA%\ClioDesk\logs\main.log
 
 ---
 
-## Distribution et Releases
+## Distribution and Releases
 
-### Signature de code (production)
+### Code Signing (Production)
 
 #### macOS
 
-1. Obtenir un certificat Apple Developer
-2. Configurer dans `package.json`:
+1. Get an Apple Developer certificate
+2. Configure in `package.json`:
 
 ```json
 {
@@ -509,7 +509,7 @@ type %APPDATA%\ClioDesk\logs\main.log
 }
 ```
 
-3. Builder avec signature:
+3. Build with signing:
 
 ```bash
 CSC_NAME="Developer ID Application" npm run build:mac
@@ -517,8 +517,8 @@ CSC_NAME="Developer ID Application" npm run build:mac
 
 #### Windows
 
-1. Obtenir un certificat code signing
-2. Configurer et builder:
+1. Get a code signing certificate
+2. Configure and build:
 
 ```bash
 set CSC_LINK=path/to/cert.pfx
@@ -528,24 +528,24 @@ npm run build:win
 
 ### GitHub Releases
 
-1. **Créer un tag de version:**
+1. **Create a version tag:**
 
 ```bash
 git tag v1.0.0
 git push origin v1.0.0
 ```
 
-2. **Builder et publier:**
+2. **Build and publish:**
 
 ```bash
 GH_TOKEN=your_github_token npm run build:all
 ```
 
-electron-builder peut publier automatiquement sur GitHub Releases si configuré.
+electron-builder can automatically publish to GitHub Releases if configured.
 
-3. **Configuration auto-update:**
+3. **Auto-update configuration:**
 
-Dans `package.json`:
+In `package.json`:
 ```json
 {
   "build": {
@@ -558,102 +558,102 @@ Dans `package.json`:
 }
 ```
 
-### Variables d'environnement
+### Environment Variables
 
 **Build:**
-- `CSC_LINK`: Chemin vers le certificat de signature
-- `CSC_KEY_PASSWORD`: Mot de passe du certificat
-- `GH_TOKEN`: Token GitHub pour les releases
-- `DEBUG`: Activer les logs de debug d'electron-builder
+- `CSC_LINK`: Path to signing certificate
+- `CSC_KEY_PASSWORD`: Certificate password
+- `GH_TOKEN`: GitHub token for releases
+- `DEBUG`: Enable electron-builder debug logs
 
 **Runtime:**
-- `NODE_ENV`: `development` ou `production`
-- `OLLAMA_HOST`: URL Ollama (défaut: http://localhost:11434)
+- `NODE_ENV`: `development` or `production`
+- `OLLAMA_HOST`: Ollama URL (default: http://localhost:11434)
 
 ---
 
-## Performance et Optimisation
+## Performance and Optimization
 
-### Configuration matérielle recommandée
+### Recommended Hardware Configuration
 
 **Minimum:**
 - CPU: Dual-core
 - RAM: 4 GB
-- Disque: 5 GB libre
+- Disk: 5 GB free
 
-**Recommandé:**
+**Recommended:**
 - CPU: Quad-core
 - RAM: 8 GB
-- Disque: 10 GB libre
+- Disk: 10 GB free
 
 **Optimal:**
 - CPU: 8+ cores
 - RAM: 16 GB
-- Disque: 20 GB libre (pour les modèles Ollama)
+- Disk: 20 GB free (for Ollama models)
 
-### Taille des installeurs
+### Installer Sizes
 
 - **Linux AppImage**: ~150-200 MB
 - **Linux deb**: ~150-200 MB
 - **macOS DMG**: ~180-250 MB
 - **Windows NSIS**: ~150-200 MB
 
-### Espace disque par projet
+### Disk Space per Project
 
 - **App**: ~200 MB
-- **Modèles Ollama**: ~500 MB - 5 GB (selon les modèles)
-- **Base vectorielle**: 50-500 MB par projet (selon le nombre de PDFs)
-- **Journal de recherche**: 1-5 MB par session, 50-200 MB pour un projet long
+- **Ollama models**: ~500 MB - 5 GB (depending on models)
+- **Vector database**: 50-500 MB per project (depending on PDF count)
+- **Research journal**: 1-5 MB per session, 50-200 MB for a long project
 
 ---
 
-## Sécurité et Confidentialité
+## Security and Privacy
 
-### Données locales
+### Local Data
 
-Toutes les données restent **locales**:
-- PDFs et documents: stockés dans le dossier du projet
-- Embeddings et index: SQLite local (`.cliodesk/vectors.db`)
-- LLM et modèles: Ollama local
+All data remains **local**:
+- PDFs and documents: stored in project folder
+- Embeddings and indexes: local SQLite (`.cliodesk/vectors.db`)
+- LLM and models: local Ollama
 
-**Aucune donnée n'est envoyée à des serveurs externes** (sauf si Zotero API est configuré pour la synchronisation).
+**No data is sent to external servers** (except if Zotero API is configured for sync).
 
-### Stockage des API Keys
+### API Key Storage
 
 **Zotero API Key:**
-- Stockée dans electron-store (chiffrement fourni par l'OS)
+- Stored in electron-store (OS-provided encryption)
 - Linux: GNOME Keyring / KWallet
 - macOS: Keychain
 - Windows: Credential Manager
 
 ---
 
-## Scripts Utiles
+## Useful Scripts
 
 ```bash
-# Nettoyage complet
+# Full cleanup
 npm run clean
 
-# Réinstaller toutes les dépendances
+# Reinstall all dependencies
 rm -rf node_modules package-lock.json
 npm install
 
-# Rebuild modules natifs
+# Rebuild native modules
 npm run rebuild:native
 
-# Vérifier les types
+# Check types
 npm run typecheck
 
 # Linter
 npm run lint
 
-# Preview du build
+# Build preview
 npm run preview
 ```
 
 ---
 
-## Ressources
+## Resources
 
 - [Electron Builder Documentation](https://www.electron.build/)
 - [Vite Documentation](https://vitejs.dev/)
@@ -663,4 +663,4 @@ npm run preview
 
 ---
 
-**Note pour le développement quotidien:** Utilisez simplement `npm run dev` dans un terminal et `npm start` dans un autre.
+**Note for daily development:** Simply use `npm run dev` in one terminal and `npm start` in another.

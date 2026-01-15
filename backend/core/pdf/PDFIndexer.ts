@@ -75,12 +75,16 @@ export class PDFIndexer {
 
   /**
    * Indexe un PDF complet
+   * @param filePath Chemin vers le fichier PDF
+   * @param bibtexKey Clé BibTeX optionnelle pour lier à la bibliographie
+   * @param onProgress Callback pour la progression
+   * @param bibliographyMetadata Métadonnées optionnelles provenant de la bibliographie (prioritaires sur l'extraction PDF)
    */
   async indexPDF(
     filePath: string,
     bibtexKey?: string,
     onProgress?: (progress: IndexingProgress) => void,
-    customTitle?: string
+    bibliographyMetadata?: { title?: string; author?: string; year?: string }
   ): Promise<PDFDocument> {
     try {
       // 1. Extraire le texte + métadonnées
@@ -92,8 +96,8 @@ export class PDFIndexer {
 
       const { pages, metadata, title: extractedTitle } = await this.pdfExtractor.extractDocument(filePath);
 
-      // Use custom title if provided, otherwise use extracted title
-      const title = customTitle || extractedTitle;
+      // Use bibliography metadata if provided, otherwise fall back to PDF extraction
+      const title = bibliographyMetadata?.title || extractedTitle;
 
       onProgress?.({
         stage: 'extracting',
@@ -102,9 +106,23 @@ export class PDFIndexer {
         totalPages: pages.length,
       });
 
-      // 2. Extraire auteur et année des métadonnées
-      const author = await this.pdfExtractor.extractAuthor(filePath);
-      const year = await this.pdfExtractor.extractYear(filePath);
+      // 2. Use bibliography metadata for author/year if provided, otherwise extract from PDF
+      let author: string | undefined;
+      let year: string | undefined;
+
+      if (bibliographyMetadata?.author) {
+        author = bibliographyMetadata.author;
+        console.log(`   Using bibliography author: ${author}`);
+      } else {
+        author = await this.pdfExtractor.extractAuthor(filePath);
+      }
+
+      if (bibliographyMetadata?.year) {
+        year = bibliographyMetadata.year;
+        console.log(`   Using bibliography year: ${year}`);
+      } else {
+        year = await this.pdfExtractor.extractYear(filePath);
+      }
 
       // 3. Extraire le texte complet pour analyse
       const fullText = pages.map((p) => p.text).join('\n\n');

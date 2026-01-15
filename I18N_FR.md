@@ -1,37 +1,37 @@
-# i18n Migration Report - ClioDesk v1.0
+# Rapport de Migration i18n - ClioDesk v1.0
 
-This document details all modifications needed to complete ClioDesk internationalization.
+Ce document détaille toutes les modifications nécessaires pour compléter l'internationalisation de ClioDesk.
 
 **Date:** 2026-01-11
-**Target Version:** 1.0.0
-**Supported Languages:** French (FR), English (EN), German (DE)
+**Version cible:** 1.0.0
+**Langues supportées:** Français (FR), Anglais (EN), Allemand (DE)
 
 ---
 
-## 1. Overview
+## 1. Vue d'ensemble
 
-### Current State
-- i18next configured and functional
-- 3 languages supported (fr, en, de)
-- 2 namespaces (common, menu)
-- ~42 existing translation keys
-- ~50+ hardcoded strings
-- Several critical components not translated
+### État actuel
+- ✅ i18next configuré et fonctionnel
+- ✅ 3 langues supportées (fr, en, de)
+- ✅ 2 namespaces (common, menu)
+- ✅ ~42 clés de traduction existantes
+- ❌ ~50+ chaînes de caractères en dur (hardcoded)
+- ❌ Plusieurs composants critiques non traduits
 
-### Goals
-1. Add all missing keys to translation files
-2. Replace all hardcoded texts with `t()` calls
-3. Ensure complete FR/EN/DE translation
+### Objectifs
+1. Ajouter toutes les clés manquantes aux fichiers de traduction
+2. Remplacer tous les textes en dur par des appels à `t()`
+3. Assurer une traduction complète FR/EN/DE
 
 ---
 
-## 2. Translation Keys to Add
+## 2. Clés de traduction à ajouter
 
-### 2.1 Language Section (LanguageConfigSection)
+### 2.1 Section Language (LanguageConfigSection)
 
-**File:** `src/renderer/src/components/Config/LanguageConfigSection.tsx`
+**Fichier:** `src/renderer/src/components/Config/LanguageConfigSection.tsx`
 
-| Key | FR | EN | DE |
+| Clé | FR | EN | DE |
 |-----|----|----|-----|
 | `settings.languageSelector.label` | "Choisir la langue de l'interface" | "Choose the interface language" | "Wählen Sie die Sprache der Benutzeroberfläche" |
 | `settings.languageSelector.changeWarning` | "La langue sera appliquée au prochain redémarrage de l'application." | "The language will be applied on next application restart." | "Die Sprache wird beim nächsten Neustart der Anwendung angewendet." |
@@ -41,18 +41,18 @@ This document details all modifications needed to complete ClioDesk internationa
 
 ---
 
-### 2.2 Actions Section (ActionsSection)
+### 2.2 Section Actions (ActionsSection)
 
-**File:** `src/renderer/src/components/Config/ActionsSection.tsx`
+**Fichier:** `src/renderer/src/components/Config/ActionsSection.tsx`
 
-| Key | FR | EN | DE |
+| Clé | FR | EN | DE |
 |-----|----|----|-----|
 | `actions.title` | "Actions" | "Actions" | "Aktionen" |
 | `actions.dangerZone` | "Zone dangereuse" | "Danger Zone" | "Gefahrenzone" |
 | `actions.purgeDatabase.title` | "Purger la base de données" | "Purge Database" | "Datenbank löschen" |
 | `actions.purgeDatabase.description` | "Supprime tous les chunks vectoriels et réinitialise les index. Les PDFs devront être réindexés." | "Deletes all vector chunks and resets indexes. PDFs will need to be reindexed." | "Löscht alle Vektor-Chunks und setzt Indizes zurück. PDFs müssen neu indiziert werden." |
 | `actions.purgeDatabase.button` | "Purger la base" | "Purge Database" | "Datenbank löschen" |
-| `actions.purgeDatabase.confirmTitle` | "ATTENTION - Action irréversible" | "WARNING - Irreversible action" | "WARNUNG - Unwiderrufliche Aktion" |
+| `actions.purgeDatabase.confirmTitle` | "⚠️ ATTENTION - Action irréversible" | "⚠️ WARNING - Irreversible action" | "⚠️ WARNUNG - Unwiderrufliche Aktion" |
 | `actions.purgeDatabase.confirmMessage` | "Cette action va :\n\n• Supprimer TOUS les embeddings vectoriels\n• Supprimer TOUS les chunks de texte\n• Détruire les index HNSW et BM25\n• Réinitialiser complètement la base vectorielle\n\nVous devrez réindexer TOUS vos PDFs.\n\nTapez 'PURGER' pour confirmer :" | "This action will:\n\n• Delete ALL vector embeddings\n• Delete ALL text chunks\n• Destroy HNSW and BM25 indexes\n• Completely reset the vector database\n\nYou will need to reindex ALL your PDFs.\n\nType 'PURGE' to confirm:" | "Diese Aktion wird:\n\n• ALLE Vektor-Embeddings löschen\n• ALLE Text-Chunks löschen\n• HNSW- und BM25-Indizes zerstören\n• Die Vektordatenbank vollständig zurücksetzen\n\nSie müssen ALLE Ihre PDFs neu indizieren.\n\nGeben Sie 'LÖSCHEN' ein, um zu bestätigen:" |
 | `actions.purgeDatabase.finalConfirm` | "Dernière confirmation: Cette action est IRRÉVERSIBLE. Continuer ?" | "Final confirmation: This action is IRREVERSIBLE. Continue?" | "Letzte Bestätigung: Diese Aktion ist UNWIDERRUFLICH. Fortfahren?" |
 | `actions.purgeDatabase.purging` | "Purge en cours..." | "Purging..." | "Wird gelöscht..." |
@@ -81,11 +81,11 @@ This document details all modifications needed to complete ClioDesk internationa
 
 ---
 
-### 2.3 Zotero Import Section (ZoteroImport)
+### 2.3 Section Zotero Import (ZoteroImport)
 
-**File:** `src/renderer/src/components/Bibliography/ZoteroImport.tsx`
+**Fichier:** `src/renderer/src/components/Bibliography/ZoteroImport.tsx`
 
-| Key | FR | EN | DE |
+| Clé | FR | EN | DE |
 |-----|----|----|-----|
 | `zotero.import.title` | "Import depuis Zotero" | "Import from Zotero" | "Aus Zotero importieren" |
 | `zotero.import.notConfigured` | "Zotero n'est pas configuré" | "Zotero is not configured" | "Zotero ist nicht konfiguriert" |
@@ -104,18 +104,18 @@ This document details all modifications needed to complete ClioDesk internationa
 | `zotero.import.fetchingMetadata` | "Récupération des métadonnées ({{current}}/{{total}})" | "Fetching metadata ({{current}}/{{total}})" | "Abrufen von Metadaten ({{current}}/{{total}})" |
 | `zotero.import.downloadingPDFs` | "Téléchargement des PDFs ({{current}}/{{total}})" | "Downloading PDFs ({{current}}/{{total}})" | "Herunterladen von PDFs ({{current}}/{{total}})" |
 | `zotero.import.indexingPDFs` | "Indexation des PDFs ({{current}}/{{total}})" | "Indexing PDFs ({{current}}/{{total}})" | "Indizieren von PDFs ({{current}}/{{total}})" |
-| `zotero.import.successTitle` | "Import réussi!" | "Import successful!" | "Import erfolgreich!" |
+| `zotero.import.successTitle` | "✅ Import réussi!" | "✅ Import successful!" | "✅ Import erfolgreich!" |
 | `zotero.import.successMessage` | "**{{items}} références** importées\n**{{pdfs}} PDFs** téléchargés\n**{{indexed}} documents** indexés" | "**{{items}} references** imported\n**{{pdfs}} PDFs** downloaded\n**{{indexed}} documents** indexed" | "**{{items}} Referenzen** importiert\n**{{pdfs}} PDFs** heruntergeladen\n**{{indexed}} Dokumente** indiziert" |
-| `zotero.import.errorTitle` | "Erreur lors de l'import" | "Import error" | "Importfehler" |
+| `zotero.import.errorTitle` | "❌ Erreur lors de l'import" | "❌ Import error" | "❌ Importfehler" |
 | `zotero.import.close` | "Fermer" | "Close" | "Schließen" |
 
 ---
 
-### 2.4 Chat Interface Section (ChatInterface)
+### 2.4 Section Chat Interface (ChatInterface)
 
-**File:** `src/renderer/src/components/Chat/ChatInterface.tsx`
+**Fichier:** `src/renderer/src/components/Chat/ChatInterface.tsx`
 
-| Key | FR | EN | DE |
+| Clé | FR | EN | DE |
 |-----|----|----|-----|
 | `chat.aiAssistant` | "Assistant IA" | "AI Assistant" | "KI-Assistent" |
 | `chat.helpText` | "L'assistant utilise RAG (Retrieval-Augmented Generation) pour répondre à vos questions en se basant sur les documents PDF indexés." | "The assistant uses RAG (Retrieval-Augmented Generation) to answer your questions based on indexed PDF documents." | "Der Assistent verwendet RAG (Retrieval-Augmented Generation), um Ihre Fragen basierend auf indizierten PDF-Dokumenten zu beantworten." |
@@ -124,13 +124,13 @@ This document details all modifications needed to complete ClioDesk internationa
 
 ---
 
-### 2.5 Editor Config Section (EditorConfigSection)
+### 2.5 Section Editor Config (EditorConfigSection)
 
-**File:** `src/renderer/src/components/Config/EditorConfigSection.tsx`
+**Fichier:** `src/renderer/src/components/Config/EditorConfigSection.tsx`
 
-The following keys already exist in common.json, but help texts are not all used. Verify and complete if necessary.
+Les clés suivantes existent déjà dans common.json, mais les textes d'aide ne sont pas tous utilisés. À vérifier et compléter si nécessaire.
 
-Already present:
+✅ Déjà présent:
 - `editor.fontSizeHelp`
 - `editor.currentSize`
 - `editor.appliesToEditor`
@@ -142,11 +142,11 @@ Already present:
 
 ---
 
-### 2.6 Citation Card Section (CitationCard)
+### 2.6 Section Citation Card (CitationCard)
 
-**File:** `src/renderer/src/components/Bibliography/CitationCard.tsx`
+**Fichier:** `src/renderer/src/components/Bibliography/CitationCard.tsx`
 
-| Key | FR | EN | DE |
+| Clé | FR | EN | DE |
 |-----|----|----|-----|
 | `bibliography.pdfIndexed` | "PDF indexé:" | "PDF indexed:" | "PDF indiziert:" |
 | `bibliography.indexError` | "Erreur:" | "Error:" | "Fehler:" |
@@ -158,13 +158,13 @@ Already present:
 
 ---
 
-## 3. Component Modifications
+## 3. Modifications des composants
 
 ### 3.1 LanguageConfigSection.tsx
 
-**Lines to modify:** 24-26, 42-44
+**Lignes à modifier:** 24-26, 42-44
 
-**Before:**
+**Avant:**
 ```typescript
 const languageLabels = {
   fr: currentLang === 'fr' ? 'Choisir la langue...' :
@@ -173,7 +173,7 @@ const languageLabels = {
 };
 ```
 
-**After:**
+**Après:**
 ```typescript
 const languageLabels = {
   fr: t('settings.languageSelector.fr'),
@@ -182,7 +182,7 @@ const languageLabels = {
 };
 ```
 
-**And replace:**
+**Et remplacer:**
 ```typescript
 <p className="language-note">
   {currentLang === 'fr'
@@ -193,7 +193,7 @@ const languageLabels = {
 </p>
 ```
 
-**With:**
+**Par:**
 ```typescript
 <p className="language-note">
   {t('settings.languageSelector.changeWarning')}
@@ -204,23 +204,23 @@ const languageLabels = {
 
 ### 3.2 ActionsSection.tsx
 
-**Required actions:**
-1. Add `const { t } = useTranslation('common');` at component top
-2. Replace all hardcoded texts with `t()` calls
+**Actions requises:**
+1. Ajouter `const { t } = useTranslation('common');` en haut du composant
+2. Remplacer tous les textes en dur par des appels `t()`
 
-**Replacement examples:**
+**Exemples de remplacement:**
 
-Line 28-37:
+Ligne 28-37:
 ```typescript
-// Before
+// Avant
 const userConfirmation = prompt(
-  ` ATTENTION - Action irréversible\n\n` +
+  `⚠️ ATTENTION - Action irréversible\n\n` +
   `Cette action va :\n\n` +
   `• Supprimer TOUS les embeddings vectoriels\n` +
   // ...
 );
 
-// After
+// Après
 const userConfirmation = prompt(t('actions.purgeDatabase.confirmMessage'));
 ```
 
@@ -228,31 +228,31 @@ const userConfirmation = prompt(t('actions.purgeDatabase.confirmMessage'));
 
 ### 3.3 ZoteroImport.tsx
 
-**Required actions:**
-1. Add `const { t } = useTranslation('common');` at component top
-2. Replace all `alert()` and hardcoded texts
+**Actions requises:**
+1. Ajouter `const { t } = useTranslation('common');` en haut du composant
+2. Remplacer tous les `alert()` et textes en dur
 
-**Examples:**
+**Exemples:**
 
-Line 47:
+Ligne 47:
 ```typescript
-// Before
+// Avant
 alert("Zotero n'est pas configuré...");
 
-// After
+// Après
 alert(t('zotero.import.notConfigured') + '\n' + t('zotero.import.configureFirst'));
 ```
 
-Line 129:
+Ligne 129:
 ```typescript
-// Before
+// Avant
 setResultMessage(
-  ` Import réussi!\n\n` +
+  `✅ Import réussi!\n\n` +
   `**${imported.items} références** importées\n` +
   // ...
 );
 
-// After
+// Après
 setResultMessage(
   t('zotero.import.successTitle') + '\n\n' +
   t('zotero.import.successMessage', {
@@ -267,29 +267,29 @@ setResultMessage(
 
 ### 3.4 ChatInterface.tsx
 
-**Required actions:**
-1. Component already uses `useTranslation`
-2. Replace hardcoded texts lines 56, 58, 78-79
+**Actions requises:**
+1. Le composant utilise déjà `useTranslation`
+2. Remplacer les textes en dur lignes 56, 58, 78-79
 
-**Examples:**
+**Exemples:**
 
-Line 56:
+Ligne 56:
 ```typescript
-// Before
+// Avant
 <h2>Assistant IA</h2>
 
-// After
+// Après
 <h2>{t('chat.aiAssistant')}</h2>
 ```
 
-Line 58:
+Ligne 58:
 ```typescript
-// Before
+// Avant
 <p className="chat-help">
   L'assistant utilise RAG (Retrieval-Augmented Generation) pour...
 </p>
 
-// After
+// Après
 <p className="chat-help">
   {t('chat.helpText')}
 </p>
@@ -299,28 +299,28 @@ Line 58:
 
 ### 3.5 CitationCard.tsx
 
-**Required actions:**
-1. Add `import { useTranslation } from 'react-i18next';`
-2. Add `const { t } = useTranslation('common');`
-3. Replace button texts and alerts
+**Actions requises:**
+1. Ajouter `import { useTranslation } from 'react-i18next';`
+2. Ajouter `const { t } = useTranslation('common');`
+3. Remplacer les textes des boutons et alertes
 
 ---
 
-## 4. Translation Files to Modify
+## 4. Fichiers de traduction à modifier
 
-### 4.1 Final File Structure
+### 4.1 Structure finale des fichiers
 
-Each file (`fr/common.json`, `en/common.json`, `de/common.json`) should contain:
+Chaque fichier (`fr/common.json`, `en/common.json`, `de/common.json`) doit contenir:
 
 ```json
 {
   "app": { ... },
   "actions": {
-    // Existing keys +
-    // New keys (ActionsSection)
+    // Clés existantes +
+    // Nouvelles clés (ActionsSection)
   },
   "settings": {
-    // Existing keys +
+    // Clés existantes +
     "languageSelector": {
       "label": "...",
       "changeWarning": "...",
@@ -329,10 +329,10 @@ Each file (`fr/common.json`, `en/common.json`, `de/common.json`) should contain:
       "de": "..."
     }
   },
-  "editor": { ... }, // Already complete
-  "ui": { ... }, // Already complete
+  "editor": { ... }, // Déjà complet
+  "ui": { ... }, // Déjà complet
   "bibliography": {
-    // Existing keys +
+    // Clés existantes +
     "pdfIndexed": "...",
     "indexError": "...",
     // etc.
@@ -342,7 +342,7 @@ Each file (`fr/common.json`, `en/common.json`, `de/common.json`) should contain:
   "rag": { ... },
   "llm": { ... },
   "zotero": {
-    // Existing keys +
+    // Clés existantes +
     "import": {
       "title": "...",
       "notConfigured": "...",
@@ -351,7 +351,7 @@ Each file (`fr/common.json`, `en/common.json`, `de/common.json`) should contain:
   },
   "suggestions": { ... },
   "chat": {
-    // Existing keys +
+    // Clés existantes +
     "aiAssistant": "...",
     "helpText": "...",
     "emptyState": {
@@ -366,30 +366,30 @@ Each file (`fr/common.json`, `en/common.json`, `de/common.json`) should contain:
 
 ---
 
-## 5. Execution Plan
+## 5. Plan d'exécution
 
-### Phase 1: Adding Translation Keys
-1. Update `public/locales/fr/common.json`
-2. Update `public/locales/en/common.json`
-3. Update `public/locales/de/common.json`
+### Phase 1: Ajout des clés de traduction
+1. ✅ Mettre à jour `public/locales/fr/common.json`
+2. ✅ Mettre à jour `public/locales/en/common.json`
+3. ✅ Mettre à jour `public/locales/de/common.json`
 
-### Phase 2: Component Modifications
-1. `LanguageConfigSection.tsx`
-2. `ActionsSection.tsx`
-3. `ZoteroImport.tsx`
-4. `ChatInterface.tsx`
-5. `CitationCard.tsx`
+### Phase 2: Modification des composants
+1. ✅ `LanguageConfigSection.tsx`
+2. ✅ `ActionsSection.tsx`
+3. ✅ `ZoteroImport.tsx`
+4. ✅ `ChatInterface.tsx`
+5. ✅ `CitationCard.tsx`
 
-### Phase 3: Testing
-1. Test language switching (FR → EN → DE)
-2. Verify all modified components
-3. Verify no hardcoded text remains
+### Phase 3: Tests
+1. Tester le changement de langue (FR → EN → DE)
+2. Vérifier tous les composants modifiés
+3. Vérifier qu'aucun texte en dur ne subsiste
 
 ---
 
-## 6. Components to Verify After Migration
+## 6. Composants à vérifier après migration
 
-### Already Translated Components (verify)
+### Composants déjà traduits (à vérifier)
 - [x] `ConfigPanel.tsx`
 - [x] `SettingsModal.tsx`
 - [x] `EditorConfigSection.tsx`
@@ -401,7 +401,7 @@ Each file (`fr/common.json`, `en/common.json`, `de/common.json`) should contain:
 - [x] `MessageBubble.tsx`
 - [x] `SourceCard.tsx`
 
-### New Components to Translate
+### Nouveaux composants à traduire
 - [ ] `LanguageConfigSection.tsx`
 - [ ] `ActionsSection.tsx`
 - [ ] `ZoteroImport.tsx`
@@ -410,46 +410,46 @@ Each file (`fr/common.json`, `en/common.json`, `de/common.json`) should contain:
 
 ---
 
-## 7. Validation Checklist
+## 7. Checklist de validation
 
-- [ ] All hardcoded texts replaced with `t()`
-- [ ] All 3 translation files (fr, en, de) have same keys
-- [ ] Language switching works without restart
-- [ ] Variable interpolations work (e.g., `{{size}}`, `{{items}}`)
-- [ ] Multiline texts handled correctly
-- [ ] Confirmations and alerts translated
-- [ ] No i18next missing key console warnings
+- [ ] Tous les textes hardcodés sont remplacés par `t()`
+- [ ] Les 3 fichiers de traduction (fr, en, de) ont les mêmes clés
+- [ ] Le changement de langue fonctionne sans redémarrage
+- [ ] Les interpolations de variables fonctionnent (ex: `{{size}}`, `{{items}}`)
+- [ ] Les textes multilignes sont correctement gérés
+- [ ] Les confirmations et alertes sont traduites
+- [ ] Aucune console warning i18next manquante
 
 ---
 
-## 8. Technical Notes
+## 8. Notes techniques
 
-### Variable Interpolation
+### Interpolation de variables
 ```typescript
 // FR
 "success": "Base optimisée. Gain: {{saved}}"
 
-// Usage
+// Utilisation
 t('actions.optimizeDatabase.success', { saved: '10 MB' })
 ```
 
-### Multiline Texts
+### Textes multilignes
 ```typescript
-// In JSON
-"message": "Line 1\n\nLine 2\nLine 3"
+// Dans JSON
+"message": "Ligne 1\n\nLigne 2\nLigne 3"
 
-// Or use concat
+// Ou utiliser concat
 t('zotero.import.successTitle') + '\n\n' + t('zotero.import.successMessage')
 ```
 
-### Pluralization (future improvement)
-i18next natively supports pluralization:
+### Pluralisation (future amélioration)
+i18next supporte la pluralisation nativement:
 ```json
-"items": "{{count}} reference",
-"items_plural": "{{count}} references"
+"items": "{{count}} référence",
+"items_plural": "{{count}} références"
 ```
 
 ---
 
-**Status:** Migration in progress
-**Last updated:** 2026-01-11
+**Statut:** ⏳ En cours de migration
+**Dernière mise à jour:** 2026-01-11

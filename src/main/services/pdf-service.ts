@@ -213,9 +213,9 @@ class PDFService {
     }
   }
 
-  async indexPDF(filePath: string, bibtexKey?: string, onProgress?: any, customTitle?: string) {
+  async indexPDF(filePath: string, bibtexKey?: string, onProgress?: any, bibliographyMetadata?: { title?: string; author?: string; year?: string }) {
     this.ensureInitialized();
-    return this.pdfIndexer!.indexPDF(filePath, bibtexKey, onProgress, customTitle);
+    return this.pdfIndexer!.indexPDF(filePath, bibtexKey, onProgress, bibliographyMetadata);
   }
 
   async search(query: string, options?: any) {

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { X, Search, Book, AlertCircle, Info } from 'lucide-react';
 import methodologyGuide from '../../../../../backend/data/methodology-guide.json';
 import './MethodologyModal.css';
@@ -12,6 +13,7 @@ interface Props {
 type ViewMode = 'overview' | 'feature' | 'faq' | 'glossary';
 
 export const MethodologyModal: React.FC<Props> = ({ isOpen, onClose, initialFeature }) => {
+  const { t } = useTranslation('common');
   const [viewMode, setViewMode] = useState<ViewMode>('overview');
   const [selectedFeature, setSelectedFeature] = useState<string | null>(initialFeature || null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -53,7 +55,7 @@ export const MethodologyModal: React.FC<Props> = ({ isOpen, onClose, initialFeat
         <p className="feature-description">{feature.description}</p>
 
         <section className="detail-section">
-          <h3>✓ Capacités</h3>
+          <h3>✓ {t('methodology.capabilities')}</h3>
           <ul>
             {feature.capabilities.map((cap, idx) => (
               <li key={idx}>{cap}</li>
@@ -62,7 +64,7 @@ export const MethodologyModal: React.FC<Props> = ({ isOpen, onClose, initialFeat
         </section>
 
         <section className="detail-section">
-          <h3>⚠ Limitations</h3>
+          <h3>⚠ {t('methodology.limitations')}</h3>
           <ul className="limitations-list">
             {feature.limitations.map((lim, idx) => (
               <li key={idx}>{lim}</li>
@@ -71,7 +73,7 @@ export const MethodologyModal: React.FC<Props> = ({ isOpen, onClose, initialFeat
         </section>
 
         <section className="detail-section">
-          <h3>💡 Bonnes Pratiques</h3>
+          <h3>💡 {t('methodology.bestPractices')}</h3>
           <ul>
             {feature.bestPractices.map((practice, idx) => (
               <li key={idx}>{practice}</li>
@@ -80,7 +82,7 @@ export const MethodologyModal: React.FC<Props> = ({ isOpen, onClose, initialFeat
         </section>
 
         <section className="detail-section academic-context">
-          <h3>📚 Contexte Académique</h3>
+          <h3>📚 {t('methodology.academicContext')}</h3>
           <p>{feature.academicContext}</p>
         </section>
       </div>
@@ -94,7 +96,7 @@ export const MethodologyModal: React.FC<Props> = ({ isOpen, onClose, initialFeat
         <div className="modal-header">
           <div className="modal-title">
             <Book size={24} />
-            <h2>Guide Méthodologique</h2>
+            <h2>{t('methodology.title')}</h2>
           </div>
           <button className="close-btn" onClick={onClose}>
             <X size={20} />
@@ -107,7 +109,7 @@ export const MethodologyModal: React.FC<Props> = ({ isOpen, onClose, initialFeat
             className={viewMode === 'overview' ? 'active' : ''}
             onClick={() => setViewMode('overview')}
           >
-            Vue d'ensemble
+            {t('methodology.overview')}
           </button>
           <button
             className={viewMode === 'feature' ? 'active' : ''}
@@ -116,16 +118,16 @@ export const MethodologyModal: React.FC<Props> = ({ isOpen, onClose, initialFeat
               if (!selectedFeature) setSelectedFeature('chat');
             }}
           >
-            Fonctionnalités
+            {t('methodology.features')}
           </button>
           <button className={viewMode === 'faq' ? 'active' : ''} onClick={() => setViewMode('faq')}>
-            FAQ
+            {t('methodology.faq')}
           </button>
           <button
             className={viewMode === 'glossary' ? 'active' : ''}
             onClick={() => setViewMode('glossary')}
           >
-            Glossaire
+            {t('methodology.glossary')}
           </button>
         </div>
 
@@ -135,7 +137,7 @@ export const MethodologyModal: React.FC<Props> = ({ isOpen, onClose, initialFeat
             <Search size={16} />
             <input
               type="text"
-              placeholder="Rechercher..."
+              placeholder={t('methodology.searchPlaceholder')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
@@ -146,23 +148,19 @@ export const MethodologyModal: React.FC<Props> = ({ isOpen, onClose, initialFeat
         <div className="modal-content">
           {viewMode === 'overview' && (
             <div className="overview">
-              <h2>Bienvenue dans ClioDesk</h2>
+              <h2>{t('methodology.welcome')}</h2>
               <p className="intro">
-                ClioDesk est un outil d'écriture académique assistée par IA, conçu pour les
-                chercheurs en sciences humaines. Ce guide vous aide à comprendre les capacités,
-                limitations et bonnes pratiques de chaque fonctionnalité.
+                {t('methodology.intro')}
               </p>
 
               <div className="alert-box">
                 <AlertCircle size={20} />
                 <div>
-                  <strong>Important :</strong> L'IA est un outil d'exploration et d'assistance,
-                  pas un remplacement de votre analyse critique. Vérifiez toujours les sources et
-                  documentez votre méthodologie.
+                  <strong>{t('methodology.importantWarning')}</strong> {t('methodology.importantWarningText')}
                 </div>
               </div>
 
-              <h3>Fonctionnalités Principales</h3>
+              <h3>{t('methodology.mainFeatures')}</h3>
               <div className="feature-cards">
                 {Object.entries(features).map(([key, feature]) => (
                   <div
@@ -184,7 +182,7 @@ export const MethodologyModal: React.FC<Props> = ({ isOpen, onClose, initialFeat
           {viewMode === 'feature' && (
             <div className="feature-view">
               <div className="feature-sidebar">
-                <h3>Fonctionnalités</h3>
+                <h3>{t('methodology.features')}</h3>
                 {Object.entries(features).map(([key, feature]) => (
                   <button
                     key={key}
@@ -203,9 +201,9 @@ export const MethodologyModal: React.FC<Props> = ({ isOpen, onClose, initialFeat
 
           {viewMode === 'faq' && (
             <div className="faq-view">
-              <h2>Questions Fréquentes</h2>
+              <h2>{t('methodology.faqTitle')}</h2>
               {filteredFaq.length === 0 ? (
-                <p className="no-results">Aucun résultat pour "{searchQuery}"</p>
+                <p className="no-results">{t('methodology.noResults')} "{searchQuery}"</p>
               ) : (
                 filteredFaq.map((item, idx) => (
                   <div key={idx} className="faq-item">
@@ -220,9 +218,9 @@ export const MethodologyModal: React.FC<Props> = ({ isOpen, onClose, initialFeat
 
           {viewMode === 'glossary' && (
             <div className="glossary-view">
-              <h2>Glossaire</h2>
+              <h2>{t('methodology.glossaryTitle')}</h2>
               {filteredGlossary.length === 0 ? (
-                <p className="no-results">Aucun résultat pour "{searchQuery}"</p>
+                <p className="no-results">{t('methodology.noResults')} "{searchQuery}"</p>
               ) : (
                 filteredGlossary.map(([term, definition]) => (
                   <div key={term} className="glossary-item">

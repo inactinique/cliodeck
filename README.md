@@ -1,45 +1,45 @@
-# ClioDesk Electron - Assistant d'écriture pour historiens
+# ClioDesk Electron - Writing Assistant for Historians
 
-Application desktop multi-plateforme (Electron + React + TypeScript) pour assister les historiens dans l'écriture d'articles et de livres, avec RAG (Retrieval-Augmented Generation) et intégrations Zotero/Tropy.
+Multi-platform desktop application (Electron + React + TypeScript) to assist historians in writing articles and books, with RAG (Retrieval-Augmented Generation) and Zotero/Tropy integrations.
 
-## 🎯 Objectif
+## Objective
 
-Créer un assistant d'écriture qui permet aux historiens de :
-- Rechercher efficacement dans leurs données bibliographiques
-- Interroger leurs sources numérisées (PDFs) via RAG
-- Intégrer Zotero pour la bibliographie
-- Intégrer Tropy pour les sources d'archives
-- Éditer en markdown avec assistant IA contextuel
+Create a writing assistant that allows historians to:
+- Efficiently search their bibliographic data
+- Query their digitized sources (PDFs) via RAG
+- Integrate Zotero for bibliography
+- Integrate Tropy for archival sources
+- Edit in markdown with contextual AI assistant
 
-## 📋 État d'avancement
+## Progress Status
 
-### ✅ Phase 1 : Infrastructure (COMPLÉTÉ)
-- [x] Projet Electron + React + TypeScript initialisé
-- [x] Structure de dossiers créée (src/, backend/)
-- [x] Dépendances installées (better-sqlite3, electron-store, Monaco, pdfjs-dist, etc.)
-- [x] IPC handlers configurés (preload bridge)
-- [x] ConfigManager avec electron-store
-- [x] **VectorStore.ts** porté depuis Swift (586 lignes)
-  - Base SQLite avec better-sqlite3
-  - Gestion documents et chunks
-  - Embeddings en BLOB
-  - Recherche par similarité cosinus
+### Phase 1: Infrastructure (COMPLETED)
+- [x] Electron + React + TypeScript project initialized
+- [x] Folder structure created (src/, backend/)
+- [x] Dependencies installed (better-sqlite3, electron-store, Monaco, pdfjs-dist, etc.)
+- [x] IPC handlers configured (preload bridge)
+- [x] ConfigManager with electron-store
+- [x] **VectorStore.ts** ported from Swift (586 lines)
+  - SQLite database with better-sqlite3
+  - Documents and chunks management
+  - Embeddings as BLOB
+  - Cosine similarity search
   - CASCADE delete
-  - Statistics et integrity checks
+  - Statistics and integrity checks
 
-### 🚧 En cours : Modules backend core
+### In Progress: Core Backend Modules
 - [ ] DocumentChunker.ts
 - [ ] BibTeXParser.ts
 - [ ] PDFExtractor.ts (pdfjs-dist)
 - [ ] OllamaClient.ts
 - [ ] PDFIndexer.ts (orchestration)
 
-### 📅 À venir
-- [ ] Interface React (Monaco Editor, Chat RAG, Bibliography)
-- [ ] Intégrations Zotero/Tropy
+### Upcoming
+- [ ] React Interface (Monaco Editor, RAG Chat, Bibliography)
+- [ ] Zotero/Tropy Integrations
 - [ ] Exports (PDF, DOCX, reveal.js)
 
-## 🏗️ Architecture
+## Architecture
 
 ```
 cliodesk/
@@ -51,7 +51,7 @@ cliodesk/
 │   │   └── services/
 │   │       └── config-manager.ts # Configuration
 │   ├── preload/
-│   │   └── index.ts       # IPC bridge sécurisé
+│   │   └── index.ts       # Secure IPC bridge
 │   └── renderer/          # React Frontend
 │       ├── index.html
 │       └── src/
@@ -59,10 +59,10 @@ cliodesk/
 │           ├── App.tsx
 │           └── components/
 │
-├── backend/               # Modules Node.js
+├── backend/               # Node.js Modules
 │   ├── core/
 │   │   ├── vector-store/
-│   │   │   └── VectorStore.ts ✅
+│   │   │   └── VectorStore.ts
 │   │   ├── chunking/
 │   │   ├── pdf/
 │   │   ├── llm/
@@ -71,76 +71,76 @@ cliodesk/
 │   │   ├── zotero/
 │   │   └── tropy/
 │   └── types/
-│       ├── config.ts ✅
-│       └── pdf-document.ts ✅
+│       ├── config.ts
+│       └── pdf-document.ts
 │
 └── package.json
 ```
 
-## 🔧 Stack technique
+## Tech Stack
 
 ### Frontend
-- **Electron 28** - Desktop multi-plateforme
+- **Electron 28** - Multi-platform desktop
 - **React 18** - UI components
 - **TypeScript 5** - Type safety
-- **Monaco Editor** - Éditeur markdown
+- **Monaco Editor** - Markdown editor
 - **Zustand** - State management
 - **Vite** - Build tool
 
 ### Backend
-- **Node.js 20+** - Runtime JavaScript
-- **better-sqlite3** - Base SQLite (vector store)
-- **pdfjs-dist** - Extraction PDF
-- **electron-store** - Persistance config
-- **Python 3.11+** - Services d'analyse (topic modeling)
+- **Node.js 20+** - JavaScript runtime
+- **better-sqlite3** - SQLite database (vector store)
+- **pdfjs-dist** - PDF extraction
+- **electron-store** - Config persistence
+- **Python 3.11+** - Analysis services (topic modeling)
 
-### LLM & IA
-- **Ollama** - Modèles locaux (nomic-embed-text, gemma2:2b)
-  - Modèle d'embeddings : `nomic-embed-text` (768 dimensions)
-  - Modèle de chat : `gemma2:2b` (rapide, multilingue)
-- **BERTopic** - Topic modeling et clustering (Python)
-- **Claude API** - Option cloud (Anthropic)
-- **OpenAI API** - Option cloud alternative
+### LLM & AI
+- **Ollama** - Local models (nomic-embed-text, gemma2:2b)
+  - Embedding model: `nomic-embed-text` (768 dimensions)
+  - Chat model: `gemma2:2b` (fast, multilingual)
+- **BERTopic** - Topic modeling and clustering (Python)
+- **Claude API** - Cloud option (Anthropic)
+- **OpenAI API** - Alternative cloud option
 
-## 🚀 Installation
+## Installation
 
-### Guides détaillés par plateforme
+### Detailed Platform Guides
 
-Pour des instructions complètes d'installation avec gestion des dépendances système, configuration d'Ollama, et dépannage :
+For complete installation instructions including system dependencies, Ollama configuration, and troubleshooting:
 
-- 📘 **[Guide d'installation macOS](INSTALL_MACOS.md)** - Installation complète sur macOS (Intel et Apple Silicon)
-- 📗 **[Guide d'installation Linux](INSTALL_LINUX.md)** - Installation sur Ubuntu, Debian, Fedora, Arch Linux, etc.
+- **[macOS Installation Guide](INSTALL_MACOS.md)** - Complete installation on macOS (Intel and Apple Silicon)
+- **[Linux Installation Guide](INSTALL_LINUX.md)** - Installation on Ubuntu, Debian, Fedora, Arch Linux, etc.
 
-### Installation rapide (développeurs)
+### Quick Installation (Developers)
 
-**Prérequis :**
-- Node.js 20+ et npm 10+
-- Python 3.11+ (avec venv)
-- Ollama avec les modèles :
-  - `nomic-embed-text` (obligatoire pour embeddings)
-  - `gemma2:2b` (recommandé pour chat)
+**Prerequisites:**
+- Node.js 20+ and npm 10+
+- Python 3.11+ (with venv)
+- Ollama with models:
+  - `nomic-embed-text` (required for embeddings)
+  - `gemma2:2b` (recommended for chat)
 
-**Installation :**
+**Installation:**
 
 ```bash
-# Cloner le dépôt
-git clone https://github.com/votre-org/cliodesk.git
+# Clone the repository
+git clone https://github.com/your-org/cliodesk.git
 cd cliodesk
 
-# Installer les dépendances npm
+# Install npm dependencies
 npm install
 
-# Compiler les modules natifs pour Electron
+# Compile native modules for Electron
 npx electron-rebuild -f
 
-# Compiler le projet
+# Build the project
 npm run build
 
-# Lancer l'application
+# Launch the application
 npm start
 ```
 
-**Installation d'Ollama et des modèles :**
+**Installing Ollama and Models:**
 
 ```bash
 # macOS
@@ -150,27 +150,27 @@ brew services start ollama
 # Linux
 curl -fsSL https://ollama.ai/install.sh | sh
 
-# Télécharger les modèles
+# Download models
 ollama pull nomic-embed-text
 ollama pull gemma2:2b
 ```
 
-## 📦 Scripts disponibles
+## Available Scripts
 
 ```bash
-# Développement (compile en mode watch + lance l'app)
+# Development (compile in watch mode + launch app)
 npm run dev:full
 
-# Développement (compile uniquement en mode watch)
+# Development (compile only in watch mode)
 npm run dev
 
-# Build production
+# Production build
 npm run build
 
-# Lancer l'application
+# Launch application
 npm start
 
-# Build pour distribution
+# Build for distribution
 npm run build:linux    # AppImage + .deb
 npm run build:mac      # DMG (x64 + arm64)
 npm run build:win      # NSIS installer
@@ -186,27 +186,27 @@ npm run typecheck
 # Lint
 npm run lint
 
-# Nettoyage
+# Clean
 npm run clean
 ```
 
-## 📚 Composants principaux
+## Main Components
 
-### VectorStore (✅ Complété)
+### VectorStore (Completed)
 
-**Fichier:** `backend/core/vector-store/VectorStore.ts`
+**File:** `backend/core/vector-store/VectorStore.ts`
 
-Gestion de la base de données SQLite pour les embeddings vectoriels.
+SQLite database management for vector embeddings.
 
-**Fonctionnalités:**
-- Stockage documents PDF avec métadonnées
-- Stockage chunks de texte avec embeddings (Float32Array → Buffer)
-- Recherche par similarité cosinus
+**Features:**
+- PDF document storage with metadata
+- Text chunk storage with embeddings (Float32Array → Buffer)
+- Cosine similarity search
 - Statistics (documents, chunks, embeddings)
 - Integrity checks (orphaned chunks)
-- CASCADE delete automatique
+- Automatic CASCADE delete
 
-**Schéma SQLite:**
+**SQLite Schema:**
 ```sql
 CREATE TABLE documents (
   id TEXT PRIMARY KEY,
@@ -241,13 +241,13 @@ import { VectorStore } from './backend/core/vector-store/VectorStore';
 
 const vectorStore = new VectorStore();
 
-// Sauvegarder document
+// Save document
 vectorStore.saveDocument(pdfDoc);
 
-// Sauvegarder chunk avec embedding
+// Save chunk with embedding
 vectorStore.saveChunk(chunk, embedding);
 
-// Recherche sémantique
+// Semantic search
 const results = vectorStore.search(queryEmbedding, 10);
 
 // Stats
@@ -255,11 +255,11 @@ const stats = vectorStore.getStatistics();
 console.log(stats.documentCount, stats.embeddingCount);
 ```
 
-### ConfigManager (✅ Complété)
+### ConfigManager (Completed)
 
-**Fichier:** `src/main/services/config-manager.ts`
+**File:** `src/main/services/config-manager.ts`
 
-Gestion de la configuration avec electron-store.
+Configuration management with electron-store.
 
 **Configuration:**
 ```typescript
@@ -284,71 +284,71 @@ Gestion de la configuration avec electron-store.
 }
 ```
 
-## 📝 Port depuis Swift
+## Port from Swift
 
-Le projet réécrit ClioDesk (Swift/macOS) en Electron multi-plateforme.
+The project rewrites ClioDesk (Swift/macOS) as a multi-platform Electron application.
 
-**Fichiers portés:**
-- ✅ `VectorStore.swift` (586 lignes) → `VectorStore.ts`
-  - Logique 100% portable
+**Ported Files:**
+- VectorStore.swift (586 lines) → `VectorStore.ts`
+  - 100% portable logic
   - SQLite3 → better-sqlite3
-  - Similarité cosinus identique
-  - Gestion embeddings optimisée
+  - Identical cosine similarity
+  - Optimized embeddings management
 
-**À porter:**
+**To Port:**
 - `DocumentChunker.swift` → `DocumentChunker.ts`
 - `BibTeXParser.swift` → `BibTeXParser.ts`
 - `OllamaBackend.swift` → `OllamaClient.ts`
 - `PDFTextExtractor.swift` → `PDFExtractor.ts` (PDFKit → pdfjs-dist)
 
-## 🎯 Prochaines étapes
+## Next Steps
 
-1. **Finaliser backend core** (2-3 jours)
-   - Porter DocumentChunker
-   - Porter BibTeXParser
-   - Implémenter PDFExtractor avec pdfjs-dist
-   - Porter OllamaClient
+1. **Finalize core backend** (2-3 days)
+   - Port DocumentChunker
+   - Port BibTeXParser
+   - Implement PDFExtractor with pdfjs-dist
+   - Port OllamaClient
 
-2. **Scripts de build** (1 jour)
-   - Configurer Vite pour Electron
-   - Build main + renderer séparés
+2. **Build scripts** (1 day)
+   - Configure Vite for Electron
+   - Separate main + renderer build
    - TypeScript compilation
 
-3. **Test bout-en-bout** (1 jour)
-   - Tester VectorStore
-   - Tester indexation PDF
-   - Tester recherche sémantique
+3. **End-to-end testing** (1 day)
+   - Test VectorStore
+   - Test PDF indexing
+   - Test semantic search
 
-4. **Interface React** (1 semaine)
-   - Layout 3-panel
+4. **React interface** (1 week)
+   - 3-panel layout
    - Monaco Editor
-   - Chat RAG interface
+   - RAG chat interface
    - Bibliography panel
 
-## 📖 Documentation
+## Documentation
 
-### Guides d'installation
-- [INSTALL_MACOS.md](INSTALL_MACOS.md) - Guide complet pour macOS (Intel & Apple Silicon)
-- [INSTALL_LINUX.md](INSTALL_LINUX.md) - Guide complet pour Linux (Ubuntu, Debian, Fedora, Arch)
-- [DEPLOYMENT.md](DEPLOYMENT.md) - Déploiement en production et workflow utilisateur
+### Installation Guides
+- [INSTALL_MACOS.md](INSTALL_MACOS.md) - Complete guide for macOS (Intel & Apple Silicon)
+- [INSTALL_LINUX.md](INSTALL_LINUX.md) - Complete guide for Linux (Ubuntu, Debian, Fedora, Arch)
+- [DEPLOYMENT.md](DEPLOYMENT.md) - Production deployment and user workflow
 
-### Documentation technique
-- [VectorStore API](#vectorstore-complété) - Documentation VectorStore
-- [Configuration](#configmanager-complété) - Options de configuration
-- [Architecture](#architecture) - Structure du projet
+### Technical Documentation
+- [VectorStore API](#vectorstore-completed) - VectorStore documentation
+- [Configuration](#configmanager-completed) - Configuration options
+- [Architecture](#architecture) - Project structure
 
-## 🔗 Liens
+## Links
 
-- **Dépôt original:** `/home/inactinique/GitHub/ClioDesk` (Swift)
-- **Nouveau dépôt:** `/home/inactinique/GitHub/cliodesk` (Electron)
+- **Original repository:** `/home/inactinique/GitHub/ClioDesk` (Swift)
+- **New repository:** `/home/inactinique/GitHub/cliodesk` (Electron)
 - **Zotero API:** https://www.zotero.org/support/dev/web_api/v3/basics
 - **Tropy:** https://tropy.org/
 - **Ollama:** https://ollama.ai/
 
-## 📄 Licence
+## License
 
 MIT
 
 ---
 
-**Note:** Ce projet est en développement actif. La Phase 1 (infrastructure) est complétée. Le backend core est en cours de portage depuis la version Swift.
+**Note:** This project is under active development. Phase 1 (infrastructure) is completed. The core backend is being ported from the Swift version.

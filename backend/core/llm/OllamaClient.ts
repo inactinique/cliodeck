@@ -83,9 +83,9 @@ export class OllamaClient {
   public chatModel: string = 'gemma2:2b';
 
   // Limite de caractères pour nomic-embed-text
-  // Modèle supporte 8192 tokens ≈ 5000-6000 chars
-  // On utilise 3500 chars comme limite sécuritaire (laisse marge pour contexte document)
-  private readonly NOMIC_MAX_LENGTH = 3500;
+  // Modèle supporte 8192 tokens, mais 1 token ≈ 4 chars en moyenne
+  // On utilise 2000 chars comme limite sécuritaire pour éviter les erreurs de contexte
+  private readonly NOMIC_MAX_LENGTH = 2000;
 
   constructor(
     baseURL: string = 'http://127.0.0.1:11434',
@@ -302,10 +302,9 @@ export class OllamaClient {
    * Génère un embedding pour un texte (avec chunking automatique si nécessaire)
    */
   async generateEmbedding(text: string): Promise<Float32Array> {
-    // Pour nomic-embed-text, limiter à 2000 caractères par chunk
-    const maxLength = this.embeddingModel === 'nomic-embed-text'
-      ? this.NOMIC_MAX_LENGTH
-      : 8000; // Pour les autres modèles, utiliser une limite plus haute
+    // Limiter à 2000 caractères par chunk pour tous les modèles d'embedding
+    // La plupart des modèles ont des limites de contexte similaires
+    const maxLength = this.NOMIC_MAX_LENGTH;
 
     console.log('📤 Sending Ollama embedding request:', {
       url: `${this.baseURL}/api/embeddings`,

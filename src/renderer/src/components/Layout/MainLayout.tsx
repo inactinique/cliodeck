@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { MessageCircle, FileText, Folder, BookOpen, Network, BookMarked, HelpCircle } from 'lucide-react';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import { BibliographyPanel } from '../Bibliography/BibliographyPanel';
@@ -28,6 +29,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
   centerPanel,
   rightPanel,
 }) => {
+  const { t } = useTranslation('common');
   const [leftView, setLeftView] = useState<LeftPanelView>('projects');
   const [rightView, setRightView] = useState<RightPanelView>('chat');
   const [showExportModal, setShowExportModal] = useState(false);
@@ -113,7 +115,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
       <button
         className="floating-help-btn"
         onClick={() => setShowMethodologyModal(true)}
-        title="Guide Méthodologique"
+        title={t('methodology.title')}
       >
         <HelpCircle size={12} />
       </button>
@@ -129,14 +131,14 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
                 <button
                   className={`panel-tab ${leftView === 'projects' ? 'active' : ''}`}
                   onClick={() => handleLeftViewChange('projects')}
-                  title="Projets"
+                  title={t('project.title')}
                 >
                   <Folder size={20} strokeWidth={1} />
                 </button>
                 <button
                   className={`panel-tab ${leftView === 'bibliography' ? 'active' : ''}`}
                   onClick={() => handleLeftViewChange('bibliography')}
-                  title="Bibliographie"
+                  title={t('bibliography.title')}
                 >
                   <BookOpen size={20} strokeWidth={1} />
                 </button>
@@ -171,28 +173,28 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
                 <button
                   className={`panel-tab ${rightView === 'chat' ? 'active' : ''}`}
                   onClick={() => handleRightViewChange('chat')}
-                  title="Chat"
+                  title={t('chat.title')}
                 >
                   <MessageCircle size={20} strokeWidth={1} />
                 </button>
                 <button
                   className={`panel-tab ${rightView === 'pdfIndex' ? 'active' : ''}`}
                   onClick={() => handleRightViewChange('pdfIndex')}
-                  title="PDFs"
+                  title={t('pdfIndex.title')}
                 >
                   <FileText size={20} strokeWidth={1} />
                 </button>
                 <button
                   className={`panel-tab ${rightView === 'corpus' ? 'active' : ''}`}
                   onClick={() => handleRightViewChange('corpus')}
-                  title="Corpus Explorer"
+                  title={t('corpus.title')}
                 >
                   <Network size={20} strokeWidth={1} />
                 </button>
                 <button
                   className={`panel-tab ${rightView === 'journal' ? 'active' : ''}`}
                   onClick={() => handleRightViewChange('journal')}
-                  title="Journal de Recherche"
+                  title={t('journal.title')}
                 >
                   <BookMarked size={20} strokeWidth={1} />
                 </button>

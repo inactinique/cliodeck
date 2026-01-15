@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Plus } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { PDFList } from './PDFList';
 import { IndexingProgress } from './IndexingProgress';
 import { CollapsibleSection } from '../common/CollapsibleSection';
@@ -26,7 +27,11 @@ interface IndexingState {
   stage: string;
 }
 
+type SortField = 'author' | 'year' | 'title';
+type SortOrder = 'asc' | 'desc';
+
 export const PDFIndexPanel: React.FC = () => {
+  const { t } = useTranslation('common');
   const { currentProject } = useProjectStore();
   const [documents, setDocuments] = useState<PDFDocument[]>([]);
   const [indexingState, setIndexingState] = useState<IndexingState>({
@@ -42,9 +47,66 @@ export const PDFIndexPanel: React.FC = () => {
   const [showRenameModal, setShowRenameModal] = useState(false);
   const [pendingFiles, setPendingFiles] = useState<string[]>([]);
 
+  // Search and filter state
+  const [searchQuery, setSearchQuery] = useState('');
+  const [sortBy, setSortBy] = useState<SortField>('author');
+  const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
+
+  // Filter and sort documents
+  const filteredDocuments = useMemo(() => {
+    let filtered = documents;
+
+    // Filter by search query
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      filtered = documents.filter((doc) =>
+        (doc.title?.toLowerCase().includes(query)) ||
+        (doc.author?.toLowerCase().includes(query)) ||
+        (doc.year?.includes(query)) ||
+        (doc.bibtexKey?.toLowerCase().includes(query))
+      );
+    }
+
+    // Sort
+    filtered = [...filtered].sort((a, b) => {
+      let comparison = 0;
+      switch (sortBy) {
+        case 'author':
+          comparison = (a.author || t('pdfIndex.unknownAuthor')).localeCompare(b.author || t('pdfIndex.unknownAuthor'));
+          break;
+        case 'year':
+          comparison = (a.year || '').localeCompare(b.year || '');
+          break;
+        case 'title':
+          comparison = (a.title || '').localeCompare(b.title || '');
+          break;
+      }
+      return sortOrder === 'asc' ? comparison : -comparison;
+    });
+
+    return filtered;
+  }, [documents, searchQuery, sortBy, sortOrder, t]);
+
+  const toggleSortOrder = () => {
+    setSortOrder((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+  };
+
   useEffect(() => {
     loadDocuments();
     loadStats();
+
+    // Listen for indexing progress events
+    const unsubscribe = window.electron.pdf.onIndexingProgress((progress) => {
+      setIndexingState((prev) => ({
+        ...prev,
+        progress: progress.progress,
+        stage: progress.message,
+      }));
+    });
+
+    return () => {
+      unsubscribe();
+    };
   }, []);
 
   const loadDocuments = async () => {
@@ -85,7 +147,7 @@ export const PDFIndexPanel: React.FC = () => {
   const handleAddPDF = async () => {
     // Check if a project is open BEFORE opening file dialog
     if (!currentProject) {
-      alert('Aucun projet ouvert. Veuillez d\'abord ouvrir ou créer un projet.');
+      alert(t('pdfIndex.noProjectOpen'));
       return;
     }
 
@@ -125,23 +187,18 @@ export const PDFIndexPanel: React.FC = () => {
     });
 
     try {
-      const result = await window.electron.pdf.index(filePath, undefined, (progress) => {
-        setIndexingState({
-          isIndexing: true,
-          currentFile: filePath,
-          progress: progress.progress,
-          stage: progress.message,
-        });
-      }, customTitle);
+      // When adding PDF directly (not from bibliography), pass customTitle as bibliographyMetadata
+      const bibliographyMetadata = customTitle ? { title: customTitle } : undefined;
+      const result = await window.electron.pdf.index(filePath, undefined, bibliographyMetadata);
 
       // Check if indexing failed
       if (result && !result.success) {
-        const errorMessage = result.error || 'Erreur inconnue';
+        const errorMessage = result.error || t('pdfIndex.indexingError');
         alert(errorMessage);
         setIndexingState({
           isIndexing: false,
           progress: 0,
-          stage: 'Erreur',
+          stage: t('pdfIndex.indexingError'),
         });
         return;
       }
@@ -156,18 +213,18 @@ export const PDFIndexPanel: React.FC = () => {
       });
     } catch (error) {
       console.error('Indexing failed:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue';
-      alert(`Erreur lors de l'indexation: ${errorMessage}`);
+      const errorMessage = error instanceof Error ? error.message : t('pdfIndex.indexingError');
+      alert(`${t('pdfIndex.indexingError')}: ${errorMessage}`);
       setIndexingState({
         isIndexing: false,
         progress: 0,
-        stage: 'Erreur',
+        stage: t('pdfIndex.indexingError'),
       });
     }
   };
 
   const handleDeletePDF = async (documentId: string) => {
-    if (!window.confirm('Supprimer ce document et tous ses chunks ?')) {
+    if (!window.confirm(t('pdfIndex.deleteConfirm'))) {
       return;
     }
 
@@ -191,7 +248,7 @@ export const PDFIndexPanel: React.FC = () => {
 
     // Check if a project is open BEFORE processing dropped files
     if (!currentProject) {
-      alert('Aucun projet ouvert. Veuillez d\'abord ouvrir ou créer un projet.');
+      alert(t('pdfIndex.noProjectOpen'));
       return;
     }
 
@@ -209,7 +266,7 @@ export const PDFIndexPanel: React.FC = () => {
   };
 
   const handleCleanOrphanedChunks = async () => {
-    if (!window.confirm('Nettoyer les chunks orphelins (sans document parent) ?\n\nCette action supprimera les chunks dont le document a été supprimé.')) {
+    if (!window.confirm(t('pdfIndex.cleanOrphanedConfirm'))) {
       return;
     }
 
@@ -219,17 +276,17 @@ export const PDFIndexPanel: React.FC = () => {
 
       if (result.success) {
         console.log('✅ Orphaned chunks cleaned successfully');
-        alert('✅ Chunks orphelins nettoyés avec succès!');
+        alert(`✅ ${t('pdfIndex.cleanSuccess')}`);
       } else {
         console.error('❌ Failed to clean orphaned chunks:', result.error);
-        alert(`❌ Erreur lors du nettoyage:\n${result.error}`);
+        alert(`❌ ${t('pdfIndex.cleanError')}:\n${result.error}`);
       }
 
       // Reload statistics
       await loadStats();
     } catch (error) {
       console.error('Failed to clean orphaned chunks:', error);
-      alert('Erreur lors du nettoyage des chunks orphelins');
+      alert(t('pdfIndex.cleanError'));
     } finally {
       setIsCleaning(false);
     }
@@ -240,28 +297,28 @@ export const PDFIndexPanel: React.FC = () => {
       {/* Header */}
       <div className="pdf-header">
         <div className="header-title">
-          <h3>PDFs Indexés</h3>
+          <h3>{t('pdfIndex.title')}</h3>
           <HelperTooltip
-            content="Indexation vectorielle de vos PDFs pour recherche sémantique. Vérifiez toujours la qualité de l'extraction de texte."
+            content={t('pdfIndex.dropzone')}
             onLearnMore={handleLearnMore}
           />
         </div>
-        <button className="toolbar-btn" onClick={handleAddPDF} title="Ajouter PDF">
+        <button className="toolbar-btn" onClick={handleAddPDF} title={t('pdfIndex.addPDF')}>
           <Plus size={20} strokeWidth={1} />
         </button>
       </div>
 
       {/* Stats */}
-      <CollapsibleSection title="Statistiques" defaultExpanded={false}>
+      <CollapsibleSection title={t('pdfIndex.statistics')} defaultExpanded={false}>
         <div className="pdf-stats">
           <div className="stat-item">
             <span className="stat-value">{stats.totalDocuments}</span>
-            <span className="stat-label">Documents</span>
+            <span className="stat-label">{t('pdfIndex.documents')}</span>
           </div>
           <div className="stat-divider">|</div>
           <div className="stat-item">
             <span className="stat-value">{stats.totalChunks}</span>
-            <span className="stat-label">Chunks</span>
+            <span className="stat-label">{t('pdfIndex.chunks')}</span>
           </div>
         </div>
         <div style={{ marginTop: '12px', paddingTop: '12px', borderTop: '1px solid #444' }}>
@@ -280,7 +337,7 @@ export const PDFIndexPanel: React.FC = () => {
               fontSize: '13px',
             }}
           >
-            {isCleaning ? '⏳ Nettoyage en cours...' : '🧹 Nettoyer les chunks orphelins'}
+            {isCleaning ? `⏳ ${t('pdfIndex.cleaning')}` : `🧹 ${t('pdfIndex.cleanOrphanedChunks')}`}
           </button>
         </div>
       </CollapsibleSection>
@@ -294,8 +351,48 @@ export const PDFIndexPanel: React.FC = () => {
         />
       )}
 
+      {/* Search & Filters */}
+      <CollapsibleSection title={t('pdfIndex.searchAndFilters')} defaultExpanded={true}>
+        <div className="pdf-controls">
+          <div className="search-box">
+            <span className="search-icon">🔍</span>
+            <input
+              type="text"
+              className="search-input"
+              placeholder={t('pdfIndex.searchPlaceholder')}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
+
+          <div className="sort-controls">
+            <label className="sort-label">{t('bibliography.sortBy')}</label>
+            <select
+              className="sort-select"
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as SortField)}
+            >
+              <option value="author">{t('bibliography.author')}</option>
+              <option value="year">{t('bibliography.year')}</option>
+              <option value="title">{t('bibliography.titleField')}</option>
+            </select>
+            <button className="sort-order-btn" onClick={toggleSortOrder} title={t('bibliography.sortBy')}>
+              {sortOrder === 'asc' ? '↑' : '↓'}
+            </button>
+          </div>
+        </div>
+
+        {/* Document Count */}
+        <div className="document-count">
+          {filteredDocuments.length} {t('pdfIndex.documents').toLowerCase()}
+          {searchQuery && filteredDocuments.length !== documents.length && (
+            <span className="filter-indicator"> ({t('pdfIndex.filtered')})</span>
+          )}
+        </div>
+      </CollapsibleSection>
+
       {/* Document List */}
-      <CollapsibleSection title="Documents" defaultExpanded={true}>
+      <CollapsibleSection title={t('pdfIndex.documents')} defaultExpanded={true}>
         <div
           className="pdf-content"
           onDragOver={handleDragOver}
@@ -304,15 +401,17 @@ export const PDFIndexPanel: React.FC = () => {
           {documents.length === 0 ? (
             <div className="pdf-empty">
               <div className="empty-icon">📂</div>
-              <h4>Aucun document</h4>
-              <p>
-                Glissez-déposez des PDFs ici
-                <br />
-                ou cliquez sur + pour en ajouter
-              </p>
+              <h4>{t('pdfIndex.noDocuments')}</h4>
+              <p>{t('pdfIndex.dropzone')}</p>
+            </div>
+          ) : filteredDocuments.length === 0 ? (
+            <div className="pdf-empty">
+              <div className="empty-icon">🔍</div>
+              <h4>{t('pdfIndex.noResults')}</h4>
+              <p>{t('pdfIndex.tryDifferentSearch')}</p>
             </div>
           ) : (
-            <PDFList documents={documents} onDelete={handleDeletePDF} />
+            <PDFList documents={filteredDocuments} onDelete={handleDeletePDF} />
           )}
         </div>
       </CollapsibleSection>

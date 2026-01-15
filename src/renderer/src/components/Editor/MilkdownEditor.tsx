@@ -1,4 +1,5 @@
 import { useEffect, useRef, useCallback, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Crepe } from '@milkdown/crepe';
 import { editorViewCtx } from '@milkdown/kit/core';
 import { useEditorStore } from '../../stores/editorStore';
@@ -14,6 +15,7 @@ const CitationAutocomplete: React.FC<{
   onSelect: (citationId: string) => void;
   onClose: () => void;
 }> = ({ query, position, onSelect, onClose }) => {
+  const { t } = useTranslation('common');
   const { citations } = useBibliographyStore();
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -53,7 +55,7 @@ const CitationAutocomplete: React.FC<{
         style={{ top: position.top, left: position.left }}
       >
         <div className="citation-autocomplete-empty">
-          Aucune citation trouvée
+          {t('milkdownEditor.noCitationFound')}
         </div>
       </div>
     );
@@ -83,6 +85,7 @@ const CitationAutocomplete: React.FC<{
 };
 
 export const MilkdownEditor: React.FC = () => {
+  const { t } = useTranslation('common');
   const { content, filePath, setContent, settings } = useEditorStore();
   const editorContainerRef = useRef<HTMLDivElement>(null);
   const crepeRef = useRef<Crepe | null>(null);
@@ -131,12 +134,14 @@ export const MilkdownEditor: React.FC = () => {
     console.log('[MilkdownEditor] Initializing Crepe editor for file:', filePath);
 
     // Use contentRef.current to get the latest content without adding it as dependency
+    const welcomeText = `# ${t('milkdownEditor.welcome')}\n\n${t('milkdownEditor.startWriting')}`;
+    const placeholderText = t('milkdownEditor.placeholder');
     const crepe = new Crepe({
       root: editorContainerRef.current,
-      defaultValue: contentRef.current || '# Bienvenue\n\nCommencez à écrire...',
+      defaultValue: contentRef.current || welcomeText,
       featureConfigs: {
         [Crepe.Feature.Placeholder]: {
-          text: 'Commencez à écrire...',
+          text: placeholderText,
         },
       },
     });
@@ -175,7 +180,7 @@ export const MilkdownEditor: React.FC = () => {
       crepeRef.current = null;
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filePath, setContent]); // Only recreate when filePath changes, NOT when content changes
+  }, [filePath, setContent, t]); // Only recreate when filePath changes, NOT when content changes
 
   // Handle IPC text insertion from bibliography panel
   useEffect(() => {
@@ -190,7 +195,8 @@ export const MilkdownEditor: React.FC = () => {
       });
     };
 
-    window.electron.editor.onInsertText(handler);
+    const cleanup = window.electron.editor.onInsertText(handler);
+    return cleanup;
   }, [safeEditorAction]);
 
   // Handle citation autocomplete detection

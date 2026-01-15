@@ -88,6 +88,110 @@
   font-size: var(--icon-sm);
 }
 
+/* Controls */
+.pdf-controls {
+  padding: var(--spacing-sm);
+  background-color: var(--bg-panel);
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+/* Search Box */
+.pdf-index-panel .search-box {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-sm);
+  transition: border-color var(--transition-normal);
+}
+
+.pdf-index-panel .search-box:focus-within {
+  border-color: var(--border-color-focus);
+}
+
+.pdf-index-panel .search-icon {
+  font-size: var(--icon-xs);
+  color: var(--text-tertiary);
+}
+
+.pdf-index-panel .search-input {
+  flex: 1;
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-size: var(--font-size-sm);
+  outline: none;
+}
+
+.pdf-index-panel .search-input::placeholder {
+  color: var(--text-muted);
+}
+
+/* Sort Controls */
+.pdf-index-panel .sort-controls {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.pdf-index-panel .sort-label {
+  font-size: var(--font-size-xs);
+  color: var(--text-tertiary);
+}
+
+.pdf-index-panel .sort-select {
+  flex: 1;
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  font-size: var(--font-size-xs);
+  padding: 6px 8px;
+  border-radius: var(--radius-sm);
+  outline: none;
+  cursor: pointer;
+}
+
+.pdf-index-panel .sort-select:focus {
+  border-color: var(--border-color-focus);
+}
+
+.pdf-index-panel .sort-order-btn {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  font-size: var(--icon-xs);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color var(--transition-normal);
+}
+
+.pdf-index-panel .sort-order-btn:hover {
+  background-color: var(--border-color);
+}
+
+/* Document Count */
+.document-count {
+  padding: var(--spacing-sm);
+  font-size: var(--font-size-xs);
+  color: var(--text-tertiary);
+  background-color: var(--bg-panel);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.document-count .filter-indicator {
+  color: var(--color-accent);
+}
+
 /* Content */
 .pdf-content {
   flex: 1;

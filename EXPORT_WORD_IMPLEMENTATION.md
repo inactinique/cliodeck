@@ -1,92 +1,92 @@
-# Implémentation de l'export Word avec support des modèles
+# Word Export Implementation with Template Support
 
-## 📋 Résumé des modifications
+## Summary of Modifications
 
-Ce document décrit l'implémentation complète du support des modèles Word (.dotx) pour l'export de documents dans ClioDesk.
+This document describes the complete implementation of Word template (.dotx) support for document export in ClioDesk.
 
-## ✅ Tâches complétées
+## Completed Tasks
 
-### 1. **Correction du bug PageNumber** ✅
-- **Problème** : Utilisation de guillemets simples au lieu de guillemets doubles dans `PageNumber.CURRENT`
-- **Solution** : Changé `['Page ', PageNumber.CURRENT]` en `["Page ", PageNumber.CURRENT]`
-- **Fichier** : [word-export.ts:500](src/main/services/word-export.ts#L500)
+### 1. **PageNumber Bug Fix**
+- **Issue**: Using single quotes instead of double quotes in `PageNumber.CURRENT`
+- **Solution**: Changed `['Page ', PageNumber.CURRENT]` to `["Page ", PageNumber.CURRENT]`
+- **File**: [word-export.ts:500](src/main/services/word-export.ts#L500)
 
-### 2. **Ajout des dépendances** ✅
-- **Librairies installées** :
-  - `docxtemplater@^3.55.7` - Gestion des templates Word avec placeholders
-  - `pizzip@^3.1.7` - Manipulation des archives ZIP (format .docx/.dotx)
-  - `@types/pizzip` (dev) - Définitions TypeScript pour pizzip
+### 2. **Dependencies Added**
+- **Libraries installed**:
+  - `docxtemplater@^3.55.7` - Word template management with placeholders
+  - `pizzip@^3.1.7` - ZIP archive manipulation (.docx/.dotx format)
+  - `@types/pizzip` (dev) - TypeScript definitions for pizzip
 
-### 3. **Implémentation du merge avec templates** ✅
-- **Nouvelle méthode** : `mergeWithTemplate()` dans `WordExportService`
-- **Fonctionnalités** :
-  - Lecture du fichier .dotx
-  - Chargement avec PizZip
-  - Initialisation de Docxtemplater
-  - Remplacement des placeholders
-  - Génération du buffer de sortie
-  - Gestion d'erreurs avec fallback
+### 3. **Template Merge Implementation**
+- **New method**: `mergeWithTemplate()` in `WordExportService`
+- **Features**:
+  - Read .dotx file
+  - Load with PizZip
+  - Initialize Docxtemplater
+  - Replace placeholders
+  - Generate output buffer
+  - Error handling with fallback
 
-**Placeholders supportés** :
-- `{title}` - Titre du document
-- `{author}` - Auteur
-- `{date}` - Date d'export
-- `{content}` - Contenu Markdown converti
-- `{abstract}` - Résumé (si abstract.md existe)
+**Supported placeholders**:
+- `{title}` - Document title
+- `{author}` - Author
+- `{date}` - Export date
+- `{content}` - Converted Markdown content
+- `{abstract}` - Abstract (if abstract.md exists)
 
-### 4. **Intégration dans le flux d'export** ✅
-- **Modifications** : [word-export.ts:536-567](src/main/services/word-export.ts#L536-L567)
-- **Logique** :
+### 4. **Export Flow Integration**
+- **Modifications**: [word-export.ts:536-567](src/main/services/word-export.ts#L536-L567)
+- **Logic**:
   ```typescript
   if (options.templatePath && existsSync(options.templatePath)) {
-    // Utiliser le template
+    // Use template
     finalBuffer = await this.mergeWithTemplate(templatePath, data);
   } else {
-    // Générer depuis zéro (comportement existant)
+    // Generate from scratch (existing behavior)
     finalBuffer = await Packer.toBuffer(doc);
   }
   ```
-- **Fallback automatique** : Si le template échoue, génération standard utilisée
+- **Automatic fallback**: If template fails, standard generation is used
 
-### 5. **Détection automatique des templates** ✅
-- **Fonction existante** : `findTemplate()` détecte les fichiers .dotx
-- **IPC handler** : `word-export:find-template` expose la fonction au renderer
-- **UI** : Modal d'export affiche automatiquement le template détecté
+### 5. **Automatic Template Detection**
+- **Existing function**: `findTemplate()` detects .dotx files
+- **IPC handler**: `word-export:find-template` exposes function to renderer
+- **UI**: Export modal automatically displays detected template
 
-### 6. **Interface utilisateur** ✅
-- **Composant** : [WordExportModal.tsx](src/renderer/src/components/Export/WordExportModal.tsx)
-- **Affichage** :
-  - Ligne 175-180 : Badge vert avec icône ✓ et nom du template
-  - Exemple : "✓ Modèle Word détecté: `mon_template.dotx`"
-- **Passage du templatePath** : Ligne 123 dans `handleExport()`
+### 6. **User Interface**
+- **Component**: [WordExportModal.tsx](src/renderer/src/components/Export/WordExportModal.tsx)
+- **Display**:
+  - Lines 175-180: Green badge with icon and template name
+  - Example: " Word template detected: `my_template.dotx`"
+- **templatePath passing**: Line 123 in `handleExport()`
 
-### 7. **Types TypeScript** ✅
-- **Ajout du stage** : `'template'` dans `WordExportProgress`
-- **Déclarations de types** : `@ts-ignore` pour docxtemplater et pizzip (pas de types officiels)
+### 7. **TypeScript Types**
+- **Stage added**: `'template'` in `WordExportProgress`
+- **Type declarations**: `@ts-ignore` for docxtemplater and pizzip (no official types)
 
-### 8. **Documentation** ✅
-- **Guide utilisateur** : [WORD_TEMPLATES.md](WORD_TEMPLATES.md) - 184 lignes
-- **Contenu** :
-  - Vue d'ensemble
-  - Utilisation basique
-  - Création de templates avec placeholders
-  - Styles et mise en forme
-  - Cas d'usage (thèses, articles, rapports)
-  - Dépannage
-  - Ressources
+### 8. **Documentation**
+- **User guide**: [WORD_TEMPLATES.md](WORD_TEMPLATES.md) - 184 lines
+- **Contents**:
+  - Overview
+  - Basic usage
+  - Template creation with placeholders
+  - Styles and formatting
+  - Use cases (theses, articles, reports)
+  - Troubleshooting
+  - Resources
 
-## 📁 Fichiers modifiés
+## Modified Files
 
-| Fichier | Lignes | Description |
-|---------|--------|-------------|
-| `src/main/services/word-export.ts` | +97, -7 | Implémentation template merge |
-| `package.json` | +2 | Ajout docxtemplater et pizzip |
-| `WORD_TEMPLATES.md` | +184 (nouveau) | Documentation utilisateur |
-| `EXPORT_WORD_IMPLEMENTATION.md` | +XXX (nouveau) | Documentation technique |
+| File | Lines | Description |
+|------|-------|-------------|
+| `src/main/services/word-export.ts` | +97, -7 | Template merge implementation |
+| `package.json` | +2 | Add docxtemplater and pizzip |
+| `WORD_TEMPLATES.md` | +184 (new) | User documentation |
+| `EXPORT_WORD_IMPLEMENTATION.md` | +XXX (new) | Technical documentation |
 
-## 🔧 Configuration technique
+## Technical Configuration
 
-### Dépendances ajoutées
+### Dependencies Added
 
 ```json
 {
@@ -106,52 +106,52 @@ Ce document décrit l'implémentation complète du support des modèles Word (.d
 npm install
 ```
 
-**Note** : Un script `/tmp/install_deps.sh` a été créé pour faciliter l'installation.
+**Note**: A script `/tmp/install_deps.sh` was created to facilitate installation.
 
-## 🧪 Tests
+## Tests
 
-### Test manuel requis
+### Manual Testing Required
 
-Pour tester la fonctionnalité :
+To test the feature:
 
-1. **Sans template** (comportement existant) :
+1. **Without template** (existing behavior):
    ```bash
    npm run dev
-   # Ouvrir un projet
-   # Export Word sans .dotx dans le dossier
-   # Vérifier que l'export fonctionne comme avant
+   # Open a project
+   # Word export without .dotx in folder
+   # Verify export works as before
    ```
 
-2. **Avec template simple** :
+2. **With simple template**:
    ```bash
-   # Créer un fichier template.dotx dans le projet
-   # Le template peut être vide ou contenir du texte fixe
-   # Export Word
-   # Vérifier que le template est détecté
-   # Vérifier que l'export fonctionne
+   # Create a template.dotx file in project
+   # Template can be empty or contain fixed text
+   # Word export
+   # Verify template is detected
+   # Verify export works
    ```
 
-3. **Avec template et placeholders** :
+3. **With template and placeholders**:
    ```bash
-   # Créer un template.dotx avec :
-   # Titre: {title}
-   # Auteur: {author}
+   # Create a template.dotx with:
+   # Title: {title}
+   # Author: {author}
    # {content}
-   # Export Word
-   # Vérifier que les placeholders sont remplacés
+   # Word export
+   # Verify placeholders are replaced
    ```
 
-4. **Avec template invalide** :
+4. **With invalid template**:
    ```bash
-   # Créer un .dotx corrompu
-   # Export Word
-   # Vérifier le fallback vers génération standard
-   # Vérifier le message de warning dans les logs
+   # Create a corrupted .dotx
+   # Word export
+   # Verify fallback to standard generation
+   # Verify warning message in logs
    ```
 
-### Tests d'intégration recommandés
+### Recommended Integration Tests
 
-À implémenter dans le futur :
+To implement in the future:
 
 ```typescript
 describe('Word Export with Templates', () => {
@@ -182,7 +182,7 @@ describe('Word Export with Templates', () => {
       },
     });
     expect(result.success).toBe(true);
-    // Vérifier que le .docx généré contient "My Title" et "Test Author"
+    // Verify generated .docx contains "My Title" and "Test Author"
   });
 
   it('should fallback on template error', async () => {
@@ -192,52 +192,52 @@ describe('Word Export with Templates', () => {
       content: '# Test',
       templatePath: './invalid.dotx',
     });
-    expect(result.success).toBe(true); // Devrait réussir via fallback
+    expect(result.success).toBe(true); // Should succeed via fallback
   });
 });
 ```
 
-## 📊 Impact
+## Impact
 
-### Avantages
+### Benefits
 
-- ✅ **Flexibilité** : Les utilisateurs peuvent utiliser leurs propres modèles institutionnels
-- ✅ **Compatibilité** : Fonctionne avec tous les types de projets (article, book, notes, presentation)
-- ✅ **Robustesse** : Fallback automatique garantit que l'export ne plante jamais
-- ✅ **UX** : Détection automatique, aucune configuration manuelle requise
-- ✅ **Extensibilité** : Les placeholders peuvent être étendus facilement
+- **Flexibility**: Users can use their own institutional templates
+- **Compatibility**: Works with all project types (article, book, notes, presentation)
+- **Robustness**: Automatic fallback ensures export never fails
+- **UX**: Automatic detection, no manual configuration required
+- **Extensibility**: Placeholders can be easily extended
 
-### Limitations actuelles
+### Current Limitations
 
-- ⚠️ **Un seul template** : Si plusieurs .dotx existent, seul le premier (alphabétiquement) est utilisé
-- ⚠️ **Placeholders simples** : Pas de support pour les boucles ou conditions (limitation docxtemplater version gratuite)
-- ⚠️ **Pas de validation de template** : Si le template a des erreurs de syntaxe, l'erreur n'est visible que dans les logs
+- **One template only**: If multiple .dotx exist, only the first (alphabetically) is used
+- **Simple placeholders**: No support for loops or conditions (free docxtemplater version limitation)
+- **No template validation**: If template has syntax errors, error is only visible in logs
 
-### Améliorations futures possibles
+### Possible Future Improvements
 
-1. **Sélecteur de template** : Permettre de choisir parmi plusieurs templates
-2. **Éditeur de template** : Interface pour créer/éditer des templates directement dans ClioDesk
-3. **Prévisualisation** : Aperçu du document avant export
-4. **Templates par défaut** : Templates pré-configurés pour différents types de documents
-5. **Validation** : Vérifier les placeholders avant export
-6. **Support avancé** : Images, tableaux complexes, styles personnalisés
+1. **Template selector**: Allow choosing among multiple templates
+2. **Template editor**: Interface to create/edit templates directly in ClioDesk
+3. **Preview**: Document preview before export
+4. **Default templates**: Pre-configured templates for different document types
+5. **Validation**: Check placeholders before export
+6. **Advanced support**: Images, complex tables, custom styles
 
-## 🔗 Références
+## References
 
-- [Documentation docxtemplater](https://docxtemplater.com/docs/get-started-node/)
-- [Issue GitHub docx #137](https://github.com/dolanmiu/docx/issues/137) - Discussion sur le support .dotx
-- [Guide utilisateur](WORD_TEMPLATES.md)
+- [docxtemplater documentation](https://docxtemplater.com/docs/get-started-node/)
+- [GitHub issue docx #137](https://github.com/dolanmiu/docx/issues/137) - Discussion on .dotx support
+- [User guide](WORD_TEMPLATES.md)
 
-## ✨ Prochaines étapes
+## Next Steps
 
-1. **Tester manuellement** avec différents scénarios
-2. **Créer des templates d'exemple** pour la documentation
-3. **Mettre à jour le CHANGELOG** avec les nouvelles fonctionnalités
-4. **Créer une issue GitHub** pour les tests d'intégration
-5. **Documenter dans le guide méthodologique** comment créer des templates académiques
+1. **Test manually** with different scenarios
+2. **Create example templates** for documentation
+3. **Update CHANGELOG** with new features
+4. **Create GitHub issue** for integration tests
+5. **Document in methodology guide** how to create academic templates
 
 ---
 
-**Implémenté par** : Claude Sonnet 4.5
-**Date** : 11 janvier 2026
-**Commit** : `75ee4d0` - feat: Add Word template (.dotx) support for exports
+**Implemented by**: Claude Sonnet 4.5
+**Date**: January 11, 2026
+**Commit**: `75ee4d0` - feat: Add Word template (.dotx) support for exports

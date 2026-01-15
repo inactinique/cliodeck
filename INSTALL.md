@@ -1,33 +1,33 @@
-# Installation de ClioDesk
+# ClioDesk Installation
 
-## Installation rapide (Linux)
+## Quick Installation (Linux)
 
 ### Via AppImage
 
-1. Téléchargez le fichier `.AppImage` depuis les releases
-2. Rendez-le exécutable:
+1. Download the `.AppImage` file from releases
+2. Make it executable:
    ```bash
    chmod +x ClioDesk-*.AppImage
    ```
-3. Pour l'installer dans le menu d'applications avec l'icône:
+3. To install it in the applications menu with the icon:
    ```bash
-   ./scripts/install-desktop.sh /chemin/vers/ClioDesk-*.AppImage
+   ./scripts/install-desktop.sh /path/to/ClioDesk-*.AppImage
    ```
-4. Lancez l'application depuis votre menu ou en double-cliquant sur l'AppImage
+4. Launch the application from your menu or by double-clicking the AppImage
 
 ### Via .deb (Debian/Ubuntu)
 
 ```bash
 sudo dpkg -i cliodesk_*.deb
-sudo apt-get install -f  # Installer les dépendances manquantes si nécessaire
+sudo apt-get install -f  # Install missing dependencies if necessary
 ```
 
-L'icône et le lanceur seront automatiquement installés.
+The icon and launcher will be automatically installed.
 
-## Désinstallation
+## Uninstallation
 
 ### AppImage
-Pour retirer ClioDesk du menu d'applications:
+To remove ClioDesk from the applications menu:
 ```bash
 rm ~/.local/share/applications/cliodesk.desktop
 rm -rf ~/.local/share/icons/hicolor/*/apps/cliodesk.png
@@ -39,34 +39,34 @@ update-desktop-database ~/.local/share/applications/
 sudo apt remove cliodesk
 ```
 
-## Problèmes connus
+## Known Issues
 
-### L'icône n'apparaît pas
-Si l'icône n'apparaît pas dans votre barre des tâches ou menu:
-1. Réexécutez le script d'installation: `./scripts/install-desktop.sh`
-2. Déconnectez-vous et reconnectez-vous
-3. Ou redémarrez votre gestionnaire de fenêtres
+### Icon doesn't appear
+If the icon doesn't appear in your taskbar or menu:
+1. Re-run the installation script: `./scripts/install-desktop.sh`
+2. Log out and log back in
+3. Or restart your window manager
 
-### Dépendances requises
+### Required Dependencies
 
-ClioDesk nécessite:
-- **Pandoc** (pour l'export PDF): `sudo apt install pandoc`
-- **XeLaTeX** (pour l'export PDF): `sudo apt install texlive-xetex texlive-fonts-recommended texlive-lang-french`
+ClioDesk requires:
+- **Pandoc** (for PDF export): `sudo apt install pandoc`
+- **XeLaTeX** (for PDF export): `sudo apt install texlive-xetex texlive-fonts-recommended texlive-lang-french`
 
-## Build depuis les sources
+## Build from Source
 
 ```bash
-# Installer les dépendances
+# Install dependencies
 npm install
 
-# Build complet
+# Full build
 npm run build
 
-# Générer les packages
+# Generate packages
 npm run build:linux   # Linux (AppImage + .deb)
 npm run build:mac     # macOS (.dmg)
-npm run build:win     # Windows (installateur)
+npm run build:win     # Windows (installer)
 
-# Installer le lanceur et l'icône
+# Install launcher and icon
 ./scripts/install-desktop.sh
 ```

@@ -1,27 +1,27 @@
-# Guide d'installation - ClioDesk pour Linux
+# Installation Guide - ClioDesk for Linux
 
-Ce guide vous accompagne dans l'installation complète de ClioDesk sur Linux, depuis les prérequis jusqu'au premier lancement.
+This guide walks you through the complete installation of ClioDesk on Linux, from prerequisites to first launch.
 
-## Table des matières
+## Table of Contents
 
-- [Prérequis système](#prérequis-système)
-- [Installation des dépendances](#installation-des-dépendances)
-- [Installation de ClioDesk](#installation-de-cliodesk)
-- [Configuration initiale](#configuration-initiale)
-- [Vérification de l'installation](#vérification-de-linstallation)
-- [Dépannage](#dépannage)
+- [System Requirements](#system-requirements)
+- [Installing Dependencies](#installing-dependencies)
+- [Installing ClioDesk](#installing-cliodesk)
+- [Initial Configuration](#initial-configuration)
+- [Verifying Installation](#verifying-installation)
+- [Troubleshooting](#troubleshooting)
 
-## Prérequis système
+## System Requirements
 
-- **Distribution** : Ubuntu 20.04+, Debian 11+, Fedora 35+, Arch Linux, ou compatible
-- **Architecture** : x86_64 (AMD64)
-- **Espace disque** : Au moins 5 GB libres (pour l'application et les modèles Ollama)
-- **Mémoire** : 8 GB RAM minimum, 16 GB recommandé
-- **Bibliothèques système** : libgtk-3, libnotify, libnss3, libxss1, libxtst6, xdg-utils, libatspi2.0
+- **Distribution**: Ubuntu 20.04+, Debian 11+, Fedora 35+, Arch Linux, or compatible
+- **Architecture**: x86_64 (AMD64)
+- **Disk Space**: At least 5 GB free (for application and Ollama models)
+- **Memory**: 8 GB RAM minimum, 16 GB recommended
+- **System Libraries**: libgtk-3, libnotify, libnss3, libxss1, libxtst6, xdg-utils, libatspi2.0
 
-## Installation des dépendances
+## Installing Dependencies
 
-### 1. Dépendances système de base
+### 1. Basic System Dependencies
 
 #### Ubuntu/Debian
 
@@ -47,7 +47,7 @@ sudo apt install -y \
   texlive-lang-french
 ```
 
-**Note :** Pandoc et XeLaTeX sont nécessaires pour l'export PDF depuis ClioDesk.
+**Note:** Pandoc and XeLaTeX are required for PDF export from ClioDesk.
 
 #### Fedora/RHEL/CentOS
 
@@ -96,83 +96,83 @@ sudo pacman -Syu --needed \
   texlive-lang
 ```
 
-### 2. Node.js et npm
+### 2. Node.js and npm
 
-ClioDesk nécessite Node.js 20+ et npm 10+.
+ClioDesk requires Node.js 20+ and npm 10+.
 
-#### Méthode 1 : Via NodeSource (recommandé)
+#### Method 1: Via NodeSource (recommended)
 
-**Ubuntu/Debian :**
+**Ubuntu/Debian:**
 ```bash
-# Installer le dépôt NodeSource pour Node.js 20
+# Install NodeSource repository for Node.js 20
 curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
 
-# Installer Node.js et npm
+# Install Node.js and npm
 sudo apt install -y nodejs
 
-# Vérifier les versions
-node --version  # Devrait afficher v20.x.x ou supérieur
-npm --version   # Devrait afficher 10.x.x ou supérieur
+# Verify versions
+node --version  # Should show v20.x.x or higher
+npm --version   # Should show 10.x.x or higher
 ```
 
-**Fedora/RHEL/CentOS :**
+**Fedora/RHEL/CentOS:**
 ```bash
-# Installer le dépôt NodeSource pour Node.js 20
+# Install NodeSource repository for Node.js 20
 curl -fsSL https://rpm.nodesource.com/setup_20.x | sudo bash -
 
-# Installer Node.js et npm
+# Install Node.js and npm
 sudo dnf install -y nodejs
 
-# Vérifier les versions
+# Verify versions
 node --version
 npm --version
 ```
 
-**Arch Linux :**
+**Arch Linux:**
 ```bash
-# Node.js 20+ est disponible dans les dépôts officiels
+# Node.js 20+ is available in official repositories
 sudo pacman -S nodejs npm
 
-# Vérifier les versions
+# Verify versions
 node --version
 npm --version
 ```
 
-#### Méthode 2 : Via nvm (Node Version Manager)
+#### Method 2: Via nvm (Node Version Manager)
 
-Utile pour gérer plusieurs versions de Node.js :
+Useful for managing multiple Node.js versions:
 
 ```bash
-# Installer nvm
+# Install nvm
 curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
 
-# Recharger votre shell
-source ~/.bashrc  # ou ~/.zshrc si vous utilisez zsh
+# Reload your shell
+source ~/.bashrc  # or ~/.zshrc if using zsh
 
-# Installer Node.js 20
+# Install Node.js 20
 nvm install 20
 nvm use 20
 nvm alias default 20
 
-# Vérifier
+# Verify
 node --version
 npm --version
 ```
 
 ### 3. Python 3
 
-ClioDesk utilise Python pour certains services (topic modeling). Python 3.11+ est requis.
+ClioDesk uses Python for certain services (topic modeling). Python 3.11+ is required.
 
 #### Ubuntu/Debian
 
 ```bash
-# Vérifier si Python 3.11+ est installé
+# Check if Python 3.11+ is installed
 python3 --version
 
-# Si nécessaire (Ubuntu 22.04+, Debian 12+)
+# If necessary (Ubuntu 22.04+, Debian 12+)
 sudo apt install -y python3 python3-pip python3-venv
 
-# Pour Ubuntu 20.04/Debian 11, installer depuis le PPA deadsnakes
+# For Ubuntu 20.04/Debian 11, install from deadsnakes PPA
 sudo apt install software-properties-common
 sudo add-apt-repository ppa:deadsnakes/ppa
 sudo apt update
@@ -182,51 +182,51 @@ sudo apt install python3.11 python3.11-venv python3.11-dev
 #### Fedora/RHEL/CentOS
 
 ```bash
-# Python 3.11+ devrait être disponible
+# Python 3.11+ should be available
 sudo dnf install -y python3 python3-pip python3-devel
 
-# Vérifier
+# Verify
 python3 --version
 ```
 
 #### Arch Linux
 
 ```bash
-# Python 3.12+ est dans les dépôts
+# Python 3.12+ is in repositories
 sudo pacman -S python python-pip
 
-# Vérifier
+# Verify
 python --version
 ```
 
-**Note :** L'environnement virtuel Python (venv) sera créé automatiquement par ClioDesk au premier lancement.
+**Note:** The Python virtual environment (venv) will be created automatically by ClioDesk on first launch.
 
-### 4. Ollama (LLM local)
+### 4. Ollama (Local LLM)
 
-Ollama est nécessaire pour les fonctionnalités d'IA locales (embeddings et chat).
+Ollama is required for local AI features (embeddings and chat).
 
-#### Installation automatique (toutes distributions)
+#### Automatic Installation (all distributions)
 
 ```bash
-# Installer Ollama
+# Install Ollama
 curl -fsSL https://ollama.ai/install.sh | sh
 ```
 
-Ce script :
-- Télécharge et installe Ollama dans `/usr/local/bin/`
-- Crée un service systemd `ollama.service`
-- Démarre automatiquement le service
+This script:
+- Downloads and installs Ollama in `/usr/local/bin/`
+- Creates a systemd service `ollama.service`
+- Automatically starts the service
 
-#### Installation manuelle
+#### Manual Installation
 
-**Ubuntu/Debian/Fedora/RHEL :**
+**Ubuntu/Debian/Fedora/RHEL:**
 ```bash
-# Télécharger le binaire
+# Download binary
 curl -L https://ollama.ai/download/ollama-linux-amd64 -o ollama
 chmod +x ollama
 sudo mv ollama /usr/local/bin/
 
-# Créer un service systemd
+# Create systemd service
 sudo tee /etc/systemd/system/ollama.service > /dev/null <<EOF
 [Unit]
 Description=Ollama Service
@@ -243,102 +243,102 @@ RestartSec=3
 WantedBy=default.target
 EOF
 
-# Créer l'utilisateur ollama
+# Create ollama user
 sudo useradd -r -s /bin/false -m -d /usr/share/ollama ollama
 
-# Démarrer le service
+# Start service
 sudo systemctl daemon-reload
 sudo systemctl enable ollama
 sudo systemctl start ollama
 ```
 
-**Arch Linux :**
+**Arch Linux:**
 ```bash
 # Via AUR
 yay -S ollama
 
-# Ou depuis les sources
+# Or from source
 git clone https://aur.archlinux.org/ollama.git
 cd ollama
 makepkg -si
 
-# Démarrer le service
+# Start service
 sudo systemctl enable --now ollama
 ```
 
-#### Vérifier le service Ollama
+#### Verify Ollama Service
 
 ```bash
-# Vérifier le statut
+# Check status
 systemctl status ollama
 
-# Vérifier que le serveur répond
+# Verify server responds
 curl http://localhost:11434/api/tags
 ```
 
-#### Télécharger les modèles requis
+#### Download Required Models
 
 ```bash
-# Modèle d'embeddings (obligatoire)
+# Embedding model (required)
 ollama pull nomic-embed-text
 
-# Modèle de chat (recommandé)
+# Chat model (recommended)
 ollama pull gemma2:2b
 ```
 
-**Modèles optionnels :**
+**Optional models:**
 
 ```bash
-# Modèle de chat alternatif (plus performant mais plus lourd)
+# Alternative chat model (more performant but heavier)
 ollama pull mistral:7b-instruct
 
-# Modèle d'embedding de secours
+# Fallback embedding model
 ollama pull mxbai-embed-large
 ```
 
-**Vérification :**
+**Verification:**
 
 ```bash
-# Lister les modèles installés
+# List installed models
 ollama list
 
-# Devrait afficher au minimum :
+# Should show at minimum:
 # nomic-embed-text
 # gemma2:2b
 ```
 
-## Installation de ClioDesk
+## Installing ClioDesk
 
-### Option A : Installation depuis les binaires (utilisateur)
+### Option A: Installation from Binaries (User)
 
-Si une version packagée est disponible :
+If a packaged version is available:
 
-#### AppImage (recommandé - fonctionne sur toutes les distributions)
+#### AppImage (recommended - works on all distributions)
 
 ```bash
-# Télécharger l'AppImage
-wget https://github.com/votre-org/cliodesk/releases/latest/download/ClioDesk-0.1.0.AppImage
+# Download AppImage
+wget https://github.com/your-org/cliodesk/releases/latest/download/ClioDesk-0.1.0.AppImage
 
-# Rendre exécutable
+# Make executable
 chmod +x ClioDesk-0.1.0.AppImage
 
-# Lancer
+# Launch
 ./ClioDesk-0.1.0.AppImage
 ```
 
-**Intégration au système (optionnel) :**
+**System integration (optional):**
 
 ```bash
-# Déplacer vers un emplacement standard
+# Move to standard location
 mkdir -p ~/.local/bin
 mv ClioDesk-0.1.0.AppImage ~/.local/bin/cliodesk
 
-# Créer une entrée de menu desktop
+# Create desktop menu entry
 mkdir -p ~/.local/share/applications
 cat > ~/.local/share/applications/cliodesk.desktop <<EOF
 [Desktop Entry]
 Name=ClioDesk
-Comment=Assistant d'écriture pour historiens
+Comment=Writing assistant for historians
 Exec=$HOME/.local/bin/cliodesk %U
 Icon=cliodesk
 Terminal=false
@@ -347,238 +347,238 @@ Categories=Office;TextEditor;
 MimeType=text/markdown;
 EOF
 
-# Mettre à jour le cache des applications
+# Update applications cache
 update-desktop-database ~/.local/share/applications
 ```
 
-#### Package .deb (Ubuntu/Debian)
+#### .deb Package (Ubuntu/Debian)
 
 ```bash
-# Télécharger le package
-wget https://github.com/votre-org/cliodesk/releases/latest/download/ClioDesk-0.1.0.deb
+# Download package
+wget https://github.com/your-org/cliodesk/releases/latest/download/ClioDesk-0.1.0.deb
 
-# Installer
+# Install
 sudo dpkg -i ClioDesk-0.1.0.deb
 
-# Résoudre les dépendances manquantes (si nécessaire)
+# Resolve missing dependencies (if necessary)
 sudo apt-get install -f
 
-# Lancer
+# Launch
 cliodesk
 ```
 
-#### Package .rpm (Fedora/RHEL/CentOS)
+#### .rpm Package (Fedora/RHEL/CentOS)
 
-Si disponible :
+If available:
 
 ```bash
-# Télécharger le package
-wget https://github.com/votre-org/cliodesk/releases/latest/download/ClioDesk-0.1.0.rpm
+# Download package
+wget https://github.com/your-org/cliodesk/releases/latest/download/ClioDesk-0.1.0.rpm
 
-# Installer
+# Install
 sudo dnf install ./ClioDesk-0.1.0.rpm
 
-# Ou avec rpm
+# Or with rpm
 sudo rpm -i ClioDesk-0.1.0.rpm
 
-# Lancer
+# Launch
 cliodesk
 ```
 
-### Option B : Installation depuis les sources (développeur)
+### Option B: Installation from Source (Developer)
 
-Pour contribuer au projet ou exécuter la version de développement :
+To contribute to the project or run the development version:
 
-1. **Cloner le dépôt**
+1. **Clone the repository**
    ```bash
-   git clone https://github.com/votre-org/cliodesk.git
+   git clone https://github.com/your-org/cliodesk.git
    cd cliodesk
    ```
 
-2. **Installer les dépendances npm**
+2. **Install npm dependencies**
    ```bash
    npm install
    ```
 
-3. **Compiler les modules natifs**
+3. **Compile native modules**
 
-   Cette étape est cruciale pour que `better-sqlite3` fonctionne avec Electron :
+   This step is crucial for `better-sqlite3` to work with Electron:
    ```bash
    npx electron-rebuild -f
    ```
 
-4. **Compiler le projet**
+4. **Build the project**
    ```bash
    npm run build
    ```
 
-5. **Lancer en mode développement**
+5. **Launch in development mode**
    ```bash
-   # Méthode 1 : Tout en un
+   # Method 1: All in one
    npm run dev:full
 
-   # Méthode 2 : Séparé (pour le développement)
-   # Terminal 1 : Compiler en mode watch
+   # Method 2: Separate (for development)
+   # Terminal 1: Compile in watch mode
    npm run dev
 
-   # Terminal 2 : Lancer l'application
+   # Terminal 2: Launch application
    npm start
    ```
 
-6. **Construire l'application pour distribution**
+6. **Build application for distribution**
 
    ```bash
-   # Build pour Linux (AppImage + deb)
+   # Build for Linux (AppImage + deb)
    npm run build:linux
 
-   # Les fichiers seront dans : release/
+   # Files will be in: release/
    # - ClioDesk-0.1.0.AppImage
    # - ClioDesk-0.1.0.deb
    ```
 
-## Configuration initiale
+## Initial Configuration
 
-Au premier lancement de ClioDesk :
+On first ClioDesk launch:
 
-### 1. Vérification d'Ollama
+### 1. Ollama Verification
 
-ClioDesk vérifie automatiquement la connexion à Ollama (http://localhost:11434).
+ClioDesk automatically checks the connection to Ollama (http://localhost:11434).
 
-**Si la connexion échoue :**
+**If connection fails:**
 ```bash
-# Vérifier le statut du service
+# Check service status
 systemctl status ollama
 
-# Redémarrer si nécessaire
+# Restart if necessary
 sudo systemctl restart ollama
 
-# Vérifier que le port 11434 est ouvert
+# Verify port 11434 is open
 curl http://localhost:11434/api/tags
 ```
 
-### 2. Configuration du LLM
+### 2. LLM Configuration
 
-1. Ouvrir **Settings** → **LLM Configuration**
-2. Vérifier les paramètres :
-   - **Backend** : Ollama (par défaut)
-   - **URL** : http://localhost:11434
-   - **Embedding Model** : nomic-embed-text
-   - **Chat Model** : gemma2:2b
-3. Cliquer sur **Test Connection** pour valider
+1. Open **Settings** → **LLM Configuration**
+2. Verify settings:
+   - **Backend**: Ollama (default)
+   - **URL**: http://localhost:11434
+   - **Embedding Model**: nomic-embed-text
+   - **Chat Model**: gemma2:2b
+3. Click **Test Connection** to validate
 
-### 3. Créer votre premier projet
+### 3. Create Your First Project
 
-1. **Nouveau Projet** → Choisir un dossier
-2. ClioDesk crée la structure :
+1. **New Project** → Choose a folder
+2. ClioDesk creates the structure:
    ```
-   mon-projet/
+   my-project/
    ├── .cliodesk/
-   │   └── vectors.db          # Base de données vectorielle
+   │   └── vectors.db          # Vector database
    ├── src/
-   │   ├── images/             # Images du projet
-   │   └── pdfs/               # PDFs à indexer
-   ├── bibliography.bib        # Bibliographie BibTeX
-   └── article.md              # Document principal
+   │   ├── images/             # Project images
+   │   └── pdfs/               # PDFs to index
+   ├── bibliography.bib        # BibTeX bibliography
+   └── article.md              # Main document
    ```
 
-### 4. Configuration Zotero (optionnel)
+### 4. Zotero Configuration (optional)
 
-Si vous utilisez Zotero :
+If you use Zotero:
 
-1. Obtenir votre API Key : [https://www.zotero.org/settings/keys/new](https://www.zotero.org/settings/keys/new)
-   - Permissions : "Read library" et "Write library"
-2. Dans ClioDesk : **Settings** → **Zotero Integration**
-3. Entrer votre User ID et API Key
+1. Get your API Key: [https://www.zotero.org/settings/keys/new](https://www.zotero.org/settings/keys/new)
+   - Permissions: "Read library" and "Write library"
+2. In ClioDesk: **Settings** → **Zotero Integration**
+3. Enter your User ID and API Key
 4. **Test Connection**
 
-## Vérification de l'installation
+## Verifying Installation
 
-### Test complet
+### Complete Test
 
-1. **Vérifier Ollama**
+1. **Verify Ollama**
    ```bash
-   # Vérifier le service
+   # Check service
    systemctl status ollama
 
-   # Tester l'API
+   # Test API
    curl http://localhost:11434/api/tags
-   # Devrait retourner la liste des modèles installés
+   # Should return list of installed models
    ```
 
-2. **Vérifier Node.js et npm**
+2. **Verify Node.js and npm**
    ```bash
-   node --version  # v20.x.x ou supérieur
-   npm --version   # 10.x.x ou supérieur
+   node --version  # v20.x.x or higher
+   npm --version   # 10.x.x or higher
    ```
 
-3. **Vérifier Python**
+3. **Verify Python**
    ```bash
-   python3 --version  # 3.11.x ou supérieur
+   python3 --version  # 3.11.x or higher
    ```
 
-4. **Vérifier Pandoc et XeLaTeX**
+4. **Verify Pandoc and XeLaTeX**
    ```bash
-   pandoc --version   # 2.x ou supérieur
-   xelatex --version  # TeX Live 2020+ ou supérieur
+   pandoc --version   # 2.x or higher
+   xelatex --version  # TeX Live 2020+ or higher
    ```
 
-5. **Tester ClioDesk**
-   - Créer un nouveau projet
-   - Importer un PDF dans `src/pdfs/`
-   - Indexer le PDF via l'interface
-   - Vérifier que le corpus affiche les statistiques
+5. **Test ClioDesk**
+   - Create a new project
+   - Import a PDF into `src/pdfs/`
+   - Index the PDF via the interface
+   - Verify corpus displays statistics
 
-### Vérifier les logs
+### Check Logs
 
-En mode développement, les logs sont affichés dans la console. En production :
+In development mode, logs are displayed in console. In production:
 
 ```bash
-# Logs de l'application
+# Application logs
 journalctl --user -u cliodesk -f
 
-# Ou pour les AppImages
+# Or for AppImages
 tail -f ~/.config/cliodesk/logs/main.log
 ```
 
-## Dépannage
+## Troubleshooting
 
-### Problème : Ollama ne répond pas
+### Problem: Ollama doesn't respond
 
 ```bash
-# Vérifier si Ollama tourne
+# Check if Ollama is running
 systemctl status ollama
 
-# Redémarrer le service
+# Restart service
 sudo systemctl restart ollama
 
-# Vérifier les logs
+# Check logs
 sudo journalctl -u ollama -n 50
 
-# Tester manuellement
+# Test manually
 ollama serve
 ```
 
-### Problème : "Module did not self-register" (better-sqlite3)
+### Problem: "Module did not self-register" (better-sqlite3)
 
-Cela signifie que le module natif n'a pas été compilé pour Electron.
+This means the native module wasn't compiled for Electron.
 
 ```bash
 cd /path/to/cliodesk
 
-# Supprimer le build existant
+# Remove existing build
 rm -rf node_modules/better-sqlite3/build
 
-# Recompiler pour Electron
+# Recompile for Electron
 npx electron-rebuild -f -w better-sqlite3
 
-# Relancer
+# Relaunch
 npm start
 ```
 
-### Problème : AppImage ne se lance pas
+### Problem: AppImage doesn't launch
 
 ```bash
-# Vérifier les dépendances FUSE
+# Check FUSE dependencies
 # Ubuntu/Debian
 sudo apt install libfuse2
 
@@ -588,22 +588,22 @@ sudo dnf install fuse-libs
 # Arch Linux
 sudo pacman -S fuse2
 
-# Rendre l'AppImage exécutable
+# Make AppImage executable
 chmod +x ClioDesk-0.1.0.AppImage
 
-# Lancer avec --no-sandbox si nécessaire
+# Launch with --no-sandbox if necessary
 ./ClioDesk-0.1.0.AppImage --no-sandbox
 ```
 
-### Problème : Python venv ne se crée pas
+### Problem: Python venv doesn't create
 
-Vérifiez que Python 3 et venv sont bien installés :
+Verify Python 3 and venv are properly installed:
 
 ```bash
 python3 --version
 python3 -m venv --help
 
-# Ubuntu/Debian : Installer python3-venv si manquant
+# Ubuntu/Debian: Install python3-venv if missing
 sudo apt install python3-venv
 
 # Fedora/RHEL
@@ -613,15 +613,15 @@ sudo dnf install python3-devel
 sudo pacman -S python
 ```
 
-### Problème : Erreur "cannot open shared object file"
+### Problem: "cannot open shared object file" error
 
-Il manque probablement des bibliothèques système :
+System libraries are probably missing:
 
 ```bash
-# Vérifier les dépendances manquantes
+# Check missing dependencies
 ldd /path/to/cliodesk
 
-# Ubuntu/Debian : Réinstaller les dépendances
+# Ubuntu/Debian: Reinstall dependencies
 sudo apt install --reinstall \
   libgtk-3-0 libnotify4 libnss3 libxss1 \
   libxtst6 xdg-utils libatspi2.0-0 libsecret-1-0 libgbm1
@@ -632,188 +632,188 @@ sudo dnf reinstall \
   libXtst xdg-utils at-spi2-core libsecret mesa-libgbm
 ```
 
-### Problème : Mémoire insuffisante pour les modèles
+### Problem: Insufficient memory for models
 
-Les modèles Ollama consomment de la RAM :
-- `nomic-embed-text` : ~1 GB
-- `gemma2:2b` : ~2 GB
-- `mistral:7b-instruct` : ~4 GB
+Ollama models consume RAM:
+- `nomic-embed-text`: ~1 GB
+- `gemma2:2b`: ~2 GB
+- `mistral:7b-instruct`: ~4 GB
 
-**Solutions :**
-- Fermer les applications inutilisées
-- Utiliser uniquement `gemma2:2b` (éviter `mistral:7b-instruct`)
-- Ajouter de la swap :
+**Solutions:**
+- Close unused applications
+- Use only `gemma2:2b` (avoid `mistral:7b-instruct`)
+- Add swap:
   ```bash
-  # Créer un fichier swap de 4GB
+  # Create 4GB swap file
   sudo fallocate -l 4G /swapfile
   sudo chmod 600 /swapfile
   sudo mkswap /swapfile
   sudo swapon /swapfile
 
-  # Rendre permanent
+  # Make permanent
   echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
   ```
 
-### Problème : Port 11434 déjà utilisé
+### Problem: Port 11434 already in use
 
-Si un autre service utilise le port 11434 :
+If another service uses port 11434:
 
 ```bash
-# Identifier le processus
+# Identify process
 sudo lsof -i :11434
 
-# Option 1 : Arrêter l'autre service
+# Option 1: Stop other service
 
-# Option 2 : Configurer Ollama sur un autre port
+# Option 2: Configure Ollama on another port
 sudo systemctl edit ollama
 
-# Ajouter :
+# Add:
 [Service]
 Environment="OLLAMA_HOST=127.0.0.1:11435"
 
-# Redémarrer
+# Restart
 sudo systemctl daemon-reload
 sudo systemctl restart ollama
 
-# Puis dans ClioDesk Settings → LLM → URL : http://localhost:11435
+# Then in ClioDesk Settings → LLM → URL: http://localhost:11435
 ```
 
-### Problème : Sandbox Electron (Wayland)
+### Problem: Electron Sandbox (Wayland)
 
-Sur certaines distributions avec Wayland :
+On some distributions with Wayland:
 
 ```bash
-# Lancer avec --no-sandbox
+# Launch with --no-sandbox
 ./ClioDesk-0.1.0.AppImage --no-sandbox
 
-# Ou définir la variable d'environnement
+# Or set environment variable
 export ELECTRON_NO_SANDBOX=1
 ./ClioDesk-0.1.0.AppImage
 ```
 
-### Obtenir de l'aide
+### Getting Help
 
-- **Documentation** : [README.md](README.md)
-- **Issues** : [GitHub Issues](https://github.com/votre-org/cliodesk/issues)
-- **Logs** : `~/.config/cliodesk/logs/`
+- **Documentation**: [README.md](README.md)
+- **Issues**: [GitHub Issues](https://github.com/your-org/cliodesk/issues)
+- **Logs**: `~/.config/cliodesk/logs/`
 
-## Désinstallation
+## Uninstallation
 
-Pour désinstaller complètement ClioDesk :
+To completely uninstall ClioDesk:
 
 ### AppImage
 
 ```bash
-# Supprimer l'AppImage
+# Remove AppImage
 rm ~/.local/bin/cliodesk
 
-# Supprimer l'entrée de menu
+# Remove menu entry
 rm ~/.local/share/applications/cliodesk.desktop
 update-desktop-database ~/.local/share/applications
 
-# Supprimer les données utilisateur
+# Remove user data
 rm -rf ~/.config/cliodesk
 rm -rf ~/.local/share/cliodesk
 ```
 
-### Package .deb
+### .deb Package
 
 ```bash
-# Désinstaller
+# Uninstall
 sudo apt remove cliodesk
 
-# Supprimer les données
+# Remove data
 rm -rf ~/.config/cliodesk
 ```
 
-### Package .rpm
+### .rpm Package
 
 ```bash
-# Désinstaller
+# Uninstall
 sudo dnf remove cliodesk
 
-# Supprimer les données
+# Remove data
 rm -rf ~/.config/cliodesk
 ```
 
-### Depuis les sources
+### From Source
 
 ```bash
-# Supprimer le dépôt cloné
+# Remove cloned repository
 rm -rf /path/to/cliodesk
 
-# Supprimer les données utilisateur
+# Remove user data
 rm -rf ~/.config/cliodesk
 ```
 
-### Désinstaller Ollama (optionnel)
+### Uninstall Ollama (optional)
 
 ```bash
-# Arrêter le service
+# Stop service
 sudo systemctl stop ollama
 sudo systemctl disable ollama
 
-# Supprimer le binaire
+# Remove binary
 sudo rm /usr/local/bin/ollama
 
-# Supprimer le service systemd
+# Remove systemd service
 sudo rm /etc/systemd/system/ollama.service
 sudo systemctl daemon-reload
 
-# Supprimer les données
+# Remove data
 sudo rm -rf /usr/share/ollama
 sudo rm -rf ~/.ollama
 
-# Supprimer l'utilisateur
+# Remove user
 sudo userdel ollama
 ```
 
-**Note :** Vos projets ClioDesk (fichiers .md, PDFs, .cliodesk/) ne sont pas supprimés automatiquement.
+**Note:** Your ClioDesk projects (.md files, PDFs, .cliodesk/) are not automatically deleted.
 
-## Prochaines étapes
+## Next Steps
 
-Une fois ClioDesk installé :
-1. Consultez le [README.md](README.md) pour comprendre l'architecture
-2. Lisez le [DEPLOYMENT.md](DEPLOYMENT.md) pour le workflow utilisateur
-3. Explorez les [exemples de projets](examples/) (si disponibles)
+Once ClioDesk is installed:
+1. See [README.md](README.md) to understand the architecture
+2. Read [DEPLOYMENT.md](DEPLOYMENT.md) for user workflow
+3. Explore [project examples](examples/) (if available)
 
-## Notes spécifiques aux distributions
+## Distribution-Specific Notes
 
 ### Ubuntu 20.04 LTS
 
-- Utilisez le PPA deadsnakes pour Python 3.11+
+- Use deadsnakes PPA for Python 3.11+
 - Node.js 20 via NodeSource
-- Ollama via script d'installation automatique
+- Ollama via automatic installation script
 
 ### Fedora 38+
 
-- Python 3.11+ disponible par défaut
-- Node.js 20 via NodeSource ou dnf
-- Ollama via script d'installation automatique
+- Python 3.11+ available by default
+- Node.js 20 via NodeSource or dnf
+- Ollama via automatic installation script
 
 ### Arch Linux
 
-- Toutes les dépendances dans les dépôts officiels
+- All dependencies in official repositories
 - Ollama via AUR (yay -S ollama)
-- Mises à jour continues (rolling release)
+- Continuous updates (rolling release)
 
 ### WSL2 (Windows Subsystem for Linux)
 
-ClioDesk peut fonctionner sur WSL2, mais avec limitations :
-- Pas d'accélération GPU pour Ollama
-- Interface graphique nécessite un serveur X (VcXsrv, WSLg)
-- Performances réduites par rapport à Linux natif
+ClioDesk can work on WSL2, but with limitations:
+- No GPU acceleration for Ollama
+- GUI requires X server (VcXsrv, WSLg)
+- Reduced performance compared to native Linux
 
 ```bash
-# Activer systemd sur WSL2 (Ubuntu 22.04+)
+# Enable systemd on WSL2 (Ubuntu 22.04+)
 echo "[boot]" | sudo tee -a /etc/wsl.conf
 echo "systemd=true" | sudo tee -a /etc/wsl.conf
 
-# Redémarrer WSL depuis PowerShell
+# Restart WSL from PowerShell
 wsl --shutdown
 ```
 
 ---
 
-**Licence :** MIT
-**Support :** Ouvrez une issue sur GitHub pour toute question
+**License:** MIT
+**Support:** Open an issue on GitHub for any questions

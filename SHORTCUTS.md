@@ -1,127 +1,127 @@
-# Raccourcis Clavier - ClioDesk
+# Keyboard Shortcuts - ClioDesk
 
-Ce document liste tous les raccourcis clavier disponibles dans ClioDesk.
+This document lists all keyboard shortcuts available in ClioDesk.
 
-> **Note**: Sur macOS, utilisez `Cmd` au lieu de `Ctrl`.
+> **Note**: On macOS, use `Cmd` instead of `Ctrl`.
 
-## 📝 Fichier
+## File
 
-| Raccourci | Action | Description |
-|-----------|--------|-------------|
-| `Ctrl+N` | Nouveau fichier | Crée un nouveau fichier Markdown vierge |
-| `Ctrl+O` | Ouvrir fichier | Ouvre un fichier Markdown existant |
-| `Ctrl+S` | Sauvegarder | Sauvegarde le fichier actuel |
-| `Ctrl+Shift+N` | Nouveau projet | Crée un nouveau projet |
-| `Ctrl+Shift+O` | Ouvrir projet | Ouvre un projet existant |
-| `Ctrl+E` | Exporter PDF | Ouvre la boîte de dialogue d'export PDF |
-| `Ctrl+,` | Paramètres | Ouvre le panneau de configuration |
+| Shortcut | Action | Description |
+|----------|--------|-------------|
+| `Ctrl+N` | New file | Creates a new blank Markdown file |
+| `Ctrl+O` | Open file | Opens an existing Markdown file |
+| `Ctrl+S` | Save | Saves the current file |
+| `Ctrl+Shift+N` | New project | Creates a new project |
+| `Ctrl+Shift+O` | Open project | Opens an existing project |
+| `Ctrl+E` | Export PDF | Opens the PDF export dialog |
+| `Ctrl+,` | Settings | Opens the configuration panel |
 
-## ✏️ Édition
+## Editing
 
-| Raccourci | Action | Description |
-|-----------|--------|-------------|
-| `Ctrl+Z` | Annuler | Annule la dernière modification |
-| `Ctrl+Y` / `Ctrl+Shift+Z` | Rétablir | Rétablit la dernière modification annulée |
-| `Ctrl+X` | Couper | Coupe le texte sélectionné |
-| `Ctrl+C` | Copier | Copie le texte sélectionné |
-| `Ctrl+V` | Coller | Colle le texte depuis le presse-papiers |
-| `Ctrl+A` | Tout sélectionner | Sélectionne tout le contenu |
+| Shortcut | Action | Description |
+|----------|--------|-------------|
+| `Ctrl+Z` | Undo | Undoes the last modification |
+| `Ctrl+Y` / `Ctrl+Shift+Z` | Redo | Redoes the last undone modification |
+| `Ctrl+X` | Cut | Cuts selected text |
+| `Ctrl+C` | Copy | Copies selected text |
+| `Ctrl+V` | Paste | Pastes text from clipboard |
+| `Ctrl+A` | Select all | Selects all content |
 
-## 🎨 Formatage Markdown
+## Markdown Formatting
 
-| Raccourci | Action | Description |
-|-----------|--------|-------------|
-| `Ctrl+B` | Gras | Insère ou formate le texte en **gras** |
-| `Ctrl+I` | Italique | Insère ou formate le texte en _italique_ |
-| `Ctrl+L` | Insérer lien | Insère un lien Markdown `[texte](url)` |
-| `Ctrl+'` | Insérer citation | Insère une citation BibTeX `[@clé]` |
-| `Ctrl+Shift+T` | Insérer tableau | Insère un tableau Markdown |
+| Shortcut | Action | Description |
+|----------|--------|-------------|
+| `Ctrl+B` | Bold | Inserts or formats text as **bold** |
+| `Ctrl+I` | Italic | Inserts or formats text as _italic_ |
+| `Ctrl+L` | Insert link | Inserts a Markdown link `[text](url)` |
+| `Ctrl+'` | Insert citation | Inserts a BibTeX citation `[@key]` |
+| `Ctrl+Shift+T` | Insert table | Inserts a Markdown table |
 
-## 👁️ Affichage
+## View
 
-| Raccourci | Action | Description |
-|-----------|--------|-------------|
-| `Ctrl+K` | Basculer aperçu | Affiche/masque l'aperçu Markdown |
-| `Alt+1` | Panneau Projects | Active le panneau de gestion des projets |
-| `Alt+2` | Panneau Bibliography | Active le panneau de bibliographie |
-| `Alt+3` | Panneau Chat | Active le panneau de chat RAG |
-| `Alt+4` | Panneau PDFs | Active le panneau d'indexation des PDFs |
-| `Alt+5` | Panneau Corpus | Active le panneau d'exploration du corpus |
-| `Alt+6` | Panneau Settings | Active le panneau de configuration |
-| `Ctrl+0` | Réinitialiser zoom | Rétablit le zoom par défaut |
-| `Ctrl++` | Zoom avant | Augmente le niveau de zoom |
-| `Ctrl+-` | Zoom arrière | Diminue le niveau de zoom |
-| `F11` | Plein écran | Active/désactive le mode plein écran |
-| `F12` | DevTools | Ouvre les outils de développement |
+| Shortcut | Action | Description |
+|----------|--------|-------------|
+| `Ctrl+K` | Toggle preview | Shows/hides Markdown preview |
+| `Alt+1` | Projects panel | Activates project management panel |
+| `Alt+2` | Bibliography panel | Activates bibliography panel |
+| `Alt+3` | Chat panel | Activates RAG chat panel |
+| `Alt+4` | PDFs panel | Activates PDF indexing panel |
+| `Alt+5` | Corpus panel | Activates corpus exploration panel |
+| `Alt+6` | Settings panel | Activates configuration panel |
+| `Ctrl+0` | Reset zoom | Restores default zoom |
+| `Ctrl++` | Zoom in | Increases zoom level |
+| `Ctrl+-` | Zoom out | Decreases zoom level |
+| `F11` | Full screen | Toggles full screen mode |
+| `F12` | DevTools | Opens developer tools |
 
-## 📚 Bibliographie
+## Bibliography
 
-| Raccourci | Action | Description |
-|-----------|--------|-------------|
-| `Ctrl+Shift+B` | Importer BibTeX | Ouvre la boîte de dialogue d'import BibTeX |
-| `Ctrl+F` | Rechercher citations | Focus sur la barre de recherche de citations |
+| Shortcut | Action | Description |
+|----------|--------|-------------|
+| `Ctrl+Shift+B` | Import BibTeX | Opens BibTeX import dialog |
+| `Ctrl+F` | Search citations | Focuses on citation search bar |
 
-## 🪟 Fenêtre
+## Window
 
-| Raccourci | Action | Description |
-|-----------|--------|-------------|
-| `Ctrl+W` | Fermer fenêtre | Ferme la fenêtre actuelle (sur Windows/Linux) |
-| `Ctrl+M` | Réduire | Réduit la fenêtre dans la barre des tâches |
-| `Ctrl+Q` | Quitter | Quitte l'application (sur Windows/Linux) |
+| Shortcut | Action | Description |
+|----------|--------|-------------|
+| `Ctrl+W` | Close window | Closes current window (on Windows/Linux) |
+| `Ctrl+M` | Minimize | Minimizes window to taskbar |
+| `Ctrl+Q` | Quit | Quits the application (on Windows/Linux) |
 
-## 💡 Astuces
+## Tips
 
-### Navigation rapide entre panneaux
-Utilisez les raccourcis `Alt+1` à `Alt+6` pour naviguer rapidement entre les différents panneaux sans utiliser la souris.
+### Quick Navigation Between Panels
+Use `Alt+1` through `Alt+6` shortcuts to quickly navigate between different panels without using the mouse.
 
-### Workflow d'édition optimal
-1. `Ctrl+N` - Nouveau fichier
-2. Écrivez votre contenu
-3. `Ctrl+B` / `Ctrl+I` - Formatage rapide
-4. `Ctrl+'` - Insérez des citations
-5. `Ctrl+K` - Prévisualisez le résultat
-6. `Ctrl+S` - Sauvegardez régulièrement
-7. `Ctrl+E` - Exportez en PDF quand terminé
+### Optimal Editing Workflow
+1. `Ctrl+N` - New file
+2. Write your content
+3. `Ctrl+B` / `Ctrl+I` - Quick formatting
+4. `Ctrl+'` - Insert citations
+5. `Ctrl+K` - Preview result
+6. `Ctrl+S` - Save regularly
+7. `Ctrl+E` - Export to PDF when done
 
-### Citations bibliographiques
-1. `Ctrl+Shift+B` - Importez votre fichier BibTeX
-2. `Alt+2` - Basculez vers le panneau Bibliographie
-3. `Ctrl+F` - Recherchez une citation
-4. Cliquez sur "Insérer" ou utilisez `Ctrl+'` dans l'éditeur
+### Bibliographic Citations
+1. `Ctrl+Shift+B` - Import your BibTeX file
+2. `Alt+2` - Switch to Bibliography panel
+3. `Ctrl+F` - Search for a citation
+4. Click "Insert" or use `Ctrl+'` in editor
 
-### Chat RAG
-- `Alt+3` - Accédez rapidement au panneau Chat
-- Tapez votre question dans le champ de saisie
-- Appuyez sur `Enter` pour envoyer (ou `Shift+Enter` si configuré ainsi)
-- `Escape` - Annulez une génération en cours
+### RAG Chat
+- `Alt+3` - Quickly access Chat panel
+- Type your question in the input field
+- Press `Enter` to send (or `Shift+Enter` if configured)
+- `Escape` - Cancel an ongoing generation
 
-## 🔧 Personnalisation
+## Customization
 
-Les raccourcis clavier sont définis dans le fichier `src/main/menu.ts`. Pour les modifier :
+Keyboard shortcuts are defined in the `src/main/menu.ts` file. To modify them:
 
-1. Ouvrez `src/main/menu.ts`
-2. Modifiez la propriété `accelerator` de l'élément de menu désiré
-3. Recompilez l'application avec `npm run build`
-4. Redémarrez l'application
+1. Open `src/main/menu.ts`
+2. Modify the `accelerator` property of the desired menu item
+3. Rebuild the application with `npm run build`
+4. Restart the application
 
-### Format des raccourcis
+### Shortcut Format
 
-Les raccourcis utilisent le format Electron Accelerator :
-- `CmdOrCtrl` - `Cmd` sur macOS, `Ctrl` sur Windows/Linux
-- `Shift` - Touche Maj
-- `Alt` - Touche Alt (Option sur macOS)
-- Combinez avec `+` : `CmdOrCtrl+Shift+B`
+Shortcuts use Electron Accelerator format:
+- `CmdOrCtrl` - `Cmd` on macOS, `Ctrl` on Windows/Linux
+- `Shift` - Shift key
+- `Alt` - Alt key (Option on macOS)
+- Combine with `+`: `CmdOrCtrl+Shift+B`
 
-### Raccourcis disponibles
+### Available Keys
 
-Vous pouvez utiliser :
-- Lettres : `A-Z`
-- Chiffres : `0-9`
-- Touches fonction : `F1-F24`
-- Touches spéciales : `Space`, `Tab`, `Enter`, `Escape`, `Backspace`, `Delete`
-- Symboles : `+`, `-`, `=`, `[`, `]`, etc.
+You can use:
+- Letters: `A-Z`
+- Numbers: `0-9`
+- Function keys: `F1-F24`
+- Special keys: `Space`, `Tab`, `Enter`, `Escape`, `Backspace`, `Delete`
+- Symbols: `+`, `-`, `=`, `[`, `]`, etc.
 
-## 📖 Références
+## References
 
-- [Documentation Electron - Accelerators](https://www.electronjs.org/docs/latest/api/accelerator)
-- [Documentation ClioDesk](README.md)
+- [Electron Documentation - Accelerators](https://www.electronjs.org/docs/latest/api/accelerator)
+- [ClioDesk Documentation](README.md)

@@ -107,11 +107,21 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
           console.log('📚 Loading bibliography from:', bibliographyPath);
           await useBibliographyStore.getState().loadBibliography(bibliographyPath);
           console.log('✅ Bibliography loaded for project');
+          // Refresh indexed PDFs to update the Chat panel state
+          await useBibliographyStore.getState().refreshIndexedPDFs();
+          console.log('✅ Indexed PDFs refreshed');
         } catch (error) {
           console.error('❌ Failed to load project bibliography:', error);
         }
       } else {
         console.log('ℹ️ No bibliography to load');
+        // Still refresh indexed PDFs in case there are documents indexed without bibliography
+        try {
+          const { useBibliographyStore } = await import('./bibliographyStore');
+          await useBibliographyStore.getState().refreshIndexedPDFs();
+        } catch (error) {
+          console.error('❌ Failed to refresh indexed PDFs:', error);
+        }
       }
 
       // Load document.md into editor

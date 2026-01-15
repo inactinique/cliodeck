@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Settings } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import './BeamerConfig.css';
 
 export interface BeamerConfigOptions {
@@ -141,6 +142,7 @@ export const BeamerConfig: React.FC<BeamerConfigProps> = ({
   projectPath,
   onConfigChange,
 }) => {
+  const { t } = useTranslation('common');
   const [config, setConfig] = useState<BeamerConfigOptions>(DEFAULT_CONFIG);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -173,7 +175,7 @@ export const BeamerConfig: React.FC<BeamerConfigProps> = ({
       onConfigChange?.(newConfig);
     } catch (error) {
       console.error('Failed to save Beamer config:', error);
-      alert('Erreur lors de la sauvegarde de la configuration');
+      alert(t('beamer.saveError'));
     } finally {
       setIsSaving(false);
     }
@@ -198,15 +200,15 @@ export const BeamerConfig: React.FC<BeamerConfigProps> = ({
     <div className="beamer-config">
       <div className="config-header">
         <Settings size={18} />
-        <h4>Configuration Beamer</h4>
+        <h4>{t('beamer.title')}</h4>
       </div>
 
       {/* Theme Section */}
       <div style={{ marginBottom: '1.5rem' }}>
-        <h5 style={{ margin: '0 0 0.75rem 0', color: '#ccc', fontSize: '0.9rem', fontWeight: 600 }}>Apparence</h5>
+        <h5 style={{ margin: '0 0 0.75rem 0', color: '#ccc', fontSize: '0.9rem', fontWeight: 600 }}>{t('beamer.appearance')}</h5>
 
         <div className="config-section">
-          <label>Thème principal</label>
+          <label>{t('beamer.mainTheme')}</label>
           <select
             value={config.theme}
             onChange={(e) => handleChange('theme', e.target.value)}
@@ -219,7 +221,7 @@ export const BeamerConfig: React.FC<BeamerConfigProps> = ({
         </div>
 
         <div className="config-section">
-          <label>Thème de couleur</label>
+          <label>{t('beamer.colorTheme')}</label>
           <select
             value={config.colortheme}
             onChange={(e) => handleChange('colortheme', e.target.value)}
@@ -232,7 +234,7 @@ export const BeamerConfig: React.FC<BeamerConfigProps> = ({
         </div>
 
         <div className="config-section">
-          <label>Thème de police</label>
+          <label>{t('beamer.fontTheme')}</label>
           <select
             value={config.fonttheme}
             onChange={(e) => handleChange('fonttheme', e.target.value)}
@@ -245,7 +247,7 @@ export const BeamerConfig: React.FC<BeamerConfigProps> = ({
         </div>
 
         <div className="config-section">
-          <label>Format d'écran</label>
+          <label>{t('beamer.aspectRatio')}</label>
           <select
             value={config.aspectratio}
             onChange={(e) => handleChange('aspectratio', e.target.value)}
@@ -264,16 +266,16 @@ export const BeamerConfig: React.FC<BeamerConfigProps> = ({
 
       {/* Title Page Section */}
       <div style={{ marginBottom: '1.5rem' }}>
-        <h5 style={{ margin: '0 0 0.75rem 0', color: '#ccc', fontSize: '0.9rem', fontWeight: 600 }}>Page de titre</h5>
+        <h5 style={{ margin: '0 0 0.75rem 0', color: '#ccc', fontSize: '0.9rem', fontWeight: 600 }}>{t('beamer.titlePage')}</h5>
 
         <div className="config-section">
-          <label>Institution (optionnel)</label>
+          <label>{t('beamer.institution')}</label>
           <input
             type="text"
             value={config.institute || ''}
             onChange={(e) => handleTextChange('institute', e.target.value)}
             onBlur={() => handleTextBlur('institute')}
-            placeholder="Université de..."
+            placeholder={t('beamer.institutionPlaceholder')}
             disabled={isSaving}
             style={{
               width: '100%',
@@ -288,13 +290,13 @@ export const BeamerConfig: React.FC<BeamerConfigProps> = ({
         </div>
 
         <div className="config-section">
-          <label>Logo (chemin relatif, optionnel)</label>
+          <label>{t('beamer.logo')}</label>
           <input
             type="text"
             value={config.logo || ''}
             onChange={(e) => handleTextChange('logo', e.target.value)}
             onBlur={() => handleTextBlur('logo')}
-            placeholder="logo.png"
+            placeholder={t('beamer.logoPlaceholder')}
             disabled={isSaving}
             style={{
               width: '100%',
@@ -311,7 +313,7 @@ export const BeamerConfig: React.FC<BeamerConfigProps> = ({
 
       {/* Table of Contents Section */}
       <div style={{ marginBottom: '1.5rem' }}>
-        <h5 style={{ margin: '0 0 0.75rem 0', color: '#ccc', fontSize: '0.9rem', fontWeight: 600 }}>Table des matières</h5>
+        <h5 style={{ margin: '0 0 0.75rem 0', color: '#ccc', fontSize: '0.9rem', fontWeight: 600 }}>{t('beamer.toc')}</h5>
 
         <div className="config-section">
           <label className="checkbox-label">
@@ -321,7 +323,7 @@ export const BeamerConfig: React.FC<BeamerConfigProps> = ({
               onChange={(e) => handleChange('showToc', e.target.checked)}
               disabled={isSaving}
             />
-            <span>Afficher la table des matières au début</span>
+            <span>{t('beamer.showToc')}</span>
           </label>
         </div>
 
@@ -333,7 +335,7 @@ export const BeamerConfig: React.FC<BeamerConfigProps> = ({
               onChange={(e) => handleChange('tocBeforeSection', e.target.checked)}
               disabled={isSaving || !config.showToc}
             />
-            <span>Afficher la TOC avant chaque section</span>
+            <span>{t('beamer.tocBeforeSection')}</span>
           </label>
         </div>
 
@@ -345,14 +347,14 @@ export const BeamerConfig: React.FC<BeamerConfigProps> = ({
               onChange={(e) => handleChange('sectionNumberInToc', e.target.checked)}
               disabled={isSaving || !config.showToc}
             />
-            <span>Numéroter les sections dans la TOC</span>
+            <span>{t('beamer.numberSectionsInToc')}</span>
           </label>
         </div>
       </div>
 
       {/* Numbering Section */}
       <div style={{ marginBottom: '1.5rem' }}>
-        <h5 style={{ margin: '0 0 0.75rem 0', color: '#ccc', fontSize: '0.9rem', fontWeight: 600 }}>Numérotation</h5>
+        <h5 style={{ margin: '0 0 0.75rem 0', color: '#ccc', fontSize: '0.9rem', fontWeight: 600 }}>{t('beamer.numbering')}</h5>
 
         <div className="config-section">
           <label className="checkbox-label">
@@ -362,20 +364,20 @@ export const BeamerConfig: React.FC<BeamerConfigProps> = ({
               onChange={(e) => handleChange('showFrameNumber', e.target.checked)}
               disabled={isSaving}
             />
-            <span>Afficher les numéros de slides</span>
+            <span>{t('beamer.showFrameNumber')}</span>
           </label>
         </div>
 
         <div className="config-section">
-          <label>Style de numérotation</label>
+          <label>{t('beamer.numberingStyle')}</label>
           <select
             value={config.frameNumberStyle}
             onChange={(e) => handleChange('frameNumberStyle', e.target.value)}
             disabled={isSaving || !config.showFrameNumber}
           >
-            <option value="total">Avec total (ex: 5/20)</option>
-            <option value="simple">Simple (ex: 5)</option>
-            <option value="none">Aucun</option>
+            <option value="total">{t('beamer.numberingWithTotal')}</option>
+            <option value="simple">{t('beamer.numberingSimple')}</option>
+            <option value="none">{t('beamer.numberingNone')}</option>
           </select>
         </div>
 
@@ -387,14 +389,14 @@ export const BeamerConfig: React.FC<BeamerConfigProps> = ({
               onChange={(e) => handleChange('showSectionNumber', e.target.checked)}
               disabled={isSaving}
             />
-            <span>Numéroter les sections</span>
+            <span>{t('beamer.numberSections')}</span>
           </label>
         </div>
       </div>
 
       {/* Footer Section */}
       <div style={{ marginBottom: '1.5rem' }}>
-        <h5 style={{ margin: '0 0 0.75rem 0', color: '#ccc', fontSize: '0.9rem', fontWeight: 600 }}>Pied de page</h5>
+        <h5 style={{ margin: '0 0 0.75rem 0', color: '#ccc', fontSize: '0.9rem', fontWeight: 600 }}>{t('beamer.footer')}</h5>
 
         <div className="config-section">
           <label className="checkbox-label">
@@ -404,7 +406,7 @@ export const BeamerConfig: React.FC<BeamerConfigProps> = ({
               onChange={(e) => handleChange('showAuthorInFooter', e.target.checked)}
               disabled={isSaving}
             />
-            <span>Afficher l'auteur</span>
+            <span>{t('beamer.showAuthor')}</span>
           </label>
         </div>
 
@@ -416,7 +418,7 @@ export const BeamerConfig: React.FC<BeamerConfigProps> = ({
               onChange={(e) => handleChange('showTitleInFooter', e.target.checked)}
               disabled={isSaving}
             />
-            <span>Afficher le titre</span>
+            <span>{t('beamer.showTitle')}</span>
           </label>
         </div>
 
@@ -428,14 +430,14 @@ export const BeamerConfig: React.FC<BeamerConfigProps> = ({
               onChange={(e) => handleChange('showDateInFooter', e.target.checked)}
               disabled={isSaving}
             />
-            <span>Afficher la date</span>
+            <span>{t('beamer.showDate')}</span>
           </label>
         </div>
       </div>
 
       {/* Advanced Section */}
       <div style={{ marginBottom: '1.5rem' }}>
-        <h5 style={{ margin: '0 0 0.75rem 0', color: '#ccc', fontSize: '0.9rem', fontWeight: 600 }}>Options avancées</h5>
+        <h5 style={{ margin: '0 0 0.75rem 0', color: '#ccc', fontSize: '0.9rem', fontWeight: 600 }}>{t('beamer.advanced')}</h5>
 
         <div className="config-section">
           <label className="checkbox-label">
@@ -445,7 +447,7 @@ export const BeamerConfig: React.FC<BeamerConfigProps> = ({
               onChange={(e) => handleChange('navigation', e.target.checked)}
               disabled={isSaving}
             />
-            <span>Afficher les symboles de navigation</span>
+            <span>{t('beamer.showNavigation')}</span>
           </label>
         </div>
 
@@ -457,7 +459,7 @@ export const BeamerConfig: React.FC<BeamerConfigProps> = ({
               onChange={(e) => handleChange('showNotes', e.target.checked)}
               disabled={isSaving}
             />
-            <span>Inclure les notes de présentation dans le PDF</span>
+            <span>{t('beamer.showNotes')}</span>
           </label>
         </div>
 
@@ -469,7 +471,7 @@ export const BeamerConfig: React.FC<BeamerConfigProps> = ({
               onChange={(e) => handleChange('incremental', e.target.checked)}
               disabled={isSaving}
             />
-            <span>Listes incrémentales (apparition progressive des items)</span>
+            <span>{t('beamer.incrementalLists')}</span>
           </label>
         </div>
 
@@ -481,47 +483,47 @@ export const BeamerConfig: React.FC<BeamerConfigProps> = ({
               onChange={(e) => handleChange('overlays', e.target.checked)}
               disabled={isSaving}
             />
-            <span>Activer les overlays et animations</span>
+            <span>{t('beamer.overlays')}</span>
           </label>
         </div>
       </div>
 
       {isSaving && (
         <div className="config-saving">
-          Sauvegarde...
+          {t('beamer.saving')}
         </div>
       )}
 
       <div className="config-info">
-        <p><strong>Guide de configuration :</strong></p>
+        <p><strong>{t('beamer.guide')} :</strong></p>
 
-        <p style={{ marginTop: '0.75rem', fontWeight: 600 }}>Thèmes</p>
+        <p style={{ marginTop: '0.75rem', fontWeight: 600 }}>{t('beamer.guideThemes')}</p>
         <ul>
-          <li><strong>Madrid, Berlin, Copenhagen</strong> : Professionnels avec barre latérale</li>
-          <li><strong>Singapore, Montpellier</strong> : Minimalistes et élégants</li>
-          <li><strong>CambridgeUS, Berkeley</strong> : Style académique classique</li>
-          <li><strong>Warsaw</strong> : Moderne avec gradients</li>
+          <li>{t('beamer.guideThemesDesc1')}</li>
+          <li>{t('beamer.guideThemesDesc2')}</li>
+          <li>{t('beamer.guideThemesDesc3')}</li>
+          <li>{t('beamer.guideThemesDesc4')}</li>
         </ul>
 
-        <p style={{ marginTop: '0.75rem', fontWeight: 600 }}>Logo et images</p>
+        <p style={{ marginTop: '0.75rem', fontWeight: 600 }}>{t('beamer.guideLogo')}</p>
         <ul>
-          <li>Placez vos images dans le dossier du projet</li>
-          <li>Utilisez des chemins relatifs : <code style={{ color: '#4ec9b0' }}>logo.png</code> ou <code style={{ color: '#4ec9b0' }}>images/logo.png</code></li>
-          <li>Formats supportés : PNG, JPG, PDF</li>
+          <li>{t('beamer.guideLogoDesc1')}</li>
+          <li>{t('beamer.guideLogoDesc2')}</li>
+          <li>{t('beamer.guideLogoDesc3')}</li>
         </ul>
 
-        <p style={{ marginTop: '0.75rem', fontWeight: 600 }}>Table des matières</p>
+        <p style={{ marginTop: '0.75rem', fontWeight: 600 }}>{t('beamer.guideToc')}</p>
         <ul>
-          <li><strong>TOC au début</strong> : Une page récapitulative de toutes les sections</li>
-          <li><strong>TOC avant chaque section</strong> : Rappel du plan à chaque nouvelle section</li>
-          <li>Numérotation optionnelle des sections</li>
+          <li>{t('beamer.guideTocDesc1')}</li>
+          <li>{t('beamer.guideTocDesc2')}</li>
+          <li>{t('beamer.guideTocDesc3')}</li>
         </ul>
 
-        <p style={{ marginTop: '0.75rem', fontWeight: 600 }}>Options avancées</p>
+        <p style={{ marginTop: '0.75rem', fontWeight: 600 }}>{t('beamer.guideAdvanced')}</p>
         <ul>
-          <li><strong>Listes incrémentales</strong> : Les items apparaissent un par un lors de la présentation</li>
-          <li><strong>Overlays</strong> : Active les commandes <code style={{ color: '#4ec9b0' }}>\pause</code> et les animations</li>
-          <li><strong>Notes</strong> : Syntaxe <code style={{ color: '#4ec9b0' }}>::: notes ... :::</code> pour notes de présentateur</li>
+          <li>{t('beamer.guideAdvancedDesc1')}</li>
+          <li>{t('beamer.guideAdvancedDesc2')}</li>
+          <li>{t('beamer.guideAdvancedDesc3')}</li>
         </ul>
       </div>
     </div>

@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { X, ExternalLink } from 'lucide-react';
 import './AboutModal.css';
 
@@ -8,6 +9,8 @@ interface AboutModalProps {
 }
 
 export const AboutModal: React.FC<AboutModalProps> = ({ isOpen, onClose }) => {
+  const { t } = useTranslation('common');
+
   if (!isOpen) return null;
 
   const openExternalLink = (url: string) => {
@@ -18,7 +21,7 @@ export const AboutModal: React.FC<AboutModalProps> = ({ isOpen, onClose }) => {
     <div className="about-modal" onClick={onClose}>
       <div className="about-content" onClick={(e) => e.stopPropagation()}>
         <div className="about-header">
-          <h3>About ClioDesk</h3>
+          <h3>{t('about.title')}</h3>
           <button className="close-btn" onClick={onClose}>
             <X size={20} />
           </button>
@@ -26,26 +29,25 @@ export const AboutModal: React.FC<AboutModalProps> = ({ isOpen, onClose }) => {
         <div className="about-body">
           <div className="about-section">
             <p className="about-license">
-              <strong>Licence:</strong> AGPL{' '}
+              <strong>{t('about.license')}:</strong> AGPL{' '}
               <button
                 className="about-link"
                 onClick={() => openExternalLink('https://github.com/inactinique/cliodesk')}
               >
-                GitHub Repository <ExternalLink size={14} />
+                {t('about.githubRepo')} <ExternalLink size={14} />
               </button>
             </p>
           </div>
           <div className="about-section">
             <p className="about-description">
-              This app was designed by{' '}
+              {t('about.description')}{' '}
               <button
                 className="about-link"
                 onClick={() => openExternalLink('https://inactinique.net')}
               >
                 Frédéric Clavert <ExternalLink size={14} />
               </button>{' '}
-              and developed thanks to Claude Code. It is a vibe coding experiment and is delivered
-              "as is", use it at your own risks.
+              {t('about.developedWith')}
             </p>
           </div>
         </div>

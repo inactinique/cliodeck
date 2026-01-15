@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useJournalStore } from '../../stores/journalStore';
 import { SessionTimeline } from './SessionTimeline';
 import { AIOperationsTable } from './AIOperationsTable';
@@ -7,6 +8,7 @@ import { HelperTooltip } from '../Methodology/HelperTooltip';
 import './JournalPanel.css';
 
 export const JournalPanel: React.FC = () => {
+  const { t } = useTranslation('common');
   const {
     sessions,
     selectedSession,
@@ -67,7 +69,7 @@ export const JournalPanel: React.FC = () => {
       <div className="journal-panel">
         <div className="journal-loading">
           <div className="loading-spinner"></div>
-          <p>Chargement du journal...</p>
+          <p>{t('journal.loading')}</p>
         </div>
       </div>
     );
@@ -78,17 +80,17 @@ export const JournalPanel: React.FC = () => {
       {/* Header */}
       <div className="journal-header">
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <h2>Journal de Recherche</h2>
+          <h2>{t('journal.title')}</h2>
           <HelperTooltip
-            content="Traçabilité complète de votre processus de recherche. Exportable pour annexes académiques."
+            content={t('journal.tooltipHelp')}
             onLearnMore={handleLearnMore}
           />
         </div>
         {statistics && (
           <div className="journal-stats-compact">
-            <span>{statistics.totalSessions} sessions</span>
-            <span>{statistics.totalEvents} événements</span>
-            <span>{statistics.totalAIOperations} opérations IA</span>
+            <span>{statistics.totalSessions} {t('journal.sessions')}</span>
+            <span>{statistics.totalEvents} {t('journal.events')}</span>
+            <span>{statistics.totalAIOperations} {t('journal.aiOperations')}</span>
           </div>
         )}
       </div>
@@ -97,7 +99,7 @@ export const JournalPanel: React.FC = () => {
       {error && (
         <div className="journal-error">
           <p>{error}</p>
-          <button onClick={clearError}>Fermer</button>
+          <button onClick={clearError}>{t('journal.close')}</button>
         </div>
       )}
 
@@ -108,13 +110,13 @@ export const JournalPanel: React.FC = () => {
             className={viewScope === 'session' ? 'active' : ''}
             onClick={() => setViewScope('session')}
           >
-            Par session
+            {t('journal.bySession')}
           </button>
           <button
             className={viewScope === 'project' ? 'active' : ''}
             onClick={() => setViewScope('project')}
           >
-            Vue d'ensemble du projet
+            {t('journal.projectOverview')}
           </button>
         </div>
         {viewScope === 'session' && (
@@ -124,7 +126,7 @@ export const JournalPanel: React.FC = () => {
               checked={hideEmptySessions}
               onChange={(e) => setHideEmptySessions(e.target.checked)}
             />
-            Masquer les sessions vides
+            {t('journal.hideEmptySessions')}
           </label>
         )}
       </div>
@@ -136,7 +138,7 @@ export const JournalPanel: React.FC = () => {
             className={viewMode === 'sessions' ? 'active' : ''}
             onClick={() => setViewMode('sessions')}
           >
-            Sessions
+            {t('journal.sessionsTab')}
           </button>
         )}
         <button
@@ -144,21 +146,21 @@ export const JournalPanel: React.FC = () => {
           onClick={() => setViewMode('timeline')}
           disabled={viewScope === 'session' && !selectedSession}
         >
-          Timeline
+          {t('journal.timelineTab')}
         </button>
         <button
           className={viewMode === 'ai-ops' ? 'active' : ''}
           onClick={() => setViewMode('ai-ops')}
           disabled={viewScope === 'session' && !selectedSession}
         >
-          Opérations IA
+          {t('journal.aiOpsTab')}
         </button>
         <button
           className={viewMode === 'chat' ? 'active' : ''}
           onClick={() => setViewMode('chat')}
           disabled={viewScope === 'session' && !selectedSession}
         >
-          Historique Chat
+          {t('journal.chatHistory')}
         </button>
       </div>
 
@@ -171,16 +173,16 @@ export const JournalPanel: React.FC = () => {
               <div className="empty-state">
                 {hideEmptySessions && sessions.length > 0 ? (
                   <>
-                    <p>Toutes les sessions sont vides</p>
+                    <p>{t('journal.allSessionsEmpty')}</p>
                     <p className="help-text">
-                      Décochez "Masquer les sessions vides" pour voir toutes les sessions.
+                      {t('journal.uncheckHideEmpty')}
                     </p>
                   </>
                 ) : (
                   <>
-                    <p>Aucune session enregistrée</p>
+                    <p>{t('journal.noSessionsRecorded')}</p>
                     <p className="help-text">
-                      Les sessions sont créées automatiquement lorsque vous ouvrez un projet.
+                      {t('journal.sessionsAutoCreated')}
                     </p>
                   </>
                 )}
@@ -194,10 +196,10 @@ export const JournalPanel: React.FC = () => {
                 >
                   <div className="session-header">
                     <span className="session-date">
-                      {session.startedAt.toLocaleDateString('fr-FR')}
+                      {session.startedAt.toLocaleDateString()}
                     </span>
                     <span className="session-time">
-                      {session.startedAt.toLocaleTimeString('fr-FR', {
+                      {session.startedAt.toLocaleTimeString(undefined, {
                         hour: '2-digit',
                         minute: '2-digit',
                       })}
@@ -207,9 +209,9 @@ export const JournalPanel: React.FC = () => {
                     <span className="session-duration">
                       {session.totalDurationMs
                         ? `${Math.round(session.totalDurationMs / 1000 / 60)} min`
-                        : 'Active'}
+                        : t('journal.active')}
                     </span>
-                    <span className="session-events">{session.eventCount} événements</span>
+                    <span className="session-events">{session.eventCount} {t('journal.events')}</span>
                   </div>
                   {selectedSession?.id === session.id && (
                     <div className="session-actions">
@@ -217,19 +219,19 @@ export const JournalPanel: React.FC = () => {
                         e.stopPropagation();
                         exportReport(session.id, 'markdown');
                       }}>
-                        Export MD
+                        {t('journal.exportMD')}
                       </button>
                       <button onClick={(e) => {
                         e.stopPropagation();
                         exportReport(session.id, 'json');
                       }}>
-                        Export JSON
+                        {t('journal.exportJSON')}
                       </button>
                       <button onClick={(e) => {
                         e.stopPropagation();
                         exportReport(session.id, 'latex');
                       }}>
-                        Export LaTeX
+                        {t('journal.exportLaTeX')}
                       </button>
                     </div>
                   )}
@@ -243,7 +245,7 @@ export const JournalPanel: React.FC = () => {
         {viewMode === 'timeline' && (viewScope === 'project' || selectedSession) && (
           <SessionTimeline
             events={currentEvents}
-            title={viewScope === 'project' ? 'Timeline complète du projet' : 'Timeline de la session'}
+            title={viewScope === 'project' ? t('journal.fullProjectTimeline') : t('journal.sessionTimeline')}
           />
         )}
 
@@ -260,10 +262,9 @@ export const JournalPanel: React.FC = () => {
         {/* Empty state for project view when in sessions tab */}
         {viewScope === 'project' && viewMode === 'sessions' && (
           <div className="empty-state">
-            <p>Sélectionnez une vue ci-dessus</p>
+            <p>{t('journal.selectViewAbove')}</p>
             <p className="help-text">
-              En mode "Vue d'ensemble du projet", vous pouvez voir la timeline, les opérations IA
-              et l'historique de chat agrégés pour toutes les sessions.
+              {t('journal.projectOverviewHelp')}
             </p>
           </div>
         )}

@@ -1,21 +1,21 @@
-# Système de Logging - ClioDesk
+# Logging System - ClioDesk
 
-## Vue d'ensemble
+## Overview
 
-ClioDesk utilise un système de logging centralisé qui filtre automatiquement les logs selon l'environnement (développement vs production).
+ClioDesk uses a centralized logging system that automatically filters logs based on environment (development vs production).
 
-## Comportement par défaut
+## Default Behavior
 
-| Environnement | console.log | console.info | console.warn | console.error |
-|---------------|-------------|--------------|--------------|---------------|
-| **Développement** | ✅ Affiché | ✅ Affiché | ✅ Affiché | ✅ Affiché |
-| **Production** | ❌ Filtré | ❌ Filtré | ✅ Affiché | ✅ Affiché |
+| Environment | console.log | console.info | console.warn | console.error |
+|-------------|-------------|--------------|--------------|---------------|
+| **Development** | Shown | Shown | Shown | Shown |
+| **Production** | Filtered | Filtered | Shown | Shown |
 
-En production, seuls les `console.warn` et `console.error` sont affichés pour réduire le bruit dans la console.
+In production, only `console.warn` and `console.error` are displayed to reduce console noise.
 
-## Activer les logs de debug en production
+## Enabling Debug Logs in Production
 
-### Méthode 1 : Variable d'environnement CLIODESK_DEBUG
+### Method 1: CLIODESK_DEBUG Environment Variable
 
 ```bash
 # macOS / Linux
@@ -26,24 +26,24 @@ set CLIODESK_DEBUG=1
 "C:\Program Files\ClioDesk\ClioDesk.exe"
 ```
 
-### Méthode 2 : Variable d'environnement CLIODESK_LOG_LEVEL
+### Method 2: CLIODESK_LOG_LEVEL Environment Variable
 
 ```bash
-# Niveaux disponibles : debug, info, warn, error
+# Available levels: debug, info, warn, error
 CLIODESK_LOG_LEVEL=debug /path/to/ClioDesk
 ```
 
-### Méthode 3 : Variable DEBUG standard
+### Method 3: Standard DEBUG Variable
 
 ```bash
 DEBUG=1 /path/to/ClioDesk
 ```
 
-## DevTools en production
+## DevTools in Production
 
-Par défaut, les DevTools d'Electron sont **désactivés** en production.
+By default, Electron DevTools are **disabled** in production.
 
-Pour les activer, utilisez les mêmes variables d'environnement :
+To enable them, use the same environment variables:
 
 ```bash
 # macOS / Linux
@@ -54,69 +54,69 @@ set CLIODESK_DEBUG=1
 "C:\Program Files\ClioDesk\ClioDesk.exe"
 ```
 
-Cela active à la fois :
-- Les logs de debug (`console.log`, `console.info`)
-- Les DevTools d'Electron
+This enables both:
+- Debug logs (`console.log`, `console.info`)
+- Electron DevTools
 
-## Logger centralisé (pour les développeurs)
+## Centralized Logger (for Developers)
 
-Pour les nouveaux développements, utilisez le logger centralisé au lieu de `console.log` :
+For new development, use the centralized logger instead of `console.log`:
 
 ```typescript
 import { logger } from '@shared/logger';
 
-// Avec contexte explicite
-logger.debug('MonService', 'Message de debug', { data });
-logger.info('MonService', 'Information importante');
-logger.warn('MonService', 'Attention');
-logger.error('MonService', 'Erreur', error);
+// With explicit context
+logger.debug('MyService', 'Debug message', { data });
+logger.info('MyService', 'Important information');
+logger.warn('MyService', 'Warning');
+logger.error('MyService', 'Error', error);
 
-// Ou créer un logger contextuel
-const log = logger.createContextLogger('MonService');
-log.debug('Message de debug');
+// Or create a contextual logger
+const log = logger.createContextLogger('MyService');
+log.debug('Debug message');
 log.info('Information');
-log.warn('Attention');
-log.error('Erreur', error);
+log.warn('Warning');
+log.error('Error', error);
 ```
 
-### Avantages du logger centralisé
+### Centralized Logger Benefits
 
-- Format cohérent avec emojis et contexte : `🔍 [MonService] Message`
-- Respect automatique des niveaux de log configurés
-- Méthodes typées pour TypeScript
+- Consistent format with emojis and context: ` [MyService] Message`
+- Automatic respect of configured log levels
+- Typed methods for TypeScript
 
 ## Architecture
 
 ```
 src/shared/
-├── logger.ts          # Logger centralisé avec niveaux
-└── console-filter.ts  # Filtre automatique des console.* en production
+├── logger.ts          # Centralized logger with levels
+└── console-filter.ts  # Automatic console.* filter in production
 ```
 
-Le filtre console est importé automatiquement au démarrage de l'application :
-- Main process : `src/main/index.ts`
-- Renderer process : `src/renderer/src/main.tsx`
+The console filter is automatically imported at application startup:
+- Main process: `src/main/index.ts`
+- Renderer process: `src/renderer/src/main.tsx`
 
-## Détection de l'environnement
+## Environment Detection
 
-L'environnement est détecté automatiquement via :
+Environment is automatically detected via:
 
 1. `process.env.NODE_ENV === 'production'`
 2. `process.env.ELECTRON_IS_PACKAGED === 'true'`
 
-## Restaurer les logs (pour les tests)
+## Restoring Logs (for Testing)
 
 ```typescript
 import { restoreConsole, rawConsole } from '@shared/console-filter';
 
-// Restaurer tous les console.*
+// Restore all console.*
 restoreConsole();
 
-// Ou utiliser rawConsole pour bypasser le filtre
-rawConsole.log('Ce message sera toujours affiché');
+// Or use rawConsole to bypass filter
+rawConsole.log('This message will always be displayed');
 ```
 
-## Vérifier l'état du filtre
+## Checking Filter Status
 
 ```typescript
 import { getFilterStatus } from '@shared/console-filter';

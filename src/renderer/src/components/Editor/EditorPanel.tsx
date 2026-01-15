@@ -5,6 +5,7 @@ import { MilkdownEditor } from './MilkdownEditor';
 import { DocumentStats } from './DocumentStats';
 import { useEditorStore } from '../../stores/editorStore';
 import { useBibliographyStore } from '../../stores/bibliographyStore';
+import { useAutoSave } from '../../hooks/useAutoSave';
 import { logger } from '../../utils/logger';
 import './EditorPanel.css';
 
@@ -12,6 +13,9 @@ export const EditorPanel: React.FC = () => {
   const { t } = useTranslation('common');
   const { loadFile, saveFile, setContent, content, insertFormatting } = useEditorStore();
   const { citations } = useBibliographyStore();
+
+  // Enable auto-save functionality
+  useAutoSave();
 
   const handleNewFile = () => {
     logger.component('EditorPanel', 'handleNewFile clicked');

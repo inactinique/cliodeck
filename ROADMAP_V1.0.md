@@ -1,490 +1,490 @@
-# Plan d'implémentation - ClioDesk v1.0
+# Implementation Plan - ClioDesk v1.0
 
-Version actuelle: 0.1.0
-Objectif: Version 1.0 stable et complète
+Current version: 0.1.0
+Target: Stable and complete version 1.0
 
 ---
 
-## Phase 1: Améliorations de l'interface utilisateur
+## Phase 1: User Interface Improvements
 
-### 1.1 Refonte du panneau Paramètres (Settings)
+### 1.1 Settings Panel Redesign
 
-**Fichiers concernés:**
+**Files involved:**
 - `src/renderer/src/components/Config/ConfigPanel.tsx`
 - `src/renderer/src/components/Config/ConfigPanel.css`
-- Toutes les sections de configuration (`*ConfigSection.tsx`)
+- All configuration sections (`*ConfigSection.tsx`)
 
-**Tâches:**
-- [x] Améliorer la cohérence du design entre toutes les sections ✅
-- [x] Ajouter un message "Configuration sauvegardée" à droite des boutons ✅
-- [x] Rendre les boutons Save/Reset sticky (fixés) lors du scroll ✅
-- [x] Replier toutes les sections par défaut au chargement ✅
-- [x] Utiliser ou améliorer le composant `CollapsibleSection` existant ✅
+**Tasks:**
+- [x] Improve design consistency across all sections
+- [x] Add "Configuration saved" message to the right of buttons
+- [x] Make Save/Reset buttons sticky (fixed) during scroll
+- [x] Collapse all sections by default on load
+- [x] Use or improve existing `CollapsibleSection` component
 
-**Priorité:** Moyenne
-**Complexité:** Faible
-**Status:** ✅ **Terminé**
+**Priority:** Medium
+**Complexity:** Low
+**Status:** **Completed**
 
 ---
 
-### 1.2 Amélioration du panneau Journal de recherche
+### 1.2 Research Journal Panel Improvement
 
-**Fichiers concernés:**
+**Files involved:**
 - `src/renderer/src/components/Journal/JournalPanel.tsx`
 - `src/renderer/src/components/Journal/SessionTimeline.tsx`
 - Backend: `backend/core/history/HistoryManager.ts`
 
-**Tâches:**
-- [x] Filtrer et ne pas afficher les sessions vides (sans événements) ✅
-- [x] Créer une nouvelle vue "Vue globale" affichant tous les événements de toutes les sessions ✅
-- [x] Ajouter un toggle pour basculer entre "Vue par session" et "Vue globale" ✅
-- [x] Optimiser les requêtes pour ne charger que les sessions non-vides ✅ *(filtrage côté client)*
+**Tasks:**
+- [x] Filter and hide empty sessions (without events)
+- [x] Create new "Global View" displaying all events from all sessions
+- [x] Add toggle to switch between "Session View" and "Global View"
+- [x] Optimize queries to load only non-empty sessions *(client-side filtering)*
 
-**Priorité:** Moyenne
-**Complexité:** Moyenne
-**Status:** ✅ **Terminé**
+**Priority:** Medium
+**Complexity:** Medium
+**Status:** **Completed**
 
 ---
 
-## Phase 2: Améliorations fonctionnelles
+## Phase 2: Functional Improvements
 
-### 2.1 Exports du panneau Projet
+### 2.1 Project Panel Exports
 
-**Fichiers concernés:**
+**Files involved:**
 - `src/renderer/src/components/Project/ProjectPanel.tsx`
 - `src/renderer/src/components/Export/WordExportModal.tsx`
 - Backend: `src/main/services/word-export.ts`
 - Backend: `src/main/ipc/handlers/export-handlers.ts`
 
-**Tâches:**
-- [x] Ajouter l'option d'export vers Word (.docx) ✅
-  - Utiliser la librairie `docx` déjà présente dans les dépendances
-  - Service d'export Word créé (word-export.ts, ~600 lignes)
-  - Modal d'export avec formulaire complet (WordExportModal.tsx)
-- [x] Ajouter la gestion des fichiers CSL (Citation Style Language) ✅
-  - Champ CSL ajouté dans ProjectPanel et CSLSettings
-  - Support CSL intégré dans les exports Word
-  - Composant CSLSettings.tsx pour gérer la sélection
-- [x] Support des modèles Word (.dotx) ✅
-  - Détection automatique des fichiers .dotx (méthode `findTemplate()`)
-  - Merge avec template via docxtemplater (méthode `mergeWithTemplate()`)
-  - Affichage du template détecté dans WordExportModal (badge vert)
-  - Placeholders supportés: {title}, {author}, {date}, {content}, {abstract}
-  - Fallback automatique si template invalide
-- [x] Correction bug PageNumber ✅
-  - Syntaxe corrigée pour les numéros de page dans le footer
+**Tasks:**
+- [x] Add Word export option (.docx)
+  - Use `docx` library already in dependencies
+  - Word export service created (word-export.ts, ~600 lines)
+  - Export modal with complete form (WordExportModal.tsx)
+- [x] Add CSL file management (Citation Style Language)
+  - CSL field added in ProjectPanel and CSLSettings
+  - CSL support integrated in Word exports
+  - CSLSettings.tsx component for selection management
+- [x] Word template support (.dotx)
+  - Automatic detection of .dotx files (`findTemplate()` method)
+  - Template merge via docxtemplater (`mergeWithTemplate()` method)
+  - Detected template display in WordExportModal (green badge)
+  - Supported placeholders: {title}, {author}, {date}, {content}, {abstract}
+  - Automatic fallback if invalid template
+- [x] PageNumber bug fix
+  - Syntax corrected for page numbers in footer
 
-**Dépendances ajoutées:**
-- `docxtemplater@^3.55.7` - Traitement des templates Word
-- `pizzip@^3.1.7` - Manipulation des archives ZIP
-- `@types/pizzip` (dev) - Types TypeScript
+**Dependencies added:**
+- `docxtemplater@^3.55.7` - Word template processing
+- `pizzip@^3.1.7` - ZIP archive manipulation
+- `@types/pizzip` (dev) - TypeScript types
 
-**Documentation créée:**
-- `WORD_TEMPLATES.md` - Guide utilisateur complet (184 lignes)
-- `EXPORT_WORD_IMPLEMENTATION.md` - Documentation technique (245 lignes)
+**Documentation created:**
+- `WORD_TEMPLATES.md` - Complete user guide (184 lines)
+- `EXPORT_WORD_IMPLEMENTATION.md` - Technical documentation (245 lines)
 
 **Commits:**
 - `75ee4d0` - feat: Add Word template (.dotx) support for exports
 - `30e4219` - chore: Add docxtemplater/pizzip to package.json dependencies
 
-**Priorité:** Haute
-**Complexité:** Moyenne-Haute
-**Status:** ✅ **Terminé** (2026-01-11)
+**Priority:** High
+**Complexity:** Medium-High
+**Status:** **Completed** (2026-01-11)
 
-**Tests restants:**
-- [ ] Tests manuels avec différents templates
-- [ ] Tests d'intégration automatisés (à créer)
-- [ ] Test sur les 3 plateformes après build
+**Remaining tests:**
+- [ ] Manual tests with different templates
+- [ ] Automated integration tests (to create)
+- [ ] Test on all 3 platforms after build
 
 ---
 
-### 2.2 Gestion de la bibliographie
+### 2.2 Bibliography Management
 
-**Fichiers concernés:**
+**Files involved:**
 - `src/renderer/src/components/Bibliography/BibliographyPanel.tsx`
 - `src/renderer/src/components/Bibliography/BibImportModeModal.tsx`
 - `src/renderer/src/components/Bibliography/BibImportSummaryModal.tsx`
 - `src/renderer/src/stores/bibliographyStore.ts`
 
-**Tâches:**
-- [x] Modifier le bouton "+" pour offrir deux options ✅
-  - Option 1: Remplacer complètement le fichier de bibliographie actuel
-  - Option 2: Ajouter les références du nouveau fichier à celles existantes
-- [x] Implémenter la logique de fusion des références (éviter les doublons par clé de citation) ✅
-- [x] Ajouter une confirmation avant le remplacement complet ✅
-- [x] Afficher un résumé après l'ajout (X nouvelles références, Y doublons ignorés) ✅
+**Tasks:**
+- [x] Modify "+" button to offer two options
+  - Option 1: Completely replace current bibliography file
+  - Option 2: Add references from new file to existing ones
+- [x] Implement reference merge logic (avoid duplicates by citation key)
+- [x] Add confirmation before complete replacement
+- [x] Display summary after addition (X new references, Y duplicates ignored)
 
-**Priorité:** Moyenne
-**Complexité:** Moyenne
-**Status:** ✅ **Terminé**
+**Priority:** Medium
+**Complexity:** Medium
+**Status:** **Completed**
 
 ---
 
-### 2.3 Amélioration du panneau Chat
+### 2.3 Chat Panel Improvement
 
-**Fichiers concernés:**
+**Files involved:**
 - `src/renderer/src/components/Chat/RAGSettingsPanel.tsx`
 - `src/renderer/src/stores/ragQueryStore.ts`
 - `backend/core/llm/SystemPrompts.ts`
 - `src/main/services/chat-service.ts`
 
-**Tâches:**
-- [x] Ajouter un champ "Prompt système" dans les paramètres RAG ✅
-- [x] Créer deux prompts système par défaut ✅
-  - Prompt français: Assistant académique en français
-  - Prompt anglais: Academic assistant in English
-- [x] Ajouter un sélecteur de langue du prompt système (FR/EN) dans RAGSettingsPanel ✅
-- [x] Permettre la modification du prompt système par l'utilisateur ✅
-- [x] Sauvegarder les préférences de prompt système dans la configuration ✅
-- [x] Intégrer le prompt système dans les requêtes au LLM ✅
+**Tasks:**
+- [x] Add "System Prompt" field in RAG settings
+- [x] Create two default system prompts
+  - French prompt: Academic assistant in French
+  - English prompt: Academic assistant in English
+- [x] Add system prompt language selector (FR/EN) in RAGSettingsPanel
+- [x] Allow user modification of system prompt
+- [x] Save system prompt preferences in configuration
+- [x] Integrate system prompt in LLM requests
 
-**Priorité:** Haute
-**Complexité:** Faible-Moyenne
-**Status:** ✅ **Terminé**
+**Priority:** High
+**Complexity:** Low-Medium
+**Status:** **Completed**
 
 ---
 
-### 2.4 Amélioration de l'indexation PDF
+### 2.4 PDF Indexing Improvement
 
-**Fichiers concernés:**
+**Files involved:**
 - `src/renderer/src/components/PDFIndex/PDFIndexPanel.tsx`
 - `src/renderer/src/components/PDFIndex/PDFRenameModal.tsx`
 - `backend/core/pdf/PDFIndexer.ts`
 
-**Tâches:**
-- [x] Lors de l'import de PDFs, permettre de renommer les documents ✅
-- [x] Ajouter une interface de renommage après sélection des fichiers, avant indexation ✅
-- [x] Proposer un nom par défaut basé sur ✅
-  - Le titre extrait des métadonnées PDF
-  - Le nom du fichier (si pas de métadonnées)
-- [x] Permettre l'édition du nom après import ✅
-- [x] Stocker les noms personnalisés dans la base de données ✅
+**Tasks:**
+- [x] During PDF import, allow document renaming
+- [x] Add renaming interface after file selection, before indexing
+- [x] Suggest default name based on
+  - Title extracted from PDF metadata
+  - Filename (if no metadata)
+- [x] Allow name editing after import
+- [x] Store custom names in database
 
-**Priorité:** Moyenne
-**Complexité:** Moyenne
-**Status:** ✅ **Terminé**
+**Priority:** Medium
+**Complexity:** Medium
+**Status:** **Completed**
 
 ---
 
-## Phase 3: Révision du contenu et documentation
+## Phase 3: Content Revision and Documentation
 
-### 3.1 Guide méthodologique
+### 3.1 Methodology Guide
 
-**Fichiers concernés:**
+**Files involved:**
 - `src/renderer/src/components/Methodology/MethodologyModal.tsx`
-- Fichiers de contenu du guide (à localiser)
+- Guide content files (to locate)
 
-**Tâches:**
-- [x] Auditer le contenu actuel du guide méthodologique
-- [x] Évaluer la pertinence pour les utilisateurs (historiens/chercheurs)
-- [ ] Réécrire les sections obsolètes ou non pertinentes *(Guide actuel est pertinent et à jour)*
-- [ ] Ajouter des exemples concrets d'utilisation de ClioDesk *(À faire si nécessaire)*
-- [x] S'assurer que le guide reflète les fonctionnalités actuelles (embeddings, BM25, etc.)
+**Tasks:**
+- [x] Audit current methodology guide content
+- [x] Evaluate relevance for users (historians/researchers)
+- [ ] Rewrite obsolete or irrelevant sections *(Current guide is relevant and up to date)*
+- [ ] Add concrete ClioDesk usage examples *(To do if necessary)*
+- [x] Ensure guide reflects current features (embeddings, BM25, etc.)
 
-**Priorité:** Moyenne
-**Complexité:** Faible (rédaction)
-**Status:** ✅ Audit complété - Guide de bonne qualité
+**Priority:** Medium
+**Complexity:** Low (writing)
+**Status:** Audit completed - Good quality guide
 
 ---
 
-### 3.2 Documentation technique GitHub
+### 3.2 GitHub Technical Documentation
 
-**Fichiers concernés:**
+**Files involved:**
 - `BUILD.md`
-- `DEPLOYMENT.md` (si existe)
-- `INSTALL.md` ou fichiers d'installation
-- `README.md` (révision manuelle, pas par Claude Code)
+- `DEPLOYMENT.md` (if exists)
+- `INSTALL.md` or installation files
+- `README.md` (manual review, not by Claude Code)
 
-**Tâches:**
-- [x] Fusionner BUILD.md et DEPLOYMENT.md en un seul document cohérent → `BUILD_AND_DEPLOYMENT.md`
-- [x] Revoir et mettre à jour les instructions d'installation
-- [x] Vérifier que toutes les étapes sont à jour (dépendances natives, Python, etc.)
-- [x] Ajouter des sections de troubleshooting communes
-- [x] Organiser par plateformes (macOS, Linux, Windows)
+**Tasks:**
+- [x] Merge BUILD.md and DEPLOYMENT.md into single coherent document → `BUILD_AND_DEPLOYMENT.md`
+- [x] Review and update installation instructions
+- [x] Verify all steps are current (native dependencies, Python, etc.)
+- [x] Add common troubleshooting sections
+- [x] Organize by platform (macOS, Linux, Windows)
 
-**Priorité:** Haute
-**Complexité:** Faible-Moyenne
-**Status:** ✅ Terminé - Fichier INSTALL_*.md existants sont complets et à jour
+**Priority:** High
+**Complexity:** Low-Medium
+**Status:** Completed - Existing INSTALL_*.md files are complete and up to date
 
 ---
 
-### 3.3 Documentation des fonctionnalités techniques
+### 3.3 Technical Features Documentation
 
-**Fichiers concernés:**
+**Files involved:**
 - `CHUNKING_IMPROVEMENTS.md`
 - `EMBEDDINGS_IMPROVEMENTS.md`
-- Nouveau fichier: `ARCHITECTURE.md`
+- New file: `ARCHITECTURE.md`
 
-**Tâches:**
-- [x] Fusionner CHUNKING_IMPROVEMENTS.md et EMBEDDINGS_IMPROVEMENTS.md
-- [x] Créer un document ARCHITECTURE.md structuré:
-  - Introduction: Qu'est-ce que ClioDesk et comment il fonctionne
-  - Architecture globale (frontend Electron + backend + services Python)
-  - Système de RAG (Vector store, HNSW, BM25, hybrid search)
-  - Pipeline d'indexation (chunking adaptatif, embeddings)
-  - Intégrations (Zotero, PDF, export)
-- [x] Rendre le document accessible aux développeurs externes
-- [x] Ajouter des diagrammes si nécessaire
+**Tasks:**
+- [x] Merge CHUNKING_IMPROVEMENTS.md and EMBEDDINGS_IMPROVEMENTS.md
+- [x] Create structured ARCHITECTURE.md document:
+  - Introduction: What is ClioDesk and how it works
+  - Global architecture (Electron frontend + backend + Python services)
+  - RAG system (Vector store, HNSW, BM25, hybrid search)
+  - Indexing pipeline (adaptive chunking, embeddings)
+  - Integrations (Zotero, PDF, export)
+- [x] Make document accessible to external developers
+- [x] Add diagrams if necessary
 
-**Priorité:** Moyenne
-**Complexité:** Moyenne
-**Status:** ✅ Terminé - ARCHITECTURE.md créé avec diagrammes et explications complètes
-
----
-
-## Phase 4: Internationalisation (i18n)
-
-### 4.1 Audit et complétion de la traduction anglaise
-
-**Fichiers concernés:**
-- Tous les composants React utilisant `useTranslation`
-- Fichiers de traduction (à localiser: probablement dans `src/renderer/src/i18n/` ou similaire)
-
-**Tâches:**
-- [x] Localiser le système de traduction actuel (i18next est déjà installé)
-- [x] Identifier toutes les chaînes non traduites
-- [x] Créer/compléter les fichiers de traduction:
-  - `en/common.json` ✅
-  - `fr/common.json` ✅
-  - `de/common.json` ✅
-- [x] Remplacer tous les textes en dur par des clés de traduction
-- [x] Zones vérifiées et traduites:
-  - Panneau de configuration (ActionsSection, LanguageConfigSection) ✅
-  - Messages d'erreur (AlertS/prompts dans tous les composants) ✅
-  - Chat Interface et état vide ✅
-  - Bibliographie (CitationCard, ZoteroImport) ✅
-  - Modals de confirmation ✅
-
-**Priorité:** Haute
-**Complexité:** Moyenne (volume important)
-**Status:** ✅ Terminé - Rapport détaillé créé dans I18N_MIGRATION_REPORT.md
-
-**Fichiers modifiés:**
-- `public/locales/fr/common.json` - Ajout de ~50+ nouvelles clés
-- `public/locales/en/common.json` - Ajout de ~50+ nouvelles clés
-- `public/locales/de/common.json` - Ajout de ~50+ nouvelles clés
-- `src/renderer/src/components/Config/LanguageConfigSection.tsx` - Traduit
-- `src/renderer/src/components/Config/ActionsSection.tsx` - Traduit
-- `src/renderer/src/components/Chat/ChatInterface.tsx` - Traduit
-- `src/renderer/src/components/Bibliography/ZoteroImport.tsx` - Traduit
-- `src/renderer/src/components/Bibliography/CitationCard.tsx` - Traduit
+**Priority:** Medium
+**Complexity:** Medium
+**Status:** Completed - ARCHITECTURE.md created with diagrams and complete explanations
 
 ---
 
-## Phase 5: Nettoyage et préparation
+## Phase 4: Internationalization (i18n)
 
-### 5.1 Suppression des fonctionnalités expérimentales
+### 4.1 Audit and Complete English Translation
 
-**Fichiers concernés:**
+**Files involved:**
+- All React components using `useTranslation`
+- Translation files (to locate: probably in `src/renderer/src/i18n/` or similar)
+
+**Tasks:**
+- [x] Locate current translation system (i18next already installed)
+- [x] Identify all untranslated strings
+- [x] Create/complete translation files:
+  - `en/common.json`
+  - `fr/common.json`
+  - `de/common.json`
+- [x] Replace all hardcoded texts with translation keys
+- [x] Areas verified and translated:
+  - Configuration panel (ActionsSection, LanguageConfigSection)
+  - Error messages (Alerts/prompts in all components)
+  - Chat Interface and empty state
+  - Bibliography (CitationCard, ZoteroImport)
+  - Confirmation modals
+
+**Priority:** High
+**Complexity:** Medium (significant volume)
+**Status:** Completed - Detailed report created in I18N_MIGRATION_REPORT.md
+
+**Modified files:**
+- `public/locales/fr/common.json` - Added ~50+ new keys
+- `public/locales/en/common.json` - Added ~50+ new keys
+- `public/locales/de/common.json` - Added ~50+ new keys
+- `src/renderer/src/components/Config/LanguageConfigSection.tsx` - Translated
+- `src/renderer/src/components/Config/ActionsSection.tsx` - Translated
+- `src/renderer/src/components/Chat/ChatInterface.tsx` - Translated
+- `src/renderer/src/components/Bibliography/ZoteroImport.tsx` - Translated
+- `src/renderer/src/components/Bibliography/CitationCard.tsx` - Translated
+
+---
+
+## Phase 5: Cleanup and Preparation
+
+### 5.1 Experimental Features Removal
+
+**Files involved:**
 - `src/renderer/src/components/Editor/ContextualSuggestions.tsx`
 - `src/renderer/src/components/Editor/CitationSuggestionsPanel.tsx`
 - `src/renderer/src/components/Config/SuggestionsConfigSection.tsx`
-- Références dans d'autres composants
+- References in other components
 
-**Tâches:**
-- [x] Supprimer le composant ContextualSuggestions
-- [x] Supprimer CitationSuggestionsPanel
-- [x] Supprimer SuggestionsConfigSection
-- [x] Retirer les références dans ConfigPanel
-- [x] Nettoyer les imports et types associés
-- [x] Supprimer les services backend associés si isolés
-- [x] Vérifier qu'aucune fonctionnalité active ne dépend de ces composants
+**Tasks:**
+- [x] Remove ContextualSuggestions component
+- [x] Remove CitationSuggestionsPanel
+- [x] Remove SuggestionsConfigSection
+- [x] Remove references in ConfigPanel
+- [x] Clean up associated imports and types
+- [x] Remove associated backend services if isolated
+- [x] Verify no active feature depends on these components
 
-**Priorité:** Faible (à faire avant la release)
-**Complexité:** Faible
-**Status:** ✅ Terminé
+**Priority:** Low (to do before release)
+**Complexity:** Low
+**Status:** **Completed**
 
-**Fichiers modifiés:**
-- Supprimés: `ContextualSuggestions.tsx`, `ContextualSuggestions.css`
-- Supprimés: `CitationSuggestionsPanel.tsx`, `CitationSuggestionsPanel.css`
-- Supprimé: `SuggestionsConfigSection.tsx`
-- Modifiés: `ConfigPanel.tsx`, `EditorPanel.tsx`, `editorStore.ts`
-- Modifiés: `useMenuShortcuts.ts`, `MarkdownEditor.tsx`
+**Modified files:**
+- Deleted: `ContextualSuggestions.tsx`, `ContextualSuggestions.css`
+- Deleted: `CitationSuggestionsPanel.tsx`, `CitationSuggestionsPanel.css`
+- Deleted: `SuggestionsConfigSection.tsx`
+- Modified: `ConfigPanel.tsx`, `EditorPanel.tsx`, `editorStore.ts`
+- Modified: `useMenuShortcuts.ts`, `MarkdownEditor.tsx`
 
 ---
 
-## Phase 6: Version finale 1.0 (branche dédiée)
+## Phase 6: Final Version 1.0 (dedicated branch)
 
-### 6.1 Optimisation des logs
+### 6.1 Log Optimization
 
-**Fichiers concernés:**
-- `src/shared/logger.ts` (créé)
-- `src/shared/console-filter.ts` (créé)
+**Files involved:**
+- `src/shared/logger.ts` (created)
+- `src/shared/console-filter.ts` (created)
 - `src/main/index.ts`
 - `src/renderer/src/main.tsx`
 
-**Tâches:**
-- [x] Auditer tous les logs de l'application ✅ (~850 appels console.* dans 85+ fichiers)
-- [x] Créer un système de logging centralisé avec niveaux (debug, info, warn, error) ✅
-- [x] ~~Remplacer les console.log par le système de logging~~ → Approche pragmatique: filtre automatique ✅
-- [x] Configurer les logs pour ✅
-  - Mode développement: tous les niveaux
-  - Mode production: warn et error uniquement
-- [x] ~~Ajouter la rotation des logs si nécessaire~~ → Non nécessaire pour v1.0
-- [x] Documenter comment activer les logs de debug en production ✅ → `LOGGING.md`
+**Tasks:**
+- [x] Audit all application logs (~850 console.* calls in 85+ files)
+- [x] Create centralized logging system with levels (debug, info, warn, error)
+- [x] ~~Replace console.log with logging system~~ → Pragmatic approach: automatic filter
+- [x] Configure logs for
+  - Development mode: all levels
+  - Production mode: warn and error only
+- [x] ~~Add log rotation if necessary~~ → Not needed for v1.0
+- [x] Document how to enable debug logs in production → `LOGGING.md`
 
-**Approche implémentée:** Solution pragmatique avec filtre console automatique qui désactive `console.log` et `console.info` en production, sans nécessiter la migration des 850+ appels existants.
+**Implemented approach:** Pragmatic solution with automatic console filter that disables `console.log` and `console.info` in production, without requiring migration of 850+ existing calls.
 
-**Fichiers créés:**
-- `src/shared/logger.ts` - Logger centralisé avec niveaux
-- `src/shared/console-filter.ts` - Filtre automatique en production
+**Created files:**
+- `src/shared/logger.ts` - Centralized logger with levels
+- `src/shared/console-filter.ts` - Automatic filter in production
 - `LOGGING.md` - Documentation
 
-**Variables d'environnement:**
-- `CLIODESK_DEBUG=1` : Active tous les logs en production
-- `CLIODESK_LOG_LEVEL=debug` : Définit le niveau de log
+**Environment variables:**
+- `CLIODESK_DEBUG=1`: Enable all logs in production
+- `CLIODESK_LOG_LEVEL=debug`: Set log level
 
-**Priorité:** Haute
-**Complexité:** Moyenne
-**Status:** ✅ **Terminé** (2026-01-14)
+**Priority:** High
+**Complexity:** Medium
+**Status:** **Completed** (2026-01-14)
 
 ---
 
-### 6.2 Retrait des DevTools (ON HOLD FOR NOW)
+### 6.2 DevTools Removal (ON HOLD FOR NOW)
 
-**Fichiers concernés:**
+**Files involved:**
 - `src/main/index.ts`
-- Configuration Electron
+- Electron configuration
 
-**Tâches:**
-- [ ] Localiser l'activation des DevTools dans le code
-- [ ] Désactiver les DevTools en mode production
-- [ ] Conserver la possibilité de les activer via variable d'environnement pour debug
-- [ ] Vérifier qu'aucune référence aux DevTools ne reste dans le build production
-- [ ] Tester le build final sans DevTools
+**Tasks:**
+- [ ] Locate DevTools activation in code
+- [ ] Disable DevTools in production mode
+- [ ] Keep ability to enable via environment variable for debug
+- [ ] Verify no DevTools reference remains in production build
+- [ ] Test final build without DevTools
 
-**Priorité:** Haute
-**Complexité:** Faible
+**Priority:** High
+**Complexity:** Low
 
 ---
 
-### 6.3 Préparation de la release
+### 6.3 Release Preparation
 
-**Fichiers concernés:**
+**Files involved:**
 - `package.json`
-- `CHANGELOG.md` (à créer)
-- Tags Git
+- `CHANGELOG.md` (to create)
+- Git tags
 
-**Tâches:**
-- [ ] Mettre à jour la version dans package.json: 0.1.0 → 1.0.0
-- [ ] Créer un CHANGELOG.md complet listant:
-  - Nouvelles fonctionnalités
-  - Améliorations
-  - Corrections de bugs
-  - Breaking changes (si applicable)
-- [ ] Tester le build complet sur les trois plateformes:
-  - macOS (Intel et Apple Silicon)
-  - Linux (AppImage et deb)
+**Tasks:**
+- [ ] Update version in package.json: 0.1.0 → 1.0.0
+- [ ] Create complete CHANGELOG.md listing:
+  - New features
+  - Improvements
+  - Bug fixes
+  - Breaking changes (if applicable)
+- [ ] Test complete build on all three platforms:
+  - macOS (Intel and Apple Silicon)
+  - Linux (AppImage and deb)
   - Windows (NSIS)
-- [ ] Créer un tag Git v1.0.0
-- [ ] Préparer les notes de release GitHub
+- [ ] Create Git tag v1.0.0
+- [ ] Prepare GitHub release notes
 
-**Priorité:** Critique
-**Complexité:** Faible
+**Priority:** Critical
+**Complexity:** Low
 
 ---
 
-## Organisation des phases
+## Phase Organization
 
-### Ordre recommandé d'exécution:
+### Recommended Execution Order:
 
-1. **Phase 3** (Documentation) - Pendant que le code est encore frais
-2. **Phase 4** (i18n) - Pour avoir une interface complète avant les tests
-3. **Phase 2** (Fonctionnalités) - Ajouts majeurs
-4. **Phase 1** (UI) - Polish de l'interface
-5. **Phase 5** (Nettoyage) - Suppression des features expérimentales
-6. **Phase 6** (Release) - Finalisation et publication
+1. **Phase 3** (Documentation) - While code is still fresh
+2. **Phase 4** (i18n) - To have complete interface before tests
+3. **Phase 2** (Features) - Major additions
+4. **Phase 1** (UI) - Interface polish
+5. **Phase 5** (Cleanup) - Remove experimental features
+6. **Phase 6** (Release) - Finalization and publication
 
-### Branches Git recommandées:
+### Recommended Git Branches:
 
-- `towards-1.0` (branche actuelle) - Phases 1 à 5
-- `release/1.0` - Phase 6 uniquement
-- Sous-branches optionnelles pour les grosses features:
+- `towards-1.0` (current branch) - Phases 1 to 5
+- `release/1.0` - Phase 6 only
+- Optional sub-branches for major features:
   - `feature/word-export`
   - `feature/i18n-complete`
   - `feature/system-prompt`
 
 ---
 
-## Estimation globale
+## Global Estimate
 
-**Total des tâches:** ~60-70 tâches individuelles
+**Total tasks:** ~60-70 individual tasks
 
-**Complexité par phase:**
-- Phase 1: ~1-2 semaines
-- Phase 2: ~2-3 semaines
-- Phase 3: ~1 semaine
-- Phase 4: ~1-2 semaines
-- Phase 5: ~2-3 jours
-- Phase 6: ~3-5 jours
-
----
-
-## Notes importantes
-
-### Dépendances externes à ajouter:
-- Librairie CSL (citation-js ou citeproc-js) pour la gestion des styles bibliographiques
-- Possiblement: librairie de logging structuré (winston, pino, ou custom)
-
-### Tests à prévoir:
-- Tests d'intégration pour les nouveaux exports (Word, CSL)
-- Tests du système de prompt système
-- Tests de fusion de bibliographies
-- Tests multi-plateformes du build final
-
-### Documentation utilisateur:
-- Mettre à jour le guide méthodologique après chaque phase
-- Créer des exemples d'utilisation des nouvelles fonctionnalités
-- Préparer des captures d'écran pour la documentation
+**Complexity by phase:**
+- Phase 1: ~1-2 weeks
+- Phase 2: ~2-3 weeks
+- Phase 3: ~1 week
+- Phase 4: ~1-2 weeks
+- Phase 5: ~2-3 days
+- Phase 6: ~3-5 days
 
 ---
 
-## 📊 Progression globale vers v1.0
+## Important Notes
 
-### Vue d'ensemble par phase
+### External Dependencies to Add:
+- CSL library (citation-js or citeproc-js) for citation style management
+- Possibly: structured logging library (winston, pino, or custom)
 
-| Phase | Tâches totales | Complétées | En cours | Non commencées | Progression |
-|-------|---------------|------------|----------|----------------|-------------|
-| **Phase 1** - UI | 9 | 9 | 0 | 0 | 🟩🟩🟩🟩🟩 100% |
-| **Phase 2** - Fonctionnalités | 22 | 22 | 0 | 0 | 🟩🟩🟩🟩🟩 100% |
-| **Phase 3** - Documentation | 8 | 8 | 0 | 0 | 🟩🟩🟩🟩🟩 100% |
-| **Phase 4** - i18n | 7 | 7 | 0 | 0 | 🟩🟩🟩🟩🟩 100% |
-| **Phase 5** - Nettoyage | 7 | 7 | 0 | 0 | 🟩🟩🟩🟩🟩 100% |
-| **Phase 6** - Release | 13 | 6 | 0 | 7 | 🟩🟩🟩⬜⬜ 46% |
-| **TOTAL** | **66** | **59** | **0** | **7** | 🟩🟩🟩🟩⬜ **89%** |
+### Tests to Plan:
+- Integration tests for new exports (Word, CSL)
+- System prompt tests
+- Bibliography merge tests
+- Multi-platform tests of final build
 
-### Détail Phase 2 - Améliorations fonctionnelles
+### User Documentation:
+- Update methodology guide after each phase
+- Create usage examples for new features
+- Prepare screenshots for documentation
 
-| Sous-section | Tâches | Complétées | Statut |
-|--------------|--------|------------|--------|
-| 2.1 Export Word + CSL + Templates | 7 | 7 | ✅ **100%** |
-| 2.2 Gestion bibliographie | 4 | 4 | ✅ **100%** |
-| 2.3 Prompt système Chat | 6 | 6 | ✅ **100%** |
-| 2.4 Renommage PDFs | 5 | 5 | ✅ **100%** |
+---
 
-### Détail Phase 6 - Release
+## Global Progress to v1.0
 
-| Sous-section | Tâches | Complétées | Statut |
-|--------------|--------|------------|--------|
-| 6.1 Optimisation des logs | 6 | 6 | ✅ **100%** |
-| 6.2 Retrait DevTools | 5 | 0 | ❌ 0% |
-| 6.3 Préparation release | 5 | 0 | ❌ 0% |
+### Overview by Phase
 
-### Prochaines priorités
+| Phase | Total Tasks | Completed | In Progress | Not Started | Progress |
+|-------|-------------|-----------|-------------|-------------|----------|
+| **Phase 1** - UI | 9 | 9 | 0 | 0 | 100% |
+| **Phase 2** - Features | 22 | 22 | 0 | 0 | 100% |
+| **Phase 3** - Documentation | 8 | 8 | 0 | 0 | 100% |
+| **Phase 4** - i18n | 7 | 7 | 0 | 0 | 100% |
+| **Phase 5** - Cleanup | 7 | 7 | 0 | 0 | 100% |
+| **Phase 6** - Release | 13 | 6 | 0 | 7 | 46% |
+| **TOTAL** | **66** | **59** | **0** | **7** | **89%** |
 
-1. **Phase 6.2 - Retrait DevTools**
-   - Désactiver les DevTools en production
-   - Variable d'environnement pour debug
-   - Complexité: Faible
+### Phase 2 Detail - Functional Improvements
 
-2. **Phase 6.3 - Préparation release**
-   - Mise à jour version 1.0.0
+| Sub-section | Tasks | Completed | Status |
+|-------------|-------|-----------|--------|
+| 2.1 Word Export + CSL + Templates | 7 | 7 | **100%** |
+| 2.2 Bibliography Management | 4 | 4 | **100%** |
+| 2.3 Chat System Prompt | 6 | 6 | **100%** |
+| 2.4 PDF Renaming | 5 | 5 | **100%** |
+
+### Phase 6 Detail - Release
+
+| Sub-section | Tasks | Completed | Status |
+|-------------|-------|-----------|--------|
+| 6.1 Log Optimization | 6 | 6 | **100%** |
+| 6.2 DevTools Removal | 5 | 0 | 0% |
+| 6.3 Release Preparation | 5 | 0 | 0% |
+
+### Next Priorities
+
+1. **Phase 6.2 - DevTools Removal**
+   - Disable DevTools in production
+   - Environment variable for debug
+   - Complexity: Low
+
+2. **Phase 6.3 - Release Preparation**
+   - Update version 1.0.0
    - CHANGELOG.md
-   - Tests multi-plateformes
-   - Tag Git v1.0.0
+   - Multi-platform tests
+   - Git tag v1.0.0
 
 ---
 
-**Dernière mise à jour:** 2026-01-14
-**Status:** 89% terminé - Phases 1-5 complètes, Phase 6.1 (logs) terminée
-**Prochaine étape:** Phase 6.2 (DevTools) puis Phase 6.3 (Release)
+**Last updated:** 2026-01-14
+**Status:** 89% complete - Phases 1-5 complete, Phase 6.1 (logs) completed
+**Next step:** Phase 6.2 (DevTools) then Phase 6.3 (Release)

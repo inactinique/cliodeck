@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { FileDown, X, AlertCircle, CheckCircle } from 'lucide-react';
 import { useProjectStore } from '../../stores/projectStore';
 import { useEditorStore } from '../../stores/editorStore';
@@ -10,6 +11,7 @@ interface PresentationExportModalProps {
 }
 
 export const PresentationExportModal: React.FC<PresentationExportModalProps> = ({ isOpen, onClose }) => {
+  const { t } = useTranslation('common');
   const { currentProject } = useProjectStore();
   const { content } = useEditorStore();
 
@@ -48,7 +50,7 @@ export const PresentationExportModal: React.FC<PresentationExportModalProps> = (
         defaultPath: outputPath,
         filters: [
           { name: 'HTML', extensions: ['html'] },
-          { name: 'Tous les fichiers', extensions: ['*'] },
+          { name: t('presentation.allFiles'), extensions: ['*'] },
         ],
       });
 
@@ -62,12 +64,12 @@ export const PresentationExportModal: React.FC<PresentationExportModalProps> = (
 
   const handleExport = async () => {
     if (!currentProject) {
-      setError('Aucun projet ouvert');
+      setError(t('presentation.noProjectOpen'));
       return;
     }
 
     if (!title) {
-      setError('Veuillez entrer un titre');
+      setError(t('presentation.enterTitle'));
       return;
     }
 
@@ -96,7 +98,7 @@ export const PresentationExportModal: React.FC<PresentationExportModalProps> = (
         metadata: {
           title,
           author: author || 'ClioDesk',
-          date: new Date().toLocaleDateString('fr-FR'),
+          date: new Date().toLocaleDateString(),
         },
         config,
       });
@@ -112,11 +114,11 @@ export const PresentationExportModal: React.FC<PresentationExportModalProps> = (
           setProgress({ stage: '', message: '', progress: 0 });
         }, 2000);
       } else {
-        setError(result.error || 'Erreur inconnue lors de l\'export');
+        setError(result.error || t('presentation.unknownError'));
         setIsExporting(false);
       }
     } catch (err: any) {
-      setError('Erreur lors de l\'export: ' + err.message);
+      setError(t('presentation.exportError') + ': ' + err.message);
       setIsExporting(false);
     }
   };
@@ -137,7 +139,7 @@ export const PresentationExportModal: React.FC<PresentationExportModalProps> = (
     <div className="presentation-export-modal" onClick={handleClose}>
       <div className="presentation-export-content" onClick={(e) => e.stopPropagation()}>
         <div className="presentation-export-header">
-          <h3>Export Présentation reveal.js</h3>
+          <h3>{t('presentation.title')}</h3>
           <button className="close-btn" onClick={handleClose} disabled={isExporting}>
             <X size={20} />
           </button>
@@ -146,52 +148,52 @@ export const PresentationExportModal: React.FC<PresentationExportModalProps> = (
         <div className="presentation-export-body">
           {/* Info about reveal.js */}
           <div style={{ fontSize: '0.875rem', color: '#888', marginBottom: '1rem', padding: '0.75rem', backgroundColor: '#2a2a2a', borderRadius: '4px' }}>
-            💡 La présentation sera exportée en HTML avec reveal.js. Le fichier s'ouvrira automatiquement dans votre navigateur.
+            💡 {t('presentation.info')}
             <br /><br />
-            <strong>Contrôles :</strong>
+            <strong>{t('presentation.controls')}</strong>
             <ul style={{ marginTop: '0.5rem', paddingLeft: '1.5rem' }}>
-              <li>Flèches : Navigation</li>
-              <li>Touche <code style={{ color: '#4ec9b0' }}>S</code> : Mode présentateur avec notes</li>
-              <li>Touche <code style={{ color: '#4ec9b0' }}>F</code> : Plein écran</li>
-              <li>Touche <code style={{ color: '#4ec9b0' }}>ESC</code> : Vue d'ensemble</li>
+              <li>{t('presentation.controlArrows')}</li>
+              <li><code style={{ color: '#4ec9b0' }}>S</code> : {t('presentation.controlS').replace('S key: ', '')}</li>
+              <li><code style={{ color: '#4ec9b0' }}>F</code> : {t('presentation.controlF').replace('F key: ', '')}</li>
+              <li><code style={{ color: '#4ec9b0' }}>ESC</code> : {t('presentation.controlESC').replace('ESC key: ', '')}</li>
             </ul>
           </div>
 
           {/* Form Fields */}
           <div className="form-field">
-            <label>Titre de la présentation</label>
+            <label>{t('presentation.presentationTitle')}</label>
             <input
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="Ma présentation"
+              placeholder={t('presentation.titlePlaceholder')}
               disabled={isExporting}
             />
           </div>
 
           <div className="form-field">
-            <label>Auteur (optionnel)</label>
+            <label>{t('presentation.author')}</label>
             <input
               type="text"
               value={author}
               onChange={(e) => setAuthor(e.target.value)}
-              placeholder="Votre nom"
+              placeholder={t('presentation.authorPlaceholder')}
               disabled={isExporting}
             />
           </div>
 
           <div className="form-field">
-            <label>Fichier de sortie</label>
+            <label>{t('presentation.outputFile')}</label>
             <div className="path-selector">
               <input
                 type="text"
                 value={outputPath}
                 onChange={(e) => setOutputPath(e.target.value)}
-                placeholder="/chemin/vers/fichier.html"
+                placeholder={t('presentation.outputPlaceholder')}
                 disabled={isExporting}
               />
               <button onClick={handleSelectOutputPath} disabled={isExporting}>
-                Parcourir
+                {t('actions.browse')}
               </button>
             </div>
           </div>
@@ -218,14 +220,14 @@ export const PresentationExportModal: React.FC<PresentationExportModalProps> = (
           {success && (
             <div className="export-success">
               <CheckCircle size={16} />
-              <span>Export réussi! Présentation créée à: {outputPath}</span>
+              <span>{t('presentation.exportSuccess')} {outputPath}</span>
             </div>
           )}
         </div>
 
         <div className="presentation-export-footer">
           <button className="btn-cancel" onClick={handleClose} disabled={isExporting}>
-            Annuler
+            {t('actions.cancel')}
           </button>
           <button
             className="btn-export"
@@ -233,7 +235,7 @@ export const PresentationExportModal: React.FC<PresentationExportModalProps> = (
             disabled={isExporting || !title}
           >
             <FileDown size={16} />
-            {isExporting ? 'Export en cours...' : 'Exporter'}
+            {isExporting ? t('presentation.exporting') : t('presentation.export')}
           </button>
         </div>
       </div>

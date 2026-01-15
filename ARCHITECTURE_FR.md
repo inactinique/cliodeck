@@ -1,38 +1,38 @@
-# Technical Architecture - ClioDesk
+# Architecture Technique - ClioDesk
 
-This document describes the architecture and operation of ClioDesk's RAG (Retrieval-Augmented Generation) system, an academic writing assistant for historians and humanities researchers.
+Ce document décrit l'architecture et le fonctionnement du système RAG (Retrieval-Augmented Generation) de ClioDesk, un assistant d'écriture académique pour historiens et chercheurs en sciences humaines.
 
-## Table of Contents
+## Table des matières
 
-- [Overview](#overview)
-- [Global Architecture](#global-architecture)
-- [Indexing Pipeline](#indexing-pipeline)
-- [Search System](#search-system)
-- [Assisted Generation (RAG)](#assisted-generation-rag)
-- [External Integrations](#external-integrations)
-- [Performance and Optimizations](#performance-and-optimizations)
-
----
-
-## Overview
-
-ClioDesk is an Electron application that combines:
-- **Frontend**: React/TypeScript interface with Monaco Editor
-- **Backend**: Node.js/TypeScript services for indexing and search
-- **Python Services**: Topic modeling and textometric analysis
-- **Local LLM**: Ollama for embeddings and text generation
-- **Storage**: SQLite for data and vector indexes
-
-### Design Goals
-
-1. **Local-first**: All data remains on the user's machine
-2. **Performance**: Optimized for modest machines (8-16 GB RAM, CPU only)
-3. **Academic**: Complete traceability and verifiable citations
-4. **Interoperability**: Integration with Zotero, BibTeX, Markdown, PDF
+- [Vue d'ensemble](#vue-densemble)
+- [Architecture globale](#architecture-globale)
+- [Pipeline d'indexation](#pipeline-dindexation)
+- [Système de recherche](#système-de-recherche)
+- [Génération assistée (RAG)](#génération-assistée-rag)
+- [Intégrations externes](#intégrations-externes)
+- [Performances et optimisations](#performances-et-optimisations)
 
 ---
 
-## Global Architecture
+## Vue d'ensemble
+
+ClioDesk est une application Electron qui combine :
+- **Frontend** : Interface React/TypeScript avec Monaco Editor
+- **Backend** : Services Node.js/TypeScript pour l'indexation et la recherche
+- **Services Python** : Topic modeling et analyse textométrique
+- **LLM local** : Ollama pour embeddings et génération de texte
+- **Stockage** : SQLite pour données et indexes vectoriels
+
+### Objectifs de conception
+
+1. **Local-first** : Toutes les données restent sur la machine de l'utilisateur
+2. **Performance** : Optimisé pour machines modestes (8-16 GB RAM, CPU only)
+3. **Académique** : Traçabilité complète et citations vérifiables
+4. **Interopérabilité** : Intégration avec Zotero, BibTeX, Markdown, PDF
+
+---
+
+## Architecture globale
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -57,37 +57,37 @@ ClioDesk is an Electron application that combines:
 └─────────────────────────────────────────────────────────────┘
 ```
 
-### Key Technologies
+### Technologies clés
 
-| Component | Technology | Role |
-|-----------|------------|------|
-| **UI Framework** | React 18 + TypeScript | User interface |
-| **Editor** | Monaco Editor | Markdown editing |
-| **Build Tool** | Vite | Bundling and hot reload |
-| **Desktop** | Electron 28 | Multi-platform desktop app |
-| **Database** | better-sqlite3 | Synchronous local storage |
-| **Vector Index** | hnswlib-node | Fast vector search |
-| **Sparse Index** | natural (BM25) | Keyword search |
-| **LLM** | Ollama | Local embeddings + generation |
-| **PDF Processing** | pdfjs-dist | Text extraction |
-| **Bibliography** | BibTeX parsing | Reference management |
-| **Topic Modeling** | Python + BERTopic | Thematic analysis |
+| Composant | Technologie | Rôle |
+|-----------|-------------|------|
+| **UI Framework** | React 18 + TypeScript | Interface utilisateur |
+| **Editor** | Monaco Editor | Édition Markdown |
+| **Build Tool** | Vite | Bundling et hot reload |
+| **Desktop** | Electron 28 | Application desktop multi-plateforme |
+| **Database** | better-sqlite3 | Stockage local synchrone |
+| **Vector Index** | hnswlib-node | Recherche vectorielle rapide |
+| **Sparse Index** | natural (BM25) | Recherche par mots-clés |
+| **LLM** | Ollama | Embeddings + génération locale |
+| **PDF Processing** | pdfjs-dist | Extraction de texte |
+| **Bibliography** | BibTeX parsing | Gestion des références |
+| **Topic Modeling** | Python + BERTopic | Analyse thématique |
 
 ---
 
-## Indexing Pipeline
+## Pipeline d'indexation
 
-The indexing pipeline transforms PDFs into queryable vector chunks.
+Le pipeline d'indexation transforme les PDFs en chunks vectoriels interrogeables.
 
-### Step 1: PDF Extraction
+### Étape 1: Extraction PDF
 
-**File**: `backend/core/pdf/PDFIndexer.ts`
+**Fichier** : `backend/core/pdf/PDFIndexer.ts`
 
 ```typescript
-// 1. Load PDF with pdfjs
+// 1. Charger le PDF avec pdfjs
 const pdf = await pdfjs.getDocument(pdfPath).promise;
 
-// 2. Extract text page by page
+// 2. Extraire le texte page par page
 const pages = [];
 for (let i = 1; i <= pdf.numPages; i++) {
   const page = await pdf.getPage(i);
@@ -96,27 +96,27 @@ for (let i = 1; i <= pdf.numPages; i++) {
   pages.push({ pageNumber: i, content: text });
 }
 
-// 3. Extract metadata
+// 3. Extraire les métadonnées
 const metadata = await pdf.getMetadata();
 const title = metadata.info.Title || path.basename(pdfPath);
 ```
 
-**Output**: Array of pages with raw text + document metadata
+**Sortie** : Array de pages avec texte brut + métadonnées du document
 
 ---
 
-### Step 2: Adaptive Chunking
+### Étape 2: Chunking adaptatif
 
-**Files**:
-- `backend/core/chunking/AdaptiveChunker.ts` (recommended)
+**Fichiers** :
+- `backend/core/chunking/AdaptiveChunker.ts` (recommandé)
 - `backend/core/chunking/DocumentChunker.ts` (fallback)
 
-#### Structure Detection
+#### Détection de structure
 
-The adaptive chunker automatically detects document structure:
+Le chunker adaptatif détecte automatiquement la structure du document :
 
 ```typescript
-// Header detection
+// Détection de headers
 const patterns = {
   markdown: /^#{1,6}\s+(.+)/,           // # Title, ## Subtitle
   numbered: /^\d+(\.\d+)*\s+(.+)/,      // 1. Introduction, 1.1 Context
@@ -124,7 +124,7 @@ const patterns = {
   roman: /^[IVX]+\.\s+(.+)/             // I. Introduction, II. Methods
 };
 
-// Automatic classification
+// Classification automatique
 const sectionTypes = {
   abstract: /abstract|résumé/i,
   introduction: /introduction/i,
@@ -136,16 +136,16 @@ const sectionTypes = {
 };
 ```
 
-#### Chunk Creation
+#### Création de chunks
 
-**Principles**:
+**Principes** :
 
-1. **Respect sentence boundaries**: Chunks always end with `.`, `!`, `?` or `;`
-2. **Document context**: Each chunk includes title and section as prefix
-3. **Skip references**: Bibliography section is not indexed
-4. **Smart overlap**: Overlaps occur on complete sentences
+1. **Respect des limites de phrases** : Les chunks se terminent toujours par `.`, `!`, `?` ou `;`
+2. **Contexte du document** : Chaque chunk inclut titre et section en préfixe
+3. **Skip des références** : La section bibliographique n'est pas indexée
+4. **Overlap intelligent** : Les overlaps se font sur des phrases complètes
 
-**Generated chunk example**:
+**Exemple de chunk généré** :
 
 ```
 [Doc: Active Learning Strategies in Higher Education | Section: Methodology]
@@ -157,13 +157,13 @@ lecture-based instruction, while the experimental group participated in
 collaborative problem-solving activities.
 ```
 
-**Configuration**:
+**Configuration** :
 
 ```typescript
 interface ChunkingConfig {
-  chunkSize: number;        // Target size in words (300-500)
-  overlap: number;          // Overlap in words (50-100)
-  maxTokens: number;        // Strict token limit (8192 for nomic-embed-text)
+  chunkSize: number;        // Taille cible en mots (300-500)
+  overlap: number;          // Overlap en mots (50-100)
+  maxTokens: number;        // Limite stricte en tokens (8192 pour nomic-embed-text)
 }
 
 const CHUNKING_CONFIGS = {
@@ -173,16 +173,16 @@ const CHUNKING_CONFIGS = {
 };
 ```
 
-**Output**: Array of chunks with metadata
+**Sortie** : Array de chunks avec métadonnées
 
 ```typescript
 interface DocumentChunk {
   id: string;                 // UUID
-  documentId: string;         // Document reference
-  content: string;            // Chunk text (with context)
-  pageNumber: number;         // Source page
-  chunkIndex: number;         // Position in document
-  embedding?: number[];       // Vector (768 dimensions)
+  documentId: string;         // Référence au document
+  content: string;            // Texte du chunk (avec contexte)
+  pageNumber: number;         // Page source
+  chunkIndex: number;         // Position dans le document
+  embedding?: number[];       // Vecteur (768 dimensions)
   metadata?: {
     sectionTitle?: string;    // "Methodology", "Results"
     sectionType?: string;     // "methodology", "results"
@@ -193,12 +193,12 @@ interface DocumentChunk {
 
 ---
 
-### Step 3: Embedding Generation
+### Étape 3: Génération d'embeddings
 
-**File**: `backend/core/llm/OllamaClient.ts`
+**Fichier** : `backend/core/llm/OllamaClient.ts`
 
 ```typescript
-// 1. Connect to Ollama
+// 1. Connexion à Ollama
 const response = await fetch('http://localhost:11434/api/embeddings', {
   method: 'POST',
   body: JSON.stringify({
@@ -207,39 +207,39 @@ const response = await fetch('http://localhost:11434/api/embeddings', {
   })
 });
 
-// 2. Retrieve vector
+// 2. Récupération du vecteur
 const { embedding } = await response.json();
 // embedding: number[] (768 dimensions)
 
-// 3. Normalization (if needed)
+// 3. Normalisation (si nécessaire)
 const normalized = normalize(embedding);
 ```
 
-**Model used**: `nomic-embed-text`
-- Dimensions: 768
-- Max context: 8192 tokens
-- Size: ~274 MB
-- Performance: ~100 embeddings/second on average CPU
+**Modèle utilisé** : `nomic-embed-text`
+- Dimensions : 768
+- Contexte max : 8192 tokens
+- Taille : ~274 MB
+- Performance : ~100 embeddings/seconde sur CPU moyen
 
-**Emergency chunking**: If a chunk exceeds 8192 tokens, it's intelligently subdivided:
+**Chunking d'urgence** : Si un chunk dépasse 8192 tokens, il est subdivisé intelligemment :
 
 ```typescript
 private chunkText(text: string, maxLength: number): string[] {
-  // Find sentence ending in last 200 characters
+  // Chercher une fin de phrase dans les 200 derniers caractères
   const sentenceEndings = /[.!?;](?=\s|$)/g;
-  // ... cut at last found period
+  // ... découper au dernier point trouvé
 }
 ```
 
 ---
 
-### Step 4: Multi-Strategy Indexing
+### Étape 4: Indexation multi-stratégie
 
-**File**: `backend/core/vector-store/EnhancedVectorStore.ts`
+**Fichier** : `backend/core/vector-store/EnhancedVectorStore.ts`
 
-Three indexes are created simultaneously:
+Trois index sont créés simultanément :
 
-#### Index 1: SQLite (database)
+#### Index 1: SQLite (base de données)
 
 ```sql
 CREATE TABLE chunks (
@@ -248,7 +248,7 @@ CREATE TABLE chunks (
   content TEXT NOT NULL,
   page_number INTEGER,
   chunk_index INTEGER,
-  embedding BLOB,           -- Serialized vector
+  embedding BLOB,           -- Vector serialized
   metadata TEXT,            -- JSON
   created_at INTEGER
 );
@@ -257,11 +257,11 @@ CREATE INDEX idx_document ON chunks(document_id);
 CREATE INDEX idx_page ON chunks(page_number);
 ```
 
-**Role**: Persistent storage + fallback for linear search
+**Rôle** : Stockage persistant + fallback pour recherche linéaire
 
-#### Index 2: HNSW (fast vector search)
+#### Index 2: HNSW (recherche vectorielle rapide)
 
-**File**: `backend/core/vector-store/HNSWVectorStore.ts`
+**Fichier** : `backend/core/vector-store/HNSWVectorStore.ts`
 
 ```typescript
 import { HierarchicalNSW } from 'hnswlib-node';
@@ -269,29 +269,29 @@ import { HierarchicalNSW } from 'hnswlib-node';
 const index = new HierarchicalNSW('cosine', 768); // 768 dimensions
 index.initIndex(maxElements, M=16, efConstruction=100);
 
-// Indexing
+// Indexation
 for (const chunk of chunks) {
   index.addPoint(chunk.embedding, chunk.id);
 }
 
-// Save to disk
+// Sauvegarde sur disque
 index.writeIndexSync(indexPath);
 ```
 
-**Parameters**:
-- `M=16`: Connections per node (speed/precision trade-off)
-- `efConstruction=100`: Construction effort
-- `efSearch=50`: Search effort
+**Paramètres** :
+- `M=16` : Connexions par node (trade-off vitesse/précision)
+- `efConstruction=100` : Effort de construction
+- `efSearch=50` : Effort de recherche
 
-**Complexity**:
-- Construction: O(n log n)
-- Search: O(log n)
+**Complexité** :
+- Construction : O(n log n)
+- Recherche : O(log n)
 
-**Memory footprint**: ~500 MB for 50k chunks (768 dims)
+**Empreinte mémoire** : ~500 MB pour 50k chunks (768 dims)
 
-#### Index 3: BM25 (keyword search)
+#### Index 3: BM25 (recherche par mots-clés)
 
-**File**: `backend/core/search/BM25Index.ts`
+**Fichier** : `backend/core/search/BM25Index.ts`
 
 ```typescript
 import natural from 'natural';
@@ -312,24 +312,24 @@ const idf = Math.log((totalDocs - docFreq + 0.5) / (docFreq + 0.5));
 const score = idf * ((tf * (k1 + 1)) / (tf + k1 * (1 - b + b * (docLength / avgDocLength))));
 ```
 
-**Parameters**:
-- `k1=1.5`: Term frequency saturation
-- `b=0.75`: Document length normalization
+**Paramètres** :
+- `k1=1.5` : Saturation de la fréquence des termes
+- `b=0.75` : Normalisation de la longueur du document
 
-**Memory footprint**: ~100 MB for 50k chunks
+**Empreinte mémoire** : ~100 MB pour 50k chunks
 
 ---
 
-## Search System
+## Système de recherche
 
-### Hybrid Search (Dense + Sparse)
+### Recherche hybride (Dense + Sparse)
 
-**File**: `backend/core/search/HybridSearch.ts`
+**Fichier** : `backend/core/search/HybridSearch.ts`
 
-Hybrid search combines the advantages of two complementary approaches:
+La recherche hybride combine les avantages de deux approches complémentaires :
 
 ```
-Query: "bloom taxonomy methodology"
+Query: "méthodologie bloom taxonomy"
         │
         ├────────────────────┬────────────────────┐
         │                    │                    │
@@ -341,26 +341,26 @@ Query: "bloom taxonomy methodology"
         │                    │                    │
         ▼                    ▼                    ▼
    Top-50 results       Top-50 results       Top-10 final
-   (semantic)           (keywords)           (best of both)
+   (sémantique)         (keywords)           (best of both)
 ```
 
-#### Step 1: Dense Search (HNSW)
+#### Étape 1: Recherche dense (HNSW)
 
 ```typescript
-// 1. Generate query embedding
+// 1. Générer embedding de la query
 const queryEmbedding = await ollamaClient.generateEmbedding(query);
 
-// 2. HNSW search
+// 2. Recherche HNSW
 const denseResults = await hnswStore.search(queryEmbedding, 50);
 // Returns: [{ id, score }, ...]
 ```
 
-**Advantage**: Understands semantic meaning ("active learning" ≈ "apprentissage actif")
+**Avantage** : Comprend le sens sémantique ("active learning" ≈ "apprentissage actif")
 
-#### Step 2: Sparse Search (BM25)
+#### Étape 2: Recherche sparse (BM25)
 
 ```typescript
-// 1. Query tokenization
+// 1. Tokenization de la query
 const queryTokens = tokenizer.tokenize(query.toLowerCase());
 
 // 2. BM25 scoring
@@ -368,9 +368,9 @@ const sparseResults = bm25Index.search(queryTokens, 50);
 // Returns: [{ id, score }, ...]
 ```
 
-**Advantage**: Excellent for rare terms, proper nouns, acronyms ("BERTopic", "Piaget")
+**Avantage** : Excellent pour termes rares, noms propres, acronymes ("BERTopic", "Piaget")
 
-#### Step 3: RRF Fusion (Reciprocal Rank Fusion)
+#### Étape 3: Fusion RRF (Reciprocal Rank Fusion)
 
 ```typescript
 function reciprocalRankFusion(
@@ -380,21 +380,21 @@ function reciprocalRankFusion(
 ): SearchResult[] {
   const scores = new Map<string, number>();
 
-  // Dense search contribution (60%)
+  // Contribution de la recherche dense (60%)
   for (let i = 0; i < denseResults.length; i++) {
     const chunkId = denseResults[i].id;
     const rrfScore = 0.6 / (k + i + 1);
     scores.set(chunkId, (scores.get(chunkId) || 0) + rrfScore);
   }
 
-  // Sparse search contribution (40%)
+  // Contribution de la recherche sparse (40%)
   for (let i = 0; i < sparseResults.length; i++) {
     const chunkId = sparseResults[i].id;
     const rrfScore = 0.4 / (k + i + 1);
     scores.set(chunkId, (scores.get(chunkId) || 0) + rrfScore);
   }
 
-  // Sort by final score
+  // Trier par score final
   return Array.from(scores.entries())
     .sort((a, b) => b[1] - a[1])
     .slice(0, 10)
@@ -402,23 +402,23 @@ function reciprocalRankFusion(
 }
 ```
 
-**Weights**: 60% dense / 40% sparse (configurable)
+**Poids** : 60% dense / 40% sparse (configurable)
 
-**RRF Formula**: `RRF(d) = Σ weight_i / (k + rank_i(d))`
+**Formule RRF** : `RRF(d) = Σ weight_i / (k + rank_i(d))`
 
 ### Performance
 
-| Metric | Linear Search | HNSW Only | Hybrid (HNSW+BM25) |
-|--------|--------------|-----------|-------------------|
-| **Time** | 500ms | 15ms | 30ms |
+| Métrique | Linear Search | HNSW Only | Hybrid (HNSW+BM25) |
+|----------|--------------|-----------|-------------------|
+| **Temps** | 500ms | 15ms | 30ms |
 | **Precision@10** | 65% | 75% | 80% |
 | **Recall@10** | 45% | 55% | 60% |
 
 ---
 
-## Assisted Generation (RAG)
+## Génération assistée (RAG)
 
-### Complete Pipeline
+### Pipeline complet
 
 ```
 User Query
@@ -444,19 +444,19 @@ User Query
         Response with citations
 ```
 
-### Steps 1-3: Search (see previous section)
+### Étape 1-3: Recherche (voir section précédente)
 
-### Step 4: Graph Expansion (optional)
+### Étape 4: Expansion par graphe (optionnel)
 
-**File**: `backend/core/analysis/TopicModelingService.ts`
+**Fichier** : `backend/core/analysis/TopicModelingService.ts`
 
-If enabled (`useGraphContext: true`), similar chunks are also retrieved:
+Si activé (`useGraphContext: true`), les chunks similaires sont également récupérés :
 
 ```typescript
-// 1. For each retrieved chunk, find its graph neighbors
+// 1. Pour chaque chunk récupéré, trouver ses voisins dans le graphe
 const neighbors = graph.neighbors(chunkId);
 
-// 2. Calculate cosine similarity
+// 2. Calculer similarité cosine
 for (const neighbor of neighbors) {
   const similarity = cosineSimilarity(
     chunk.embedding,
@@ -468,22 +468,22 @@ for (const neighbor of neighbors) {
   }
 }
 
-// 3. Add top-N neighbors
+// 3. Ajouter top-N voisins
 const topNeighbors = additionalChunks
   .sort((a, b) => b.similarity - a.similarity)
   .slice(0, additionalGraphDocs);
 ```
 
-**Configuration**:
+**Configuration** :
 - `useGraphContext: boolean` (default: false)
 - `graphSimilarityThreshold: number` (default: 0.7)
 - `additionalGraphDocs: number` (default: 3)
 
-### Step 5: Context Building
+### Étape 5: Construction du contexte
 
 ```typescript
 function buildRAGContext(chunks: DocumentChunk[]): string {
-  let context = "# Context (sources)\n\n";
+  let context = "# Contexte (sources)\n\n";
 
   for (const chunk of chunks) {
     context += `## [${chunk.documentTitle}, p.${chunk.pageNumber}]\n`;
@@ -494,10 +494,10 @@ function buildRAGContext(chunks: DocumentChunk[]): string {
 }
 ```
 
-**Generated context example**:
+**Exemple de contexte généré** :
 
 ```markdown
-# Context (sources)
+# Contexte (sources)
 
 ## [Active Learning in Higher Education, p.12]
 [Doc: Active Learning in Higher Education | Section: Methodology]
@@ -512,25 +512,25 @@ The revised taxonomy introduces six levels of cognitive complexity: Remember,
 Understand, Apply, Analyze, Evaluate, and Create...
 ```
 
-### Step 6: LLM Generation
+### Étape 6: Génération LLM
 
-**File**: `src/main/services/chat-service.ts`
+**Fichier** : `src/main/services/chat-service.ts`
 
 ```typescript
-const prompt = `You are a research assistant for historians.
+const prompt = `Tu es un assistant de recherche pour historiens.
 
 ${ragContext}
 
-User question:
+Question de l'utilisateur :
 ${userQuery}
 
-Instructions:
-- Answer ONLY based on the sources above
-- Always cite sources with [Document, p.X]
-- If information is not in the sources, clearly say so
-- Answer in a clear and academic manner
+Instructions :
+- Réponds en te basant UNIQUEMENT sur les sources ci-dessus
+- Cite toujours les sources avec [Document, p.X]
+- Si l'information n'est pas dans les sources, dis-le clairement
+- Réponds en français de manière claire et académique
 
-Answer:`;
+Réponse :`;
 
 const response = await ollama.generate({
   model: 'gemma2:2b',
@@ -539,42 +539,42 @@ const response = await ollama.generate({
 });
 ```
 
-**Streaming**: Response is sent token by token for better UX
+**Streaming** : La réponse est envoyée token par token pour meilleure UX
 
 ---
 
-## External Integrations
+## Intégrations externes
 
 ### Zotero
 
-**File**: `src/main/services/zotero-service.ts`
+**Fichier** : `src/main/services/zotero-service.ts`
 
 ```typescript
-// 1. Authentication
+// 1. Authentification
 const headers = {
   'Zotero-API-Key': apiKey,
   'Zotero-API-Version': '3'
 };
 
-// 2. Retrieve collections
+// 2. Récupérer collections
 const collections = await fetch(
   `https://api.zotero.org/users/${userId}/collections`,
   { headers }
 );
 
-// 3. Retrieve items from a collection
+// 3. Récupérer items d'une collection
 const items = await fetch(
   `https://api.zotero.org/users/${userId}/collections/${collectionId}/items`,
   { headers }
 );
 
-// 4. BibTeX export
+// 4. Export BibTeX
 const bibtex = await fetch(
   `https://api.zotero.org/users/${userId}/collections/${collectionId}/items?format=bibtex`,
   { headers }
 );
 
-// 5. Download PDFs
+// 5. Télécharger PDFs
 for (const item of items) {
   if (item.data.linkMode === 'linked_file') {
     const pdf = await downloadAttachment(item.key);
@@ -585,7 +585,7 @@ for (const item of items) {
 
 ### BibTeX
 
-**Parsing**: Uses a custom parser for `.bib` files
+**Parsing** : Utilise un parser custom pour les fichiers `.bib`
 
 ```typescript
 function parseBibTeX(bibContent: string): BibEntry[] {
@@ -611,7 +611,7 @@ function parseBibTeX(bibContent: string): BibEntry[] {
 
 ### Topic Modeling (Python)
 
-**Service**: `backend/python-services/topic-modeling/main.py`
+**Service** : `backend/python-services/topic-modeling/main.py`
 
 ```python
 from bertopic import BERTopic
@@ -621,15 +621,15 @@ app = FastAPI()
 
 @app.post("/analyze")
 async def analyze_corpus(documents: List[str]):
-    # 1. Embeddings with sentence-transformers
+    # 1. Embeddings avec sentence-transformers
     model = SentenceTransformer('all-MiniLM-L6-v2')
     embeddings = model.encode(documents)
 
-    # 2. Topic modeling with BERTopic
+    # 2. Topic modeling avec BERTopic
     topic_model = BERTopic()
     topics, probs = topic_model.fit_transform(documents, embeddings)
 
-    # 3. Extract topics
+    # 3. Extraction des topics
     topic_info = topic_model.get_topic_info()
 
     return {
@@ -639,7 +639,7 @@ async def analyze_corpus(documents: List[str]):
     }
 ```
 
-**Communication**: TypeScript backend communicates via HTTP (port 8001)
+**Communication** : Le backend TypeScript communique via HTTP (port 8001)
 
 ```typescript
 const response = await fetch('http://localhost:8001/analyze', {
@@ -652,74 +652,74 @@ const { topics, topic_info } = await response.json();
 
 ---
 
-## Performance and Optimizations
+## Performances et optimisations
 
-### Memory Footprint (typical 50k chunks)
+### Empreinte mémoire (50k chunks typiques)
 
-| Component | RAM | Description |
+| Composant | RAM | Description |
 |-----------|-----|-------------|
 | Electron | 1.5 GB | App + Chromium |
 | HNSW index | 500 MB | 50k × 768 dims × 3x overhead |
-| BM25 index | 100 MB | Inverted index + vocabulary |
+| BM25 index | 100 MB | Index inversé + vocabulaire |
 | SQLite | 300 MB | Chunks + metadata |
-| Ollama (nomic) | 500 MB | Embedding model in RAM |
-| **Total** | **~3 GB** | For an average project |
+| Ollama (nomic) | 500 MB | Modèle d'embeddings en RAM |
+| **Total** | **~3 GB** | Pour un projet moyen |
 
-### Recommended Configuration
+### Configuration recommandée
 
-| Corpus Size | Min RAM | CPU | Indexing Time |
-|-------------|---------|-----|---------------|
+| Taille Corpus | RAM min | CPU | Temps indexation |
+|--------------|---------|-----|------------------|
 | 10-50 PDFs | 4 GB | Dual-core | 5-10 min |
 | 50-200 PDFs | 8 GB | Quad-core | 20-40 min |
-| 200-500 PDFs | 16 GB | 8+ cores | 1-2 hours |
+| 200-500 PDFs | 16 GB | 8+ cores | 1-2 heures |
 
-### CPU Optimizations
+### Optimisations CPU
 
-**1. Parallel chunking**:
+**1. Chunking parallèle** :
 ```typescript
-// Process documents in parallel (max 4 simultaneous)
+// Traiter les documents en parallèle (max 4 simultanés)
 const batches = chunk(documents, 4);
 for (const batch of batches) {
   await Promise.all(batch.map(doc => indexDocument(doc)));
 }
 ```
 
-**2. Batch embeddings**:
+**2. Batch embeddings** :
 ```typescript
-// Generate embeddings in batches of 32
+// Générer embeddings par batch de 32
 for (let i = 0; i < chunks.length; i += 32) {
   const batch = chunks.slice(i, i + 32);
   const embeddings = await ollama.batchEmbed(batch);
 }
 ```
 
-**3. Background index building**:
+**3. Index build en arrière-plan** :
 ```typescript
-// Build HNSW index asynchronously
+// Construire HNSW index de manière asynchrone
 setTimeout(() => {
   hnswStore.rebuild();
 }, 5000);
 ```
 
-### Chunking Configurations
+### Configurations de chunking
 
 ```typescript
 const CHUNKING_CONFIGS = {
-  // For modest machines (8 GB RAM)
+  // Pour machines modestes (8 GB RAM)
   cpuOptimized: {
-    chunkSize: 300,    // Small chunks = fewer tokens
-    overlap: 50,       // Minimal overlap
+    chunkSize: 300,    // Petits chunks = moins de tokens
+    overlap: 50,       // Overlap minimal
     maxTokens: 8192
   },
 
-  // Balance performance/precision
+  // Balance performance/précision
   standard: {
     chunkSize: 400,
     overlap: 75,
     maxTokens: 8192
   },
 
-  // For maximum precision (16+ GB RAM)
+  // Pour précision maximale (16+ GB RAM)
   large: {
     chunkSize: 500,
     overlap: 100,
@@ -730,83 +730,83 @@ const CHUNKING_CONFIGS = {
 
 ---
 
-## Key Architecture Files
+## Fichiers clés de l'architecture
 
 ```
 backend/
 ├── core/
 │   ├── analysis/
-│   │   └── TopicModelingService.ts      # Thematic analysis + graph
+│   │   └── TopicModelingService.ts      # Analyse thématique + graphe
 │   ├── chunking/
-│   │   ├── AdaptiveChunker.ts           # Structure-aware chunking
-│   │   └── DocumentChunker.ts           # Simple chunking (fallback)
+│   │   ├── AdaptiveChunker.ts           # Chunking structure-aware
+│   │   └── DocumentChunker.ts           # Chunking simple (fallback)
 │   ├── history/
-│   │   └── HistoryManager.ts            # Research journal
+│   │   └── HistoryManager.ts            # Journal de recherche
 │   ├── llm/
-│   │   └── OllamaClient.ts              # Ollama client (embeddings + chat)
+│   │   └── OllamaClient.ts              # Client Ollama (embeddings + chat)
 │   ├── pdf/
-│   │   └── PDFIndexer.ts                # PDF extraction + indexing
+│   │   └── PDFIndexer.ts                # Extraction + indexation PDFs
 │   ├── search/
-│   │   ├── BM25Index.ts                 # Sparse index (keywords)
-│   │   └── HybridSearch.ts              # Dense + sparse fusion
+│   │   ├── BM25Index.ts                 # Index sparse (keywords)
+│   │   └── HybridSearch.ts              # Fusion dense + sparse
 │   └── vector-store/
 │       ├── VectorStore.ts               # SQLite base store
-│       ├── HNSWVectorStore.ts           # Fast HNSW index
-│       └── EnhancedVectorStore.ts       # Unified wrapper
+│       ├── HNSWVectorStore.ts           # Index HNSW rapide
+│       └── EnhancedVectorStore.ts       # Wrapper unifié
 │
 ├── python-services/
 │   └── topic-modeling/
 │       ├── main.py                      # FastAPI service
 │       ├── topic_analyzer.py            # BERTopic logic
-│       └── requirements.txt             # Python dependencies
+│       └── requirements.txt             # Dépendances Python
 │
 ├── types/
-│   ├── config.ts                        # Configuration types
-│   └── pdf-document.ts                  # Document/chunk types
+│   ├── config.ts                        # Types de configuration
+│   └── pdf-document.ts                  # Types documents/chunks
 │
 src/
 ├── main/
 │   ├── services/
-│   │   ├── chat-service.ts              # RAG service
-│   │   ├── pdf-service.ts               # PDF management
-│   │   ├── project-manager.ts           # Project management
-│   │   └── topic-modeling-service.ts    # Python service proxy
+│   │   ├── chat-service.ts              # Service RAG
+│   │   ├── pdf-service.ts               # Gestion PDFs
+│   │   ├── project-manager.ts           # Gestion projets
+│   │   └── topic-modeling-service.ts    # Proxy Python service
 │   └── ipc/
-│       └── handlers/                    # Electron IPC
+│       └── handlers/                    # IPC Electron
 │
 └── renderer/
     ├── components/
-    │   ├── Chat/                        # Chat interface
-    │   ├── Config/                      # Settings
-    │   ├── Editor/                      # Markdown editor
-    │   ├── PDFIndex/                    # PDF management
-    │   └── Journal/                     # Research journal
+    │   ├── Chat/                        # Interface chat
+    │   ├── Config/                      # Paramètres
+    │   ├── Editor/                      # Éditeur Markdown
+    │   ├── PDFIndex/                    # Gestion PDFs
+    │   └── Journal/                     # Journal de recherche
     └── stores/
-        └── editorStore.ts               # Zustand state
+        └── editorStore.ts               # State Zustand
 ```
 
 ---
 
-## Technical References
+## Références techniques
 
 ### Papers
 
-- **HNSW**: [Efficient and robust approximate nearest neighbor search](https://arxiv.org/abs/1603.09320) (Malkov & Yashunin, 2016)
-- **BM25**: [The Probabilistic Relevance Framework: BM25 and Beyond](https://www.staff.city.ac.uk/~sbrp622/papers/foundations_bm25_review.pdf) (Robertson & Zaragoza, 2009)
-- **RRF**: [Reciprocal rank fusion outperforms condorcet](https://plg.uwaterloo.ca/~gvcormac/cormacksigir09-rrf.pdf) (Cormack et al., 2009)
-- **RAG**: [Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks](https://arxiv.org/abs/2005.11401) (Lewis et al., 2020)
+- **HNSW** : [Efficient and robust approximate nearest neighbor search](https://arxiv.org/abs/1603.09320) (Malkov & Yashunin, 2016)
+- **BM25** : [The Probabilistic Relevance Framework: BM25 and Beyond](https://www.staff.city.ac.uk/~sbrp622/papers/foundations_bm25_review.pdf) (Robertson & Zaragoza, 2009)
+- **RRF** : [Reciprocal rank fusion outperforms condorcet](https://plg.uwaterloo.ca/~gvcormac/cormacksigir09-rrf.pdf) (Cormack et al., 2009)
+- **RAG** : [Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks](https://arxiv.org/abs/2005.11401) (Lewis et al., 2020)
 
-### Tools and Libraries
+### Outils et bibliothèques
 
-- [Ollama](https://ollama.ai/) - Local LLMs
+- [Ollama](https://ollama.ai/) - LLMs locaux
 - [hnswlib](https://github.com/nmslib/hnswlib) - HNSW implementation
-- [natural](https://github.com/NaturalNode/natural) - NLP for Node.js
+- [natural](https://github.com/NaturalNode/natural) - NLP pour Node.js
 - [BERTopic](https://maartengr.github.io/BERTopic/) - Topic modeling
 - [pdfjs-dist](https://mozilla.github.io/pdf.js/) - PDF rendering
-- [better-sqlite3](https://github.com/WiseLibs/better-sqlite3) - Synchronous SQLite
+- [better-sqlite3](https://github.com/WiseLibs/better-sqlite3) - SQLite synchrone
 
 ---
 
-**Version**: 1.0.0
-**Last updated**: 2026-01-11
-**Status**: Production-ready
+**Version** : 1.0.0
+**Dernière mise à jour** : 2026-01-11
+**Statut** : ✅ Production-ready

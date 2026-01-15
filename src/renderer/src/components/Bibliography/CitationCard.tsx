@@ -11,7 +11,7 @@ export const CitationCard: React.FC<CitationCardProps> = ({ citation }) => {
   const { t } = useTranslation('common');
   const [isExpanded, setIsExpanded] = useState(false);
   const [isIndexing, setIsIndexing] = useState(false);
-  const { selectCitation, insertCitation, indexPDFFromCitation, isFileIndexed, refreshIndexedPDFs } = useBibliographyStore();
+  const { selectCitation, insertCitation, indexPDFFromCitation, reindexPDFFromCitation, isFileIndexed, refreshIndexedPDFs } = useBibliographyStore();
 
   const hasPDF = !!citation.file;
   const isIndexed = hasPDF && isFileIndexed(citation.file!);
@@ -28,11 +28,34 @@ export const CitationCard: React.FC<CitationCardProps> = ({ citation }) => {
   const handleIndexPDF = async () => {
     if (isIndexing) return;
 
+    // If already indexed, ask if user wants to re-index
+    if (isIndexed) {
+      const shouldReindex = window.confirm(t('bibliography.reindexConfirm', { title: citation.title }));
+      if (!shouldReindex) return;
+
+      setIsIndexing(true);
+      try {
+        await reindexPDFFromCitation(citation.id);
+        alert(t('bibliography.pdfReindexed', { title: citation.title }));
+      } catch (error) {
+        alert(`${t('bibliography.indexError')} ${error}`);
+      } finally {
+        setIsIndexing(false);
+      }
+      return;
+    }
+
+    // Normal indexing for non-indexed PDFs
     setIsIndexing(true);
     try {
       const result = await indexPDFFromCitation(citation.id);
       if (result.alreadyIndexed) {
-        alert(t('bibliography.alreadyIndexed', { title: citation.title }));
+        // This shouldn't happen anymore since we check isIndexed above, but keep as fallback
+        const shouldReindex = window.confirm(t('bibliography.reindexConfirm', { title: citation.title }));
+        if (shouldReindex) {
+          await reindexPDFFromCitation(citation.id);
+          alert(t('bibliography.pdfReindexed', { title: citation.title }));
+        }
       } else {
         alert(`${t('bibliography.pdfIndexed')} ${citation.title}`);
       }
@@ -96,11 +119,11 @@ export const CitationCard: React.FC<CitationCardProps> = ({ citation }) => {
                 onClick={handleIndexPDF}
                 disabled={isIndexing}
               >
-                {isIndexing ? '⏳' : isIndexed ? '✅' : '🔍'}{' '}
+                {isIndexing ? '⏳' : isIndexed ? '🔄' : '🔍'}{' '}
                 {isIndexing
                   ? t('bibliography.indexing')
                   : isIndexed
-                    ? t('bibliography.indexed')
+                    ? t('bibliography.reindex')
                     : t('bibliography.indexPDFButton')}
               </button>
             )}
