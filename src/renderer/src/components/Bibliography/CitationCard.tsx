@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Citation, useBibliographyStore } from '../../stores/bibliographyStore';
 import './CitationCard.css';
@@ -10,22 +10,38 @@ interface CitationCardProps {
 export const CitationCard: React.FC<CitationCardProps> = ({ citation }) => {
   const { t } = useTranslation('common');
   const [isExpanded, setIsExpanded] = useState(false);
-  const { selectCitation, insertCitation, indexPDFFromCitation } = useBibliographyStore();
+  const [isIndexing, setIsIndexing] = useState(false);
+  const { selectCitation, insertCitation, indexPDFFromCitation, isFileIndexed, refreshIndexedPDFs } = useBibliographyStore();
+
+  const hasPDF = !!citation.file;
+  const isIndexed = hasPDF && isFileIndexed(citation.file!);
+
+  // Refresh indexed status on mount
+  useEffect(() => {
+    refreshIndexedPDFs();
+  }, []);
 
   const handleInsert = () => {
     insertCitation(citation.id);
   };
 
   const handleIndexPDF = async () => {
+    if (isIndexing) return;
+
+    setIsIndexing(true);
     try {
-      await indexPDFFromCitation(citation.id);
-      alert(`${t('bibliography.pdfIndexed')} ${citation.title}`);
+      const result = await indexPDFFromCitation(citation.id);
+      if (result.alreadyIndexed) {
+        alert(t('bibliography.alreadyIndexed', { title: citation.title }));
+      } else {
+        alert(`${t('bibliography.pdfIndexed')} ${citation.title}`);
+      }
     } catch (error) {
       alert(`${t('bibliography.indexError')} ${error}`);
+    } finally {
+      setIsIndexing(false);
     }
   };
-
-  const hasPDF = !!citation.file;
 
   return (
     <div className="citation-card" onClick={() => selectCitation(citation.id)}>
@@ -36,7 +52,11 @@ export const CitationCard: React.FC<CitationCardProps> = ({ citation }) => {
         <div className="citation-main">
           <div className="citation-author">{citation.author}</div>
           <div className="citation-year">({citation.year})</div>
-          {hasPDF && <span className="pdf-badge">📄</span>}
+          {hasPDF && (
+            <span className="pdf-badge" title={isIndexed ? t('bibliography.indexed') : t('bibliography.notIndexed')}>
+              {isIndexed ? '✅' : '📄'}
+            </span>
+          )}
         </div>
         <button className="expand-btn">
           {isExpanded ? '▼' : '▶'}
@@ -71,8 +91,17 @@ export const CitationCard: React.FC<CitationCardProps> = ({ citation }) => {
               ✍️ {t('bibliography.insertCitation')}
             </button>
             {hasPDF && (
-              <button className="action-btn secondary" onClick={handleIndexPDF}>
-                🔍 {t('bibliography.indexPDFButton')}
+              <button
+                className={`action-btn ${isIndexed ? 'indexed' : 'secondary'}`}
+                onClick={handleIndexPDF}
+                disabled={isIndexing}
+              >
+                {isIndexing ? '⏳' : isIndexed ? '✅' : '🔍'}{' '}
+                {isIndexing
+                  ? t('bibliography.indexing')
+                  : isIndexed
+                    ? t('bibliography.indexed')
+                    : t('bibliography.indexPDFButton')}
               </button>
             )}
           </div>

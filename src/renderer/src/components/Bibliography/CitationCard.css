@@ -138,3 +138,17 @@
 .action-btn.secondary:hover {
   background-color: var(--border-color-hover);
 }
+
+.action-btn.indexed {
+  background-color: #2d4a3e;
+  color: #4ade80;
+}
+
+.action-btn.indexed:hover {
+  background-color: #3d5a4e;
+}
+
+.action-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

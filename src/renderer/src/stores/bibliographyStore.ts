@@ -15,11 +15,34 @@ export interface Citation {
   file?: string;
 }
 
+export interface IndexingProgress {
+  citationId: string;
+  title: string;
+  progress: number;
+  stage: string;
+}
+
+export interface BatchIndexingState {
+  isIndexing: boolean;
+  current: number;
+  total: number;
+  currentCitation?: IndexingProgress;
+  skipped: number;
+  indexed: number;
+  errors: string[];
+}
+
 interface BibliographyState {
   // Citations
   citations: Citation[];
   filteredCitations: Citation[];
   selectedCitationId: string | null;
+
+  // Indexed PDFs tracking
+  indexedFilePaths: Set<string>;
+
+  // Batch indexing state
+  batchIndexing: BatchIndexingState;
 
   // Search & filters
   searchQuery: string;
@@ -36,7 +59,10 @@ interface BibliographyState {
   selectCitation: (citationId: string) => void;
   insertCitation: (citationId: string) => void;
 
-  indexPDFFromCitation: (citationId: string) => Promise<void>;
+  indexPDFFromCitation: (citationId: string) => Promise<{ alreadyIndexed: boolean }>;
+  indexAllPDFs: () => Promise<{ indexed: number; skipped: number; errors: string[] }>;
+  refreshIndexedPDFs: () => Promise<void>;
+  isFileIndexed: (filePath: string) => boolean;
 
   // Internal
   applyFilters: () => void;
@@ -48,6 +74,15 @@ export const useBibliographyStore = create<BibliographyState>((set, get) => ({
   citations: [],
   filteredCitations: [],
   selectedCitationId: null,
+  indexedFilePaths: new Set<string>(),
+  batchIndexing: {
+    isIndexing: false,
+    current: 0,
+    total: 0,
+    skipped: 0,
+    indexed: 0,
+    errors: [],
+  },
   searchQuery: '',
   sortBy: 'author',
   sortOrder: 'asc',
@@ -206,26 +241,187 @@ export const useBibliographyStore = create<BibliographyState>((set, get) => ({
 
   indexPDFFromCitation: async (citationId: string) => {
     try {
-      const { citations } = get();
+      const { citations, indexedFilePaths } = get();
       const citation = citations.find((c) => c.id === citationId);
 
       if (!citation || !citation.file) {
         throw new Error('No PDF file associated with this citation');
       }
 
+      // Check if already indexed
+      if (indexedFilePaths.has(citation.file)) {
+        console.log(`⏭️ PDF already indexed: ${citation.title}`);
+        return { alreadyIndexed: true };
+      }
+
       console.log(`🔍 Indexing PDF for citation: ${citation.title}`);
       console.log(`📁 PDF file path: ${citation.file}`);
+
+      // Emit event to show progress in PDF panel
+      window.dispatchEvent(new CustomEvent('bibliography:indexing-start', {
+        detail: { citationId, title: citation.title, filePath: citation.file }
+      }));
 
       const result = await window.electron.pdf.index(citation.file, citationId);
 
       if (!result.success) {
+        window.dispatchEvent(new CustomEvent('bibliography:indexing-end', {
+          detail: { citationId, success: false, error: result.error }
+        }));
         throw new Error(result.error || 'Failed to index PDF');
       }
 
+      // Add to indexed set
+      set((state) => ({
+        indexedFilePaths: new Set([...state.indexedFilePaths, citation.file!])
+      }));
+
+      window.dispatchEvent(new CustomEvent('bibliography:indexing-end', {
+        detail: { citationId, success: true }
+      }));
+
       console.log(`✅ PDF indexed from citation: ${citation.title}`);
+      return { alreadyIndexed: false };
     } catch (error) {
       console.error('❌ Failed to index PDF from citation:', error);
       throw error;
     }
+  },
+
+  indexAllPDFs: async () => {
+    const { citations } = get();
+
+    // Refresh indexed PDFs list first
+    await get().refreshIndexedPDFs();
+
+    // Get citations with PDFs that are not yet indexed
+    const citationsWithPDFs = citations.filter(
+      (c) => c.file && !get().indexedFilePaths.has(c.file)
+    );
+
+    if (citationsWithPDFs.length === 0) {
+      return { indexed: 0, skipped: 0, errors: [] };
+    }
+
+    const errors: string[] = [];
+    let indexed = 0;
+    let skipped = 0;
+
+    set({
+      batchIndexing: {
+        isIndexing: true,
+        current: 0,
+        total: citationsWithPDFs.length,
+        skipped: 0,
+        indexed: 0,
+        errors: [],
+      }
+    });
+
+    for (let i = 0; i < citationsWithPDFs.length; i++) {
+      const citation = citationsWithPDFs[i];
+
+      set((state) => ({
+        batchIndexing: {
+          ...state.batchIndexing,
+          current: i + 1,
+          currentCitation: {
+            citationId: citation.id,
+            title: citation.title,
+            progress: 0,
+            stage: 'Initialisation...',
+          }
+        }
+      }));
+
+      try {
+        // Check again in case it was indexed during batch
+        if (get().indexedFilePaths.has(citation.file!)) {
+          skipped++;
+          set((state) => ({
+            batchIndexing: { ...state.batchIndexing, skipped }
+          }));
+          continue;
+        }
+
+        window.dispatchEvent(new CustomEvent('bibliography:indexing-start', {
+          detail: { citationId: citation.id, title: citation.title, filePath: citation.file }
+        }));
+
+        const result = await window.electron.pdf.index(citation.file!, citation.id);
+
+        if (result.success) {
+          indexed++;
+          set((state) => ({
+            indexedFilePaths: new Set([...state.indexedFilePaths, citation.file!]),
+            batchIndexing: { ...state.batchIndexing, indexed }
+          }));
+        } else {
+          errors.push(`${citation.title}: ${result.error}`);
+        }
+
+        window.dispatchEvent(new CustomEvent('bibliography:indexing-end', {
+          detail: { citationId: citation.id, success: result.success, error: result.error }
+        }));
+      } catch (error) {
+        const errorMsg = error instanceof Error ? error.message : String(error);
+        errors.push(`${citation.title}: ${errorMsg}`);
+        window.dispatchEvent(new CustomEvent('bibliography:indexing-end', {
+          detail: { citationId: citation.id, success: false, error: errorMsg }
+        }));
+      }
+    }
+
+    set({
+      batchIndexing: {
+        isIndexing: false,
+        current: citationsWithPDFs.length,
+        total: citationsWithPDFs.length,
+        skipped,
+        indexed,
+        errors,
+      }
+    });
+
+    return { indexed, skipped, errors };
+  },
+
+  refreshIndexedPDFs: async () => {
+    try {
+      const result = await window.electron.pdf.getAll();
+      if (result.success && Array.isArray(result.documents)) {
+        // Extract file paths from indexed documents
+        // Documents store the original file path or we can match by bibtexKey
+        const indexedPaths = new Set<string>();
+
+        // Also get bibtex keys to match with citations
+        const indexedBibtexKeys = new Set<string>();
+        result.documents.forEach((doc: any) => {
+          if (doc.filePath) {
+            indexedPaths.add(doc.filePath);
+          }
+          if (doc.bibtexKey) {
+            indexedBibtexKeys.add(doc.bibtexKey);
+          }
+        });
+
+        // Match citations by bibtexKey and add their file paths
+        const { citations } = get();
+        citations.forEach((citation) => {
+          if (citation.file && indexedBibtexKeys.has(citation.id)) {
+            indexedPaths.add(citation.file);
+          }
+        });
+
+        set({ indexedFilePaths: indexedPaths });
+        console.log(`📚 Refreshed indexed PDFs: ${indexedPaths.size} files`);
+      }
+    } catch (error) {
+      console.error('Failed to refresh indexed PDFs:', error);
+    }
+  },
+
+  isFileIndexed: (filePath: string) => {
+    return get().indexedFilePaths.has(filePath);
   },
 }));

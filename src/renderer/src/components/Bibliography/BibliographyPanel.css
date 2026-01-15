@@ -267,3 +267,49 @@
 }
 
 /* Spinning animation now defined globally in index.css */
+
+/* Batch Indexing Progress */
+.batch-indexing-progress {
+  padding: var(--spacing-md);
+  background-color: var(--bg-card);
+  border-bottom: 1px solid var(--border-color);
+  margin: var(--spacing-sm);
+  border-radius: var(--radius-md);
+}
+
+.batch-progress-header {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: var(--spacing-sm);
+}
+
+.batch-progress-current {
+  font-size: var(--font-size-xs);
+  color: var(--text-tertiary);
+  margin-bottom: var(--spacing-sm);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.batch-progress-bar {
+  height: 6px;
+  background-color: var(--bg-panel);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  margin-bottom: var(--spacing-sm);
+}
+
+.batch-progress-fill {
+  height: 100%;
+  background-color: var(--color-accent);
+  transition: width 0.3s ease;
+}
+
+.batch-progress-stats {
+  font-size: var(--font-size-xs);
+  color: var(--text-tertiary);
+  display: flex;
+  gap: var(--spacing-md);
+}

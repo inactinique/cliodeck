@@ -126,7 +126,16 @@
     "publisher": "Éditeur:",
     "booktitle": "Ouvrage:",
     "insertCitation": "Insérer citation",
-    "indexPDFButton": "Indexer PDF"
+    "indexPDFButton": "Indexer PDF",
+    "indexed": "Indexé",
+    "notIndexed": "Non indexé",
+    "indexing": "Indexation...",
+    "alreadyIndexed": "Ce PDF est déjà indexé: {{title}}",
+    "indexAllPDFs": "Indexer tous les PDFs",
+    "noPDFsToIndex": "Aucun PDF à indexer dans la bibliographie",
+    "confirmIndexAll": "Indexer {{count}} PDFs de la bibliographie ?",
+    "indexAllComplete": "Indexation terminée: {{indexed}} indexés, {{skipped}} ignorés, {{errors}} erreurs",
+    "indexingProgress": "Indexation {{current}}/{{total}}"
   },
   "project": {
     "title": "Projet",
@@ -374,5 +383,13 @@
     "providerOllamaDesc": "Utilise exclusivement Ollama pour la génération (nécessite Ollama actif)",
     "providerEmbeddedDesc": "Utilise le modèle embarqué Qwen (nécessite le téléchargement dans les paramètres)",
     "notDownloaded": "non téléchargé"
+  },
+  "pdfIndex": {
+    "unknownAuthor": "Auteur inconnu",
+    "bibtexKey": "Clé BibTeX",
+    "pages": "Pages",
+    "chunks": "Chunks",
+    "indexedAt": "Indexé le",
+    "delete": "Supprimer"
   }
 }

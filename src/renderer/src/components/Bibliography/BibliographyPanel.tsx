@@ -1,10 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Plus } from 'lucide-react';
+import { Plus, FileStack } from 'lucide-react';
 import { useBibliographyStore } from '../../stores/bibliographyStore';
 import { useProjectStore } from '../../stores/projectStore';
 import { CitationList } from './CitationList';
-import { CitationCard } from './CitationCard';
 import { CollapsibleSection } from '../common/CollapsibleSection';
 import { ZoteroImport } from './ZoteroImport';
 import { BibImportModeModal } from './BibImportModeModal';
@@ -23,7 +22,18 @@ export const BibliographyPanel: React.FC = () => {
     setSortBy,
     toggleSortOrder,
     sortOrder,
+    batchIndexing,
+    indexAllPDFs,
+    refreshIndexedPDFs,
   } = useBibliographyStore();
+
+  // Refresh indexed PDFs on mount
+  useEffect(() => {
+    refreshIndexedPDFs();
+  }, []);
+
+  // Count citations with PDFs
+  const citationsWithPDFs = citations.filter((c) => c.file).length;
 
   const [showModeModal, setShowModeModal] = useState(false);
   const [showSummaryModal, setShowSummaryModal] = useState(false);
@@ -126,6 +136,34 @@ export const BibliographyPanel: React.FC = () => {
     }
   };
 
+  const handleIndexAllPDFs = async () => {
+    if (batchIndexing.isIndexing) return;
+
+    if (citationsWithPDFs === 0) {
+      alert(t('bibliography.noPDFsToIndex'));
+      return;
+    }
+
+    const confirm = window.confirm(
+      t('bibliography.confirmIndexAll', { count: citationsWithPDFs })
+    );
+    if (!confirm) return;
+
+    try {
+      const result = await indexAllPDFs();
+      alert(
+        t('bibliography.indexAllComplete', {
+          indexed: result.indexed,
+          skipped: result.skipped,
+          errors: result.errors.length,
+        })
+      );
+    } catch (error) {
+      console.error('Failed to index all PDFs:', error);
+      alert(`${t('bibliography.indexError')} ${error}`);
+    }
+  };
+
   return (
     <div className="bibliography-panel">
       {/* Header */}
@@ -133,7 +171,45 @@ export const BibliographyPanel: React.FC = () => {
         <button className="toolbar-btn" onClick={handleImportBibTeX} title={t('bibliography.import')}>
           <Plus size={20} strokeWidth={1} />
         </button>
+        {citationsWithPDFs > 0 && (
+          <button
+            className="toolbar-btn"
+            onClick={handleIndexAllPDFs}
+            disabled={batchIndexing.isIndexing}
+            title={t('bibliography.indexAllPDFs')}
+          >
+            <FileStack size={20} strokeWidth={1} />
+          </button>
+        )}
       </div>
+
+      {/* Batch Indexing Progress */}
+      {batchIndexing.isIndexing && (
+        <div className="batch-indexing-progress">
+          <div className="batch-progress-header">
+            {t('bibliography.indexingProgress', {
+              current: batchIndexing.current,
+              total: batchIndexing.total,
+            })}
+          </div>
+          {batchIndexing.currentCitation && (
+            <div className="batch-progress-current">
+              {batchIndexing.currentCitation.title}
+            </div>
+          )}
+          <div className="batch-progress-bar">
+            <div
+              className="batch-progress-fill"
+              style={{
+                width: `${(batchIndexing.current / batchIndexing.total) * 100}%`,
+              }}
+            />
+          </div>
+          <div className="batch-progress-stats">
+            ✅ {batchIndexing.indexed} | ⏭️ {batchIndexing.skipped}
+          </div>
+        </div>
+      )}
 
       {/* Zotero Import */}
       <ZoteroImport />

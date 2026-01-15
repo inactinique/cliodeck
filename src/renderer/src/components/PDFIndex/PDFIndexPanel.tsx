@@ -13,6 +13,7 @@ interface PDFDocument {
   title: string;
   author?: string;
   year?: string;
+  bibtexKey?: string;
   pageCount: number;
   chunkCount?: number;
   indexedAt: Date;

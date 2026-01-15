@@ -1,4 +1,5 @@
 import * as fs from 'fs';
+import * as path from 'path';
 import type { Citation } from '../../types/citation';
 import { createCitation } from '../../types/citation';
 
@@ -7,7 +8,8 @@ export class BibTeXParser {
   parseFile(filePath: string): Citation[] {
     try {
       const content = fs.readFileSync(filePath, 'utf-8');
-      return this.parse(content);
+      const bibDir = path.dirname(path.resolve(filePath));
+      return this.parse(content, bibDir);
     } catch (error) {
       console.error(`❌ Erreur lecture fichier BibTeX: ${error}`);
       return [];
@@ -15,7 +17,8 @@ export class BibTeXParser {
   }
 
   // Parse le contenu d'un fichier BibTeX
-  parse(content: string): Citation[] {
+  // bibDir: répertoire de base pour résoudre les chemins relatifs des fichiers
+  parse(content: string, bibDir?: string): Citation[] {
     const citations: Citation[] = [];
 
     // ✅ APPROCHE SIMPLIFIÉE : Trouver chaque @type{key, et parser jusqu'au } correspondant
@@ -60,7 +63,7 @@ export class BibTeXParser {
       const fields = this.parseFields(fieldsString);
 
       // Créer la citation
-      const citation = this.createCitation(typeString, key, fields);
+      const citation = this.createCitation(typeString, key, fields, bibDir);
       if (citation) {
         citations.push(citation);
       }
@@ -370,7 +373,8 @@ export class BibTeXParser {
   private createCitation(
     type: string,
     key: string,
-    fields: Record<string, string>
+    fields: Record<string, string>,
+    bibDir?: string
   ): Citation | null {
     // Champs obligatoires : author et title (year optionnel)
     const author = fields.author;
@@ -384,6 +388,12 @@ export class BibTeXParser {
       return null;
     }
 
+    // Résoudre le chemin du fichier si présent
+    let filePath = fields.file;
+    if (filePath && bibDir) {
+      filePath = this.resolveFilePath(filePath, bibDir);
+    }
+
     return createCitation({
       id: key,
       type,
@@ -394,8 +404,42 @@ export class BibTeXParser {
       journal: fields.journal || fields.journaltitle,
       publisher: fields.publisher,
       booktitle: fields.booktitle,
-      file: fields.file,
+      file: filePath,
     });
+  }
+
+  // Résout le chemin du fichier PDF depuis le champ BibTeX file
+  // Gère les formats Zotero: "Attachments/file.pdf" ou "Description:chemin:mimetype"
+  private resolveFilePath(fileField: string, bibDir: string): string {
+    let filePath = fileField;
+
+    // Format Zotero avec description: "Nom:chemin:application/pdf"
+    // Peut aussi être "chemin:application/pdf" sans description
+    if (fileField.includes(':')) {
+      const parts = fileField.split(':');
+      // Le chemin est généralement la partie avant le dernier segment (mimetype)
+      // ou la partie du milieu si 3 segments (description:chemin:mimetype)
+      if (parts.length >= 3) {
+        // Format: description:chemin:mimetype
+        filePath = parts[1];
+      } else if (parts.length === 2) {
+        // Format: chemin:mimetype ou description:chemin
+        // Si le deuxième segment ressemble à un mimetype, prendre le premier
+        if (parts[1].includes('/')) {
+          filePath = parts[0];
+        } else {
+          filePath = parts[1];
+        }
+      }
+    }
+
+    // Si le chemin est déjà absolu, le retourner tel quel
+    if (path.isAbsolute(filePath)) {
+      return filePath;
+    }
+
+    // Résoudre le chemin relatif par rapport au répertoire du fichier BibTeX
+    return path.resolve(bibDir, filePath);
   }
 
   // Extrait l'année d'une date
