@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import './TextometricsPanel.css';
 
 interface WordFrequency {
@@ -28,6 +29,7 @@ interface TextStatistics {
 }
 
 export const TextometricsPanel: React.FC = () => {
+  const { t } = useTranslation();
   const [statistics, setStatistics] = useState<TextStatistics | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -74,7 +76,7 @@ export const TextometricsPanel: React.FC = () => {
     return (
       <div className="textometrics-loading">
         <div className="loading-spinner"></div>
-        <p>Analyse textométrique en cours...</p>
+        <p>{t('textometrics.loading')}</p>
       </div>
     );
   }
@@ -84,7 +86,7 @@ export const TextometricsPanel: React.FC = () => {
       <div className="textometrics-error">
         <p className="error-message">{error}</p>
         <button onClick={handleRefresh} className="btn-refresh">
-          Réessayer
+          {t('textometrics.retry')}
         </button>
       </div>
     );
@@ -93,9 +95,9 @@ export const TextometricsPanel: React.FC = () => {
   if (!statistics) {
     return (
       <div className="textometrics-empty">
-        <p>Aucune statistique textométrique disponible.</p>
+        <p>{t('textometrics.noStatistics')}</p>
         <button onClick={loadTextStatistics} className="btn-analyze">
-          Lancer l'analyse
+          {t('textometrics.analyze')}
         </button>
       </div>
     );
@@ -114,39 +116,39 @@ export const TextometricsPanel: React.FC = () => {
       {/* Statistiques globales */}
       <div className="textometrics-stats-grid">
         <div className="textometrics-stat-card">
-          <div className="stat-label">Mots totaux (sans stopwords)</div>
+          <div className="stat-label">{t('textometrics.totalWordsNoStopwords')}</div>
           <div className="stat-value">{formatNumber(statistics.totalWords)}</div>
         </div>
 
         <div className="textometrics-stat-card">
-          <div className="stat-label">Mots totaux (avec stopwords)</div>
+          <div className="stat-label">{t('textometrics.totalWordsWithStopwords')}</div>
           <div className="stat-value">{formatNumber(statistics.totalWordsWithStopwords)}</div>
         </div>
 
         <div className="textometrics-stat-card">
-          <div className="stat-label">Vocabulaire unique</div>
+          <div className="stat-label">{t('textometrics.uniqueVocabulary')}</div>
           <div className="stat-value">{formatNumber(statistics.vocabularySize)}</div>
         </div>
 
         <div className="textometrics-stat-card">
-          <div className="stat-label">Richesse lexicale</div>
+          <div className="stat-label">{t('textometrics.lexicalRichness')}</div>
           <div className="stat-value">{formatPercent(statistics.lexicalRichness)}</div>
           <div className="stat-description">
-            Ratio mots uniques / mots totaux
+            {t('textometrics.lexicalRichnessDesc')}
           </div>
         </div>
 
         {statistics.totalDocuments && (
           <>
             <div className="textometrics-stat-card">
-              <div className="stat-label">Mots moyen / document</div>
+              <div className="stat-label">{t('textometrics.avgWordsPerDoc')}</div>
               <div className="stat-value">
                 {formatNumber(Math.round(statistics.averageWordsPerDocument || 0))}
               </div>
             </div>
 
             <div className="textometrics-stat-card">
-              <div className="stat-label">Vocabulaire moyen / document</div>
+              <div className="stat-label">{t('textometrics.avgVocabPerDoc')}</div>
               <div className="stat-value">
                 {formatNumber(Math.round(statistics.averageVocabularyPerDocument || 0))}
               </div>
@@ -158,7 +160,7 @@ export const TextometricsPanel: React.FC = () => {
       {/* Controls */}
       <div className="textometrics-controls">
         <button onClick={handleRefresh} className="btn-refresh">
-          🔄 Actualiser
+          🔄 {t('textometrics.refresh')}
         </button>
       </div>
 
@@ -168,19 +170,19 @@ export const TextometricsPanel: React.FC = () => {
           className={`tab-button ${activeTab === 'words' ? 'active' : ''}`}
           onClick={() => setActiveTab('words')}
         >
-          Mots fréquents
+          {t('textometrics.frequentWords')}
         </button>
         <button
           className={`tab-button ${activeTab === 'bigrams' ? 'active' : ''}`}
           onClick={() => setActiveTab('bigrams')}
         >
-          Bigrammes
+          {t('textometrics.bigrams')}
         </button>
         <button
           className={`tab-button ${activeTab === 'trigrams' ? 'active' : ''}`}
           onClick={() => setActiveTab('trigrams')}
         >
-          Trigrammes
+          {t('textometrics.trigrams')}
         </button>
       </div>
 
@@ -188,15 +190,15 @@ export const TextometricsPanel: React.FC = () => {
       <div className="textometrics-content">
         {activeTab === 'words' && (
           <div className="word-frequency-table">
-            <h4>Top {topN} mots les plus fréquents (hors stopwords)</h4>
+            <h4>{t('textometrics.topWords', { count: topN })}</h4>
             <table>
               <thead>
                 <tr>
-                  <th>Rang</th>
-                  <th>Mot</th>
-                  <th>Occurrences</th>
-                  <th>Fréquence</th>
-                  <th>Barre</th>
+                  <th>{t('textometrics.rank')}</th>
+                  <th>{t('textometrics.word')}</th>
+                  <th>{t('textometrics.occurrences')}</th>
+                  <th>{t('textometrics.frequency')}</th>
+                  <th>{t('textometrics.bar')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -223,14 +225,14 @@ export const TextometricsPanel: React.FC = () => {
 
         {activeTab === 'bigrams' && (
           <div className="ngram-frequency-table">
-            <h4>Top {topN} bigrammes les plus fréquents</h4>
+            <h4>{t('textometrics.topBigrams', { count: topN })}</h4>
             <table>
               <thead>
                 <tr>
-                  <th>Rang</th>
-                  <th>Bigramme</th>
-                  <th>Occurrences</th>
-                  <th>Barre</th>
+                  <th>{t('textometrics.rank')}</th>
+                  <th>{t('textometrics.bigram')}</th>
+                  <th>{t('textometrics.occurrences')}</th>
+                  <th>{t('textometrics.bar')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -256,14 +258,14 @@ export const TextometricsPanel: React.FC = () => {
 
         {activeTab === 'trigrams' && (
           <div className="ngram-frequency-table">
-            <h4>Top {topN} trigrammes les plus fréquents</h4>
+            <h4>{t('textometrics.topTrigrams', { count: topN })}</h4>
             <table>
               <thead>
                 <tr>
-                  <th>Rang</th>
-                  <th>Trigramme</th>
-                  <th>Occurrences</th>
-                  <th>Barre</th>
+                  <th>{t('textometrics.rank')}</th>
+                  <th>{t('textometrics.trigram')}</th>
+                  <th>{t('textometrics.occurrences')}</th>
+                  <th>{t('textometrics.bar')}</th>
                 </tr>
               </thead>
               <tbody>
