@@ -60,6 +60,8 @@ interface BibliographyState {
   insertCitation: (citationId: string) => void;
 
   indexPDFFromCitation: (citationId: string) => Promise<{ alreadyIndexed: boolean }>;
+  reindexPDFFromCitation: (citationId: string) => Promise<void>;
+  getDocumentIdForCitation: (citationId: string) => Promise<string | null>;
   indexAllPDFs: () => Promise<{ indexed: number; skipped: number; errors: string[] }>;
   refreshIndexedPDFs: () => Promise<void>;
   isFileIndexed: (filePath: string) => boolean;
@@ -262,7 +264,14 @@ export const useBibliographyStore = create<BibliographyState>((set, get) => ({
         detail: { citationId, title: citation.title, filePath: citation.file }
       }));
 
-      const result = await window.electron.pdf.index(citation.file, citationId);
+      // Pass bibliography metadata to use instead of PDF metadata extraction
+      const bibliographyMetadata = {
+        title: citation.title,
+        author: citation.author,
+        year: citation.year,
+      };
+
+      const result = await window.electron.pdf.index(citation.file, citationId, bibliographyMetadata);
 
       if (!result.success) {
         window.dispatchEvent(new CustomEvent('bibliography:indexing-end', {
@@ -284,6 +293,82 @@ export const useBibliographyStore = create<BibliographyState>((set, get) => ({
       return { alreadyIndexed: false };
     } catch (error) {
       console.error('❌ Failed to index PDF from citation:', error);
+      throw error;
+    }
+  },
+
+  getDocumentIdForCitation: async (citationId: string) => {
+    try {
+      const result = await window.electron.pdf.getAll();
+      if (result.success && Array.isArray(result.documents)) {
+        // Find document with matching bibtexKey
+        const doc = result.documents.find((d: any) => d.bibtexKey === citationId);
+        return doc?.id || null;
+      }
+      return null;
+    } catch (error) {
+      console.error('Failed to get document ID for citation:', error);
+      return null;
+    }
+  },
+
+  reindexPDFFromCitation: async (citationId: string) => {
+    try {
+      const { citations } = get();
+      const citation = citations.find((c) => c.id === citationId);
+
+      if (!citation || !citation.file) {
+        throw new Error('No PDF file associated with this citation');
+      }
+
+      // Find and delete existing indexed document
+      const documentId = await get().getDocumentIdForCitation(citationId);
+      if (documentId) {
+        console.log(`🗑️ Deleting existing indexed PDF for: ${citation.title}`);
+        await window.electron.pdf.delete(documentId);
+
+        // Remove from indexed set
+        set((state) => {
+          const newIndexedPaths = new Set(state.indexedFilePaths);
+          newIndexedPaths.delete(citation.file!);
+          return { indexedFilePaths: newIndexedPaths };
+        });
+      }
+
+      // Now re-index
+      console.log(`🔄 Re-indexing PDF for citation: ${citation.title}`);
+
+      window.dispatchEvent(new CustomEvent('bibliography:indexing-start', {
+        detail: { citationId, title: citation.title, filePath: citation.file }
+      }));
+
+      const bibliographyMetadata = {
+        title: citation.title,
+        author: citation.author,
+        year: citation.year,
+      };
+
+      const result = await window.electron.pdf.index(citation.file, citationId, bibliographyMetadata);
+
+      if (!result.success) {
+        window.dispatchEvent(new CustomEvent('bibliography:indexing-end', {
+          detail: { citationId, success: false, error: result.error }
+        }));
+        throw new Error(result.error || 'Failed to re-index PDF');
+      }
+
+      // Add back to indexed set
+      set((state) => ({
+        indexedFilePaths: new Set([...state.indexedFilePaths, citation.file!])
+      }));
+
+      window.dispatchEvent(new CustomEvent('bibliography:indexing-end', {
+        detail: { citationId, success: true }
+      }));
+
+      console.log(`✅ PDF re-indexed from citation: ${citation.title}`);
+    } catch (error) {
+      console.error('❌ Failed to re-index PDF from citation:', error);
       throw error;
     }
   },
@@ -348,7 +433,14 @@ export const useBibliographyStore = create<BibliographyState>((set, get) => ({
           detail: { citationId: citation.id, title: citation.title, filePath: citation.file }
         }));
 
-        const result = await window.electron.pdf.index(citation.file!, citation.id);
+        // Pass bibliography metadata to use instead of PDF metadata extraction
+        const bibliographyMetadata = {
+          title: citation.title,
+          author: citation.author,
+          year: citation.year,
+        };
+
+        const result = await window.electron.pdf.index(citation.file!, citation.id, bibliographyMetadata);
 
         if (result.success) {
           indexed++;
@@ -397,8 +489,9 @@ export const useBibliographyStore = create<BibliographyState>((set, get) => ({
         // Also get bibtex keys to match with citations
         const indexedBibtexKeys = new Set<string>();
         result.documents.forEach((doc: any) => {
-          if (doc.filePath) {
-            indexedPaths.add(doc.filePath);
+          // Document stores file path as fileURL (from backend)
+          if (doc.fileURL) {
+            indexedPaths.add(doc.fileURL);
           }
           if (doc.bibtexKey) {
             indexedBibtexKeys.add(doc.bibtexKey);

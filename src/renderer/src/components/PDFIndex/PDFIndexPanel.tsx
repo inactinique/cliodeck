@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Plus } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { PDFList } from './PDFList';
@@ -27,6 +27,9 @@ interface IndexingState {
   stage: string;
 }
 
+type SortField = 'author' | 'year' | 'title';
+type SortOrder = 'asc' | 'desc';
+
 export const PDFIndexPanel: React.FC = () => {
   const { t } = useTranslation('common');
   const { currentProject } = useProjectStore();
@@ -44,9 +47,66 @@ export const PDFIndexPanel: React.FC = () => {
   const [showRenameModal, setShowRenameModal] = useState(false);
   const [pendingFiles, setPendingFiles] = useState<string[]>([]);
 
+  // Search and filter state
+  const [searchQuery, setSearchQuery] = useState('');
+  const [sortBy, setSortBy] = useState<SortField>('author');
+  const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
+
+  // Filter and sort documents
+  const filteredDocuments = useMemo(() => {
+    let filtered = documents;
+
+    // Filter by search query
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      filtered = documents.filter((doc) =>
+        (doc.title?.toLowerCase().includes(query)) ||
+        (doc.author?.toLowerCase().includes(query)) ||
+        (doc.year?.includes(query)) ||
+        (doc.bibtexKey?.toLowerCase().includes(query))
+      );
+    }
+
+    // Sort
+    filtered = [...filtered].sort((a, b) => {
+      let comparison = 0;
+      switch (sortBy) {
+        case 'author':
+          comparison = (a.author || t('pdfIndex.unknownAuthor')).localeCompare(b.author || t('pdfIndex.unknownAuthor'));
+          break;
+        case 'year':
+          comparison = (a.year || '').localeCompare(b.year || '');
+          break;
+        case 'title':
+          comparison = (a.title || '').localeCompare(b.title || '');
+          break;
+      }
+      return sortOrder === 'asc' ? comparison : -comparison;
+    });
+
+    return filtered;
+  }, [documents, searchQuery, sortBy, sortOrder, t]);
+
+  const toggleSortOrder = () => {
+    setSortOrder((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+  };
+
   useEffect(() => {
     loadDocuments();
     loadStats();
+
+    // Listen for indexing progress events
+    const unsubscribe = window.electron.pdf.onIndexingProgress((progress) => {
+      setIndexingState((prev) => ({
+        ...prev,
+        progress: progress.progress,
+        stage: progress.message,
+      }));
+    });
+
+    return () => {
+      unsubscribe();
+    };
   }, []);
 
   const loadDocuments = async () => {
@@ -127,14 +187,9 @@ export const PDFIndexPanel: React.FC = () => {
     });
 
     try {
-      const result = await window.electron.pdf.index(filePath, undefined, (progress) => {
-        setIndexingState({
-          isIndexing: true,
-          currentFile: filePath,
-          progress: progress.progress,
-          stage: progress.message,
-        });
-      }, customTitle);
+      // When adding PDF directly (not from bibliography), pass customTitle as bibliographyMetadata
+      const bibliographyMetadata = customTitle ? { title: customTitle } : undefined;
+      const result = await window.electron.pdf.index(filePath, undefined, bibliographyMetadata);
 
       // Check if indexing failed
       if (result && !result.success) {
@@ -296,6 +351,46 @@ export const PDFIndexPanel: React.FC = () => {
         />
       )}
 
+      {/* Search & Filters */}
+      <CollapsibleSection title={t('pdfIndex.searchAndFilters')} defaultExpanded={true}>
+        <div className="pdf-controls">
+          <div className="search-box">
+            <span className="search-icon">🔍</span>
+            <input
+              type="text"
+              className="search-input"
+              placeholder={t('pdfIndex.searchPlaceholder')}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
+
+          <div className="sort-controls">
+            <label className="sort-label">{t('bibliography.sortBy')}</label>
+            <select
+              className="sort-select"
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as SortField)}
+            >
+              <option value="author">{t('bibliography.author')}</option>
+              <option value="year">{t('bibliography.year')}</option>
+              <option value="title">{t('bibliography.titleField')}</option>
+            </select>
+            <button className="sort-order-btn" onClick={toggleSortOrder} title={t('bibliography.sortBy')}>
+              {sortOrder === 'asc' ? '↑' : '↓'}
+            </button>
+          </div>
+        </div>
+
+        {/* Document Count */}
+        <div className="document-count">
+          {filteredDocuments.length} {t('pdfIndex.documents').toLowerCase()}
+          {searchQuery && filteredDocuments.length !== documents.length && (
+            <span className="filter-indicator"> ({t('pdfIndex.filtered')})</span>
+          )}
+        </div>
+      </CollapsibleSection>
+
       {/* Document List */}
       <CollapsibleSection title={t('pdfIndex.documents')} defaultExpanded={true}>
         <div
@@ -309,8 +404,14 @@ export const PDFIndexPanel: React.FC = () => {
               <h4>{t('pdfIndex.noDocuments')}</h4>
               <p>{t('pdfIndex.dropzone')}</p>
             </div>
+          ) : filteredDocuments.length === 0 ? (
+            <div className="pdf-empty">
+              <div className="empty-icon">🔍</div>
+              <h4>{t('pdfIndex.noResults')}</h4>
+              <p>{t('pdfIndex.tryDifferentSearch')}</p>
+            </div>
           ) : (
-            <PDFList documents={documents} onDelete={handleDeletePDF} />
+            <PDFList documents={filteredDocuments} onDelete={handleDeletePDF} />
           )}
         </div>
       </CollapsibleSection>

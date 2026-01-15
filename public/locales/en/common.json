@@ -109,7 +109,12 @@
     "minimapHelp": "Scrollbar with miniature document preview (like in VS Code)",
     "fontFamilyHelp": "Choose the font for the code editor",
     "fontSystem": "System fonts (SF Mono, Monaco, Consolas)",
-    "fontNote": "System fonts are always available. Others require installation on your system."
+    "fontNote": "System fonts are always available. Others require installation on your system.",
+    "autoSave": "Auto-save",
+    "autoSaveHelp": "Automatically saves the document after a period of inactivity",
+    "autoSaveDelay": "Auto-save delay",
+    "autoSaveDelayHelp": "Time in seconds before auto-saving after the last edit",
+    "autoSaveDelaySeconds": "{{seconds}} seconds"
   },
   "ui": {
     "title": "User interface",
@@ -147,6 +152,9 @@
     "notIndexed": "Not indexed",
     "indexing": "Indexing...",
     "alreadyIndexed": "This PDF is already indexed: {{title}}",
+    "reindex": "Re-index",
+    "reindexConfirm": "This PDF is already indexed. Do you want to delete it and re-index it?\n\n{{title}}",
+    "pdfReindexed": "PDF re-indexed: {{title}}",
     "indexAllPDFs": "Index all PDFs",
     "noPDFsToIndex": "No PDFs to index in bibliography",
     "confirmIndexAll": "Index {{count}} PDFs from bibliography?",
@@ -365,6 +373,10 @@
     "emptyState": {
       "title": "No indexed documents",
       "message": "The assistant will search through your indexed PDFs to answer your questions.\n\nIndex PDFs to get started."
+    },
+    "readyState": {
+      "title": "Ready to assist",
+      "message": "{{count}} indexed document(s) available.\n\nAsk a question to get started."
     }
   },
   "corpus": {
@@ -646,6 +658,11 @@
     "noProjectOpen": "No project open. Please open or create a project first.",
     "indexingError": "Indexing error",
     "deleteConfirm": "Delete this document and all its chunks?",
-    "cleanOrphanedConfirm": "Clean orphaned chunks (without parent document)?\n\nThis action will remove chunks whose document has been deleted."
+    "cleanOrphanedConfirm": "Clean orphaned chunks (without parent document)?\n\nThis action will remove chunks whose document has been deleted.",
+    "searchAndFilters": "Search and filters",
+    "searchPlaceholder": "Search author, title, year...",
+    "filtered": "filtered",
+    "noResults": "No results",
+    "tryDifferentSearch": "Try a different search term"
   }
 }

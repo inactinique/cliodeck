@@ -109,7 +109,12 @@
     "minimapHelp": "Scrollleiste mit Miniaturvorschau des Dokuments (wie in VS Code)",
     "fontFamilyHelp": "Wählen Sie die Schriftart für den Code-Editor",
     "fontSystem": "Systemschriftarten (SF Mono, Monaco, Consolas)",
-    "fontNote": "Systemschriftarten sind immer verfügbar. Andere müssen auf Ihrem System installiert sein."
+    "fontNote": "Systemschriftarten sind immer verfügbar. Andere müssen auf Ihrem System installiert sein.",
+    "autoSave": "Automatisches Speichern",
+    "autoSaveHelp": "Speichert das Dokument automatisch nach einer Inaktivitätsperiode",
+    "autoSaveDelay": "Verzögerung beim automatischen Speichern",
+    "autoSaveDelayHelp": "Zeit in Sekunden vor dem automatischen Speichern nach der letzten Bearbeitung",
+    "autoSaveDelaySeconds": "{{seconds}} Sekunden"
   },
   "ui": {
     "title": "Benutzeroberfläche",
@@ -147,6 +152,9 @@
     "notIndexed": "Nicht indexiert",
     "indexing": "Indexierung...",
     "alreadyIndexed": "Dieses PDF ist bereits indexiert: {{title}}",
+    "reindex": "Neu indexieren",
+    "reindexConfirm": "Dieses PDF ist bereits indexiert. Möchten Sie es löschen und neu indexieren?\n\n{{title}}",
+    "pdfReindexed": "PDF neu indexiert: {{title}}",
     "indexAllPDFs": "Alle PDFs indexieren",
     "noPDFsToIndex": "Keine PDFs zum Indexieren in der Bibliographie",
     "confirmIndexAll": "{{count}} PDFs aus der Bibliographie indexieren?",
@@ -365,6 +373,10 @@
     "emptyState": {
       "title": "Keine indexierten Dokumente",
       "message": "Der Assistent durchsucht Ihre indexierten PDFs, um Ihre Fragen zu beantworten.\n\nIndexieren Sie PDFs, um zu beginnen."
+    },
+    "readyState": {
+      "title": "Bereit zu helfen",
+      "message": "{{count}} indexierte(s) Dokument(e) verfügbar.\n\nStellen Sie eine Frage, um zu beginnen."
     }
   },
   "corpus": {
@@ -646,6 +658,11 @@
     "noProjectOpen": "Kein Projekt geöffnet. Bitte öffnen oder erstellen Sie zuerst ein Projekt.",
     "indexingError": "Indexierungsfehler",
     "deleteConfirm": "Dieses Dokument und alle seine Chunks löschen?",
-    "cleanOrphanedConfirm": "Verwaiste Chunks (ohne übergeordnetes Dokument) bereinigen?\n\nDiese Aktion entfernt Chunks, deren Dokument gelöscht wurde."
+    "cleanOrphanedConfirm": "Verwaiste Chunks (ohne übergeordnetes Dokument) bereinigen?\n\nDiese Aktion entfernt Chunks, deren Dokument gelöscht wurde.",
+    "searchAndFilters": "Suche und Filter",
+    "searchPlaceholder": "Autor, Titel, Jahr suchen...",
+    "filtered": "gefiltert",
+    "noResults": "Keine Ergebnisse",
+    "tryDifferentSearch": "Versuchen Sie einen anderen Suchbegriff"
   }
 }

@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Trash2 } from 'lucide-react';
 import { useChatStore } from '../../stores/chatStore';
+import { useBibliographyStore } from '../../stores/bibliographyStore';
 import { MessageList } from './MessageList';
 import { MessageInput } from './MessageInput';
 import { RAGSettingsPanel } from './RAGSettingsPanel';
@@ -12,7 +13,15 @@ import { logger } from '../../utils/logger';
 export const ChatInterface: React.FC = () => {
   const { t } = useTranslation('common');
   const { messages, isProcessing, sendMessage, cancelGeneration, clearChat } = useChatStore();
+  const { indexedFilePaths, refreshIndexedPDFs } = useBibliographyStore();
   const [inputValue, setInputValue] = useState('');
+
+  const indexedCount = indexedFilePaths.size;
+
+  // Refresh indexed PDFs when component mounts and when project changes
+  useEffect(() => {
+    refreshIndexedPDFs();
+  }, [refreshIndexedPDFs]);
 
   const handleSend = async () => {
     logger.component('ChatInterface', 'handleSend called', { inputValue, isProcessing });
@@ -73,10 +82,21 @@ export const ChatInterface: React.FC = () => {
       <div className="chat-messages">
         {messages.length === 0 ? (
           <div className="chat-empty">
-            <h4>{t('chat.emptyState.title')}</h4>
-            <p>
-              {t('chat.emptyState.message')}
-            </p>
+            {indexedCount > 0 ? (
+              <>
+                <h4>{t('chat.readyState.title')}</h4>
+                <p>
+                  {t('chat.readyState.message', { count: indexedCount })}
+                </p>
+              </>
+            ) : (
+              <>
+                <h4>{t('chat.emptyState.title')}</h4>
+                <p>
+                  {t('chat.emptyState.message')}
+                </p>
+              </>
+            )}
           </div>
         ) : (
           <MessageList messages={messages} />

@@ -36,8 +36,8 @@ const api = {
   pdf: {
     extractMetadata: (filePath: string) =>
       ipcRenderer.invoke('pdf:extractMetadata', filePath),
-    index: (filePath: string, bibtexKey?: string, onProgress?: any, customTitle?: string) =>
-      ipcRenderer.invoke('pdf:index', filePath, bibtexKey, customTitle),
+    index: (filePath: string, bibtexKey?: string, bibliographyMetadata?: { title?: string; author?: string; year?: string }) =>
+      ipcRenderer.invoke('pdf:index', filePath, bibtexKey, bibliographyMetadata),
     search: (query: string, options?: any) =>
       ipcRenderer.invoke('pdf:search', query, options),
     delete: (documentId: string) =>
@@ -46,6 +46,11 @@ const api = {
     getStatistics: () => ipcRenderer.invoke('pdf:get-statistics'),
     purge: () => ipcRenderer.invoke('pdf:purge'),
     cleanOrphanedChunks: () => ipcRenderer.invoke('pdf:clean-orphaned-chunks'),
+    onIndexingProgress: (callback: (progress: { stage: string; progress: number; message: string }) => void) => {
+      const listener = (_event: any, progress: any) => callback(progress);
+      ipcRenderer.on('pdf:indexing-progress', listener);
+      return () => ipcRenderer.removeListener('pdf:indexing-progress', listener);
+    },
   },
 
   // Chat RAG

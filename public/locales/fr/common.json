@@ -109,7 +109,12 @@
     "fontSystem": "Polices système (SF Mono, Monaco, Consolas)",
     "fontNote": "Les polices système sont toujours disponibles. Les autres nécessitent d'être installées sur votre système.",
     "noCitations": "Aucune citation",
-    "importBibliography": "Importez votre bibliographie..."
+    "importBibliography": "Importez votre bibliographie...",
+    "autoSave": "Sauvegarde automatique",
+    "autoSaveHelp": "Sauvegarde automatiquement le document après une période d'inactivité",
+    "autoSaveDelay": "Délai de sauvegarde automatique",
+    "autoSaveDelayHelp": "Temps en secondes avant la sauvegarde automatique après la dernière modification",
+    "autoSaveDelaySeconds": "{{seconds}} secondes"
   },
   "ui": {
     "title": "Interface utilisateur",
@@ -147,6 +152,9 @@
     "notIndexed": "Non indexé",
     "indexing": "Indexation...",
     "alreadyIndexed": "Ce PDF est déjà indexé: {{title}}",
+    "reindex": "Ré-indexer",
+    "reindexConfirm": "Ce PDF est déjà indexé. Voulez-vous le supprimer et le ré-indexer ?\n\n{{title}}",
+    "pdfReindexed": "PDF ré-indexé : {{title}}",
     "indexAllPDFs": "Indexer tous les PDFs",
     "noPDFsToIndex": "Aucun PDF à indexer dans la bibliographie",
     "confirmIndexAll": "Indexer {{count}} PDFs de la bibliographie ?",
@@ -365,6 +373,10 @@
     "emptyState": {
       "title": "Aucun document indexé",
       "message": "L'assistant recherchera dans vos PDFs indexés pour répondre à vos questions.\n\nIndexez des PDFs pour commencer."
+    },
+    "readyState": {
+      "title": "Prêt à vous aider",
+      "message": "{{count}} document(s) indexé(s) disponible(s).\n\nPosez une question pour commencer."
     }
   },
   "corpus": {
@@ -646,6 +658,11 @@
     "noProjectOpen": "Aucun projet ouvert. Veuillez d'abord ouvrir ou créer un projet.",
     "indexingError": "Erreur lors de l'indexation",
     "deleteConfirm": "Supprimer ce document et tous ses chunks ?",
-    "cleanOrphanedConfirm": "Nettoyer les chunks orphelins (sans document parent) ?\n\nCette action supprimera les chunks dont le document a été supprimé."
+    "cleanOrphanedConfirm": "Nettoyer les chunks orphelins (sans document parent) ?\n\nCette action supprimera les chunks dont le document a été supprimé.",
+    "searchAndFilters": "Recherche et filtres",
+    "searchPlaceholder": "Rechercher auteur, titre, année...",
+    "filtered": "filtré",
+    "noResults": "Aucun résultat",
+    "tryDifferentSearch": "Essayez un autre terme de recherche"
   }
 }

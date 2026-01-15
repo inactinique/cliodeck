@@ -13,6 +13,8 @@ export interface EditorSettings {
   previewPosition: 'right' | 'bottom';
   showMinimap: boolean;
   fontFamily: string;
+  autoSave: boolean;
+  autoSaveDelay: number; // in milliseconds
 }
 
 interface EditorState {
@@ -58,6 +60,8 @@ const DEFAULT_SETTINGS: EditorSettings = {
   previewPosition: 'right',
   showMinimap: true,
   fontFamily: 'system',
+  autoSave: true,
+  autoSaveDelay: 3000, // 3 seconds
 };
 
 // MARK: - Store

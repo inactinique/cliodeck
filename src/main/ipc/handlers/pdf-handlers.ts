@@ -22,8 +22,8 @@ export function setupPDFHandlers() {
     }
   });
 
-  ipcMain.handle('pdf:index', async (event, filePath: string, bibtexKey?: string, customTitle?: string) => {
-    console.log('📞 IPC Call: pdf:index', { filePath, bibtexKey, customTitle });
+  ipcMain.handle('pdf:index', async (event, filePath: string, bibtexKey?: string, bibliographyMetadata?: { title?: string; author?: string; year?: string }) => {
+    console.log('📞 IPC Call: pdf:index', { filePath, bibtexKey, bibliographyMetadata });
     const startTime = Date.now();
 
     try {
@@ -40,7 +40,7 @@ export function setupPDFHandlers() {
         if (window) {
           window.webContents.send('pdf:indexing-progress', progress);
         }
-      }, customTitle);
+      }, bibliographyMetadata);
 
       const durationMs = Date.now() - startTime;
 
