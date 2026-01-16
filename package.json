@@ -1,6 +1,6 @@
 {
   "name": "cliodesk",
-  "version": "0.1.0",
+  "version": "1.0.0-beta.1",
   "type": "module",
   "description": "Assistant d'écriture pour historiens avec RAG et intégration Zotero/Tropy",
   "main": "dist/src/main/index.js",
