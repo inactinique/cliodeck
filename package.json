@@ -1,12 +1,12 @@
 {
-  "name": "cliodesk",
+  "name": "cliodeck",
   "version": "1.0.0-beta.1",
   "type": "module",
   "description": "Assistant d'écriture pour historiens avec RAG et intégration Zotero/Tropy",
   "main": "dist/src/main/index.js",
   "author": {
-    "name": "ClioDesk Team",
-    "email": "contact@cliodesk.dev"
+    "name": "Frédéric Clavert",
+    "email": "frederic.clavert@uni.lu"
   },
   "license": "MIT",
   "scripts": {
@@ -104,8 +104,8 @@
     "vitest": "^4.0.16"
   },
   "build": {
-    "appId": "com.cliodesk.app",
-    "productName": "ClioDesk",
+    "appId": "com.cliodeck.app",
+    "productName": "ClioDeck",
     "directories": {
       "output": "release",
       "buildResources": "build"
@@ -145,14 +145,14 @@
       ],
       "category": "Office",
       "icon": "build/icon.png",
-      "executableName": "cliodesk",
+      "executableName": "cliodeck",
       "description": "Assistant d'écriture pour historiens avec RAG et intégration Zotero/Tropy",
       "desktop": {
-        "Name": "ClioDesk",
+        "Name": "ClioDeck",
         "Comment": "Assistant d'écriture pour historiens avec RAG et intégration Zotero/Tropy",
         "Categories": "Office;TextEditor;",
         "MimeType": "text/markdown;",
-        "StartupWMClass": "ClioDesk"
+        "StartupWMClass": "ClioDeck"
       },
       "executableArgs": [
         "--no-sandbox",
