@@ -2,7 +2,7 @@
 
 Multi-platform desktop application (Electron + React + TypeScript) to assist historians in writing articles (v1) and books (not implmented yet), with RAG (Retrieval-Augmented Generation) and Zotero (v1) / Tropy (not implemented yet) integrations.
 
-**NOTE that *ClioDesk* is a [vibe-coding](https://en.wikipedia.org/wiki/Vibe_coding) experiment aimed at developping a Proof Of Concept. It is provided *as is*, at your own risk**: it has been designed by [Frédéric Clavert](https://inactinique.net) and coded through [claude code](https://claude.com/product/claude-code).
+**NOTE that *ClioDesk* is a [vibe-coding](https://en.wikipedia.org/wiki/Vibe_coding) experiment aimed at developping a Proof Of Concept. It is provided *as is*, at your own risk**: it has been designed by [Frédéric Clavert](https://inactinique.net) and coded through [claude code](https://claude.com/product/claude-code). I made a small talk on vibe-coding / vibe-writing for historians, [that you can see here](https://inactinique.net/prez/2025-07-03_DH-LLM/2025-07-03_DH-LLM.html#/title-slide) (once open, hit s to get my notes).
 
 **License:** [GPLv3](https://www.gnu.org/licenses/gpl-3.0.html)
 
