@@ -172,7 +172,7 @@ class PDFService {
 
       console.log('✅ PDF Service initialized for project');
       console.log(`   Project: ${projectPath}`);
-      console.log(`   VectorStore DB: ${this.vectorStore.projectPath}/.cliodesk/vectors.db`);
+      console.log(`   VectorStore DB: ${this.vectorStore.projectPath}/.cliodeck/vectors.db`);
       console.log(`   Ollama URL: ${config.ollamaURL}`);
       console.log(`   Chat Model: ${config.ollamaChatModel}`);
       console.log(`   Embedding Model: ${config.ollamaEmbeddingModel}`);

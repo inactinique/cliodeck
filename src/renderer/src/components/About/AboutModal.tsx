@@ -32,7 +32,7 @@ export const AboutModal: React.FC<AboutModalProps> = ({ isOpen, onClose }) => {
               <strong>{t('about.license')}:</strong> AGPL{' '}
               <button
                 className="about-link"
-                onClick={() => openExternalLink('https://github.com/inactinique/cliodesk')}
+                onClick={() => openExternalLink('https://github.com/inactinique/cliodeck')}
               >
                 {t('about.githubRepo')} <ExternalLink size={14} />
               </button>

@@ -16,8 +16,8 @@ export class ConfigManager {
 
     this.store = new Store<AppConfig>({
       defaults: DEFAULT_CONFIG,
-      name: 'cliodesk-config',
-      projectName: 'cliodesk',
+      name: 'cliodeck-config',
+      projectName: 'cliodeck',
     });
 
     this.initialized = true;

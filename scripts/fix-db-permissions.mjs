@@ -10,7 +10,7 @@ import { readdir, stat, chmod, access, constants } from 'fs/promises';
 import { join } from 'path';
 import { homedir } from 'os';
 
-async function findCliodeskDirs(startPath) {
+async function findCliodeckDirs(startPath) {
   const results = [];
 
   try {
@@ -25,14 +25,14 @@ async function findCliodeskDirs(startPath) {
       }
 
       if (entry.isDirectory()) {
-        if (entry.name === '.cliodesk') {
+        if (entry.name === '.cliodeck') {
           results.push(fullPath);
         } else {
           // Recursively search (max depth 3 to avoid deep traversal)
           const depth = fullPath.split('/').length - startPath.split('/').length;
           if (depth < 3) {
             try {
-              const subResults = await findCliodeskDirs(fullPath);
+              const subResults = await findCliodeckDirs(fullPath);
               results.push(...subResults);
             } catch (err) {
               // Permission denied or other error, skip
@@ -48,20 +48,20 @@ async function findCliodeskDirs(startPath) {
   return results;
 }
 
-async function fixPermissions(cliodeskDir) {
-  console.log(`\n🔍 Checking: ${cliodeskDir}`);
+async function fixPermissions(cliodeckDir) {
+  console.log(`\n🔍 Checking: ${cliodeckDir}`);
 
   try {
     // Fix directory permissions
-    await chmod(cliodeskDir, 0o755);
-    console.log(`✅ Fixed directory permissions: ${cliodeskDir}`);
+    await chmod(cliodeckDir, 0o755);
+    console.log(`✅ Fixed directory permissions: ${cliodeckDir}`);
 
     // Find and fix database files
-    const entries = await readdir(cliodeskDir);
+    const entries = await readdir(cliodeckDir);
 
     for (const entry of entries) {
       if (entry.endsWith('.db') || entry.endsWith('.db-journal') || entry.endsWith('.db-wal')) {
-        const dbPath = join(cliodeskDir, entry);
+        const dbPath = join(cliodeckDir, entry);
 
         try {
           // Check if file is readable/writable
@@ -75,7 +75,7 @@ async function fixPermissions(cliodeskDir) {
       }
     }
   } catch (err) {
-    console.error(`❌ Error fixing permissions for ${cliodeskDir}:`, err.message);
+    console.error(`❌ Error fixing permissions for ${cliodeckDir}:`, err.message);
   }
 }
 
@@ -91,18 +91,18 @@ async function main() {
     console.log('No path specified, searching in home directory...');
   }
 
-  console.log(`🔍 Searching for .cliodesk directories in: ${searchPath}\n`);
+  console.log(`🔍 Searching for .cliodeck directories in: ${searchPath}\n`);
 
-  const cliodeskDirs = await findCliodeskDirs(searchPath);
+  const cliodeckDirs = await findCliodeckDirs(searchPath);
 
-  if (cliodeskDirs.length === 0) {
-    console.log('No .cliodesk directories found.');
+  if (cliodeckDirs.length === 0) {
+    console.log('No .cliodeck directories found.');
     return;
   }
 
-  console.log(`Found ${cliodeskDirs.length} .cliodesk directories:\n`);
+  console.log(`Found ${cliodeckDirs.length} .cliodeck directories:\n`);
 
-  for (const dir of cliodeskDirs) {
+  for (const dir of cliodeckDirs) {
     await fixPermissions(dir);
   }
 

@@ -393,7 +393,7 @@ export class WordExportService {
     outputPath: string,
     onProgress?: (progress: WordExportProgress) => void
   ): Promise<{ success: boolean; outputPath?: string; error?: string }> {
-    const tempDir = join(tmpdir(), `cliodesk-word-export-${Date.now()}`);
+    const tempDir = join(tmpdir(), `cliodeck-word-export-${Date.now()}`);
     await mkdir(tempDir, { recursive: true });
 
     try {

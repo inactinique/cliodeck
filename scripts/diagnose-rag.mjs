@@ -80,7 +80,7 @@ function findProjectDatabases() {
   log('info', 'Looking for project databases...');
 
   const homeDir = process.env.HOME || process.env.USERPROFILE;
-  const documentsPath = join(homeDir, 'Documents', 'GitHub', 'cliodesk');
+  const documentsPath = join(homeDir, 'Documents', 'GitHub', 'cliodeck');
 
   const databases = [];
 
@@ -94,7 +94,7 @@ function findProjectDatabases() {
       for (const entry of entries) {
         const fullPath = join(dir, entry.name);
 
-        if (entry.isDirectory() && entry.name === '.cliodesk') {
+        if (entry.isDirectory() && entry.name === '.cliodeck') {
           const dbPath = join(fullPath, 'vectors.db');
           if (fs.existsSync(dbPath)) {
             databases.push({

@@ -39,26 +39,26 @@ if [ -d "$ICON_SOURCE" ]; then
     echo "🎨 Installation des icônes..."
     for size in 16 32 48 64 128 256 512; do
         if [ -f "$ICON_SOURCE/${size}x${size}/icon.png" ]; then
-            cp "$ICON_SOURCE/${size}x${size}/icon.png" ~/.local/share/icons/hicolor/${size}x${size}/apps/cliodesk.png
+            cp "$ICON_SOURCE/${size}x${size}/icon.png" ~/.local/share/icons/hicolor/${size}x${size}/apps/cliodeck.png
             echo "  ✓ Icône ${size}x${size} installée"
         fi
     done
 else
     echo "⚠️  Dossier d'icônes non trouvé, utilisation de l'icône par défaut"
     if [ -f "$PROJECT_DIR/build/icon.png" ]; then
-        cp "$PROJECT_DIR/build/icon.png" ~/.local/share/icons/hicolor/512x512/apps/cliodesk.png
+        cp "$PROJECT_DIR/build/icon.png" ~/.local/share/icons/hicolor/512x512/apps/cliodeck.png
         echo "  ✓ Icône 512x512 installée"
     fi
 fi
 
 # Créer le fichier .desktop
 echo "📝 Création du fichier .desktop..."
-cat > ~/.local/share/applications/cliodesk.desktop <<EOF
+cat > ~/.local/share/applications/cliodeck.desktop <<EOF
 [Desktop Entry]
 Name=ClioDesk
 Comment=Assistant d'écriture pour historiens avec RAG et intégration Zotero/Tropy
 Exec=$APPIMAGE_PATH --no-sandbox %U
-Icon=cliodesk
+Icon=cliodeck
 Terminal=false
 Type=Application
 Categories=Office;TextEditor;
@@ -66,7 +66,7 @@ StartupWMClass=ClioDesk
 MimeType=text/markdown;
 EOF
 
-chmod +x ~/.local/share/applications/cliodesk.desktop
+chmod +x ~/.local/share/applications/cliodeck.desktop
 
 # Mettre à jour les caches
 echo "🔄 Mise à jour des caches..."

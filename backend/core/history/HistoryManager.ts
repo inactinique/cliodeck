@@ -102,19 +102,19 @@ export class HistoryManager {
     }
 
     this.projectPath = projectPath;
-    this.dbPath = path.join(projectPath, '.cliodesk', 'history.db');
+    this.dbPath = path.join(projectPath, '.cliodeck', 'history.db');
 
-    // Create .cliodesk directory if needed
-    const cliodeskDir = path.join(projectPath, '.cliodesk');
-    if (!existsSync(cliodeskDir)) {
-      mkdirSync(cliodeskDir, { recursive: true });
+    // Create .cliodeck directory if needed
+    const cliodeckDir = path.join(projectPath, '.cliodeck');
+    if (!existsSync(cliodeckDir)) {
+      mkdirSync(cliodeckDir, { recursive: true });
     }
 
-    // S'assurer que le dossier .cliodesk a les bonnes permissions
+    // S'assurer que le dossier .cliodeck a les bonnes permissions
     try {
-      chmodSync(cliodeskDir, 0o755); // rwxr-xr-x
+      chmodSync(cliodeckDir, 0o755); // rwxr-xr-x
     } catch (error) {
-      console.warn(`⚠️  Could not set permissions on ${cliodeskDir}:`, error);
+      console.warn(`⚠️  Could not set permissions on ${cliodeckDir}:`, error);
     }
 
     // Open database

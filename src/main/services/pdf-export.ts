@@ -465,7 +465,7 @@ export class PDFExportService {
       }
 
       // Create temporary directory for build
-      const tempDir = join(tmpdir(), `cliodesk-export-${Date.now()}`);
+      const tempDir = join(tmpdir(), `cliodeck-export-${Date.now()}`);
       await mkdir(tempDir, { recursive: true });
 
       onProgress?.({ stage: 'preparing', message: 'Préparation des fichiers...', progress: 20 });
