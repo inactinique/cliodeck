@@ -1,8 +1,8 @@
-# ClioDesk - Writing Assistant for Historians
+# ClioDeck - Writing Assistant for Historians
 
 Multi-platform desktop application (Electron + React + TypeScript) to assist historians in writing articles (v1) and books (not implmented yet), with RAG (Retrieval-Augmented Generation) and Zotero (v1) / Tropy (not implemented yet) integrations.
 
-**NOTE that *ClioDesk* is a [vibe-coding](https://en.wikipedia.org/wiki/Vibe_coding) experiment aimed at developping a Proof Of Concept. It is provided *as is*, at your own risk**: it has been designed by [Frédéric Clavert](https://inactinique.net) and coded through [claude code](https://claude.com/product/claude-code). I made a small talk on vibe-coding / vibe-writing for historians, [that you can see here](https://inactinique.net/prez/2025-07-03_DH-LLM/2025-07-03_DH-LLM.html#/title-slide) (once open, hit 's' to get my notes). On the ethics of vibe coding, see [here](https://github.com/inactinique/cliodeck/wiki/4.-Ethics).
+**NOTE that *ClioDeck* is a [vibe-coding](https://en.wikipedia.org/wiki/Vibe_coding) experiment aimed at developping a Proof Of Concept. It is provided *as is*, at your own risk**: it has been designed by [Frédéric Clavert](https://inactinique.net) and coded through [claude code](https://claude.com/product/claude-code). I made a small talk on vibe-coding / vibe-writing for historians, [that you can see here](https://inactinique.net/prez/2025-07-03_DH-LLM/2025-07-03_DH-LLM.html#/title-slide) (once open, hit 's' to get my notes). On the ethics of vibe coding, see [here](https://github.com/inactinique/cliodeck/wiki/4.-Ethics).
 
 **License:** [GPLv3](https://www.gnu.org/licenses/gpl-3.0.html)
 
@@ -19,7 +19,7 @@ Create a writing assistant that allows historians to:
 
 ## Progress Status
 
-**ClioDesk is approaching version 1.0**
+**ClioDeck is approaching version 1.0**
 
 ### ✅ Completed (Phases 1-5)
 
@@ -61,7 +61,7 @@ Create a writing assistant that allows historians to:
 ## Architecture
 
 ```
-cliodesk/
+cliodeck/
 ├── src/
 │   ├── main/              # Electron Main Process
 │   │   ├── index.ts       # Entry point
@@ -127,8 +127,8 @@ cliodesk/
 
 For complete installation instructions including system dependencies, Ollama configuration, and troubleshooting:
 
-- **[macOS Installation Guide](https://github.com/inactinique/cliodeck/wiki/1.2-ClioDesk-Installation-%E2%80%90-macOS)** - Complete installation on macOS (Intel and Apple Silicon)
-- **[Linux Installation Guide](https://github.com/inactinique/cliodeck/wiki/1.1-ClioDesk-Installation-%E2%80%90-Linux)** - Installation on Ubuntu, Debian, Fedora, Arch Linux, etc.
+- **[macOS Installation Guide](https://github.com/inactinique/cliodeck/wiki/1.2-ClioDeck-Installation-%E2%80%90-macOS)** - Complete installation on macOS (Intel and Apple Silicon)
+- **[Linux Installation Guide](https://github.com/inactinique/cliodeck/wiki/1.1-ClioDeck-Installation-%E2%80%90-Linux)** - Installation on Ubuntu, Debian, Fedora, Arch Linux, etc.
 
 ### Quick Installation (Developers)
 
@@ -143,8 +143,8 @@ For complete installation instructions including system dependencies, Ollama con
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-org/cliodesk.git
-cd cliodesk
+git clone https://github.com/inactinique/cliodeck.git
+cd cliodeck
 
 # Install npm dependencies
 npm install
@@ -303,23 +303,6 @@ Configuration management with electron-store.
 }
 ```
 
-## Port from Swift
-
-The project rewrites ClioDesk (Swift/macOS) as a multi-platform Electron application.
-
-**Ported Files:**
-- VectorStore.swift (586 lines) → `VectorStore.ts`
-  - 100% portable logic
-  - SQLite3 → better-sqlite3
-  - Identical cosine similarity
-  - Optimized embeddings management
-
-**To Port:**
-- `DocumentChunker.swift` → `DocumentChunker.ts`
-- `BibTeXParser.swift` → `BibTeXParser.ts`
-- `OllamaBackend.swift` → `OllamaClient.ts`
-- `PDFTextExtractor.swift` → `PDFExtractor.ts` (PDFKit → pdfjs-dist)
-
 ## Next Steps
 
 1. **Finalize core backend** (2-3 days)
@@ -346,4 +329,4 @@ The project rewrites ClioDesk (Swift/macOS) as a multi-platform Electron applica
 
 ## Documentation
 
-See the [ClioDesk wiki](https://github.com/inactinique/cliodeck/wiki).
+See the [ClioDeck wiki](https://github.com/inactinique/cliodeck/wiki).
