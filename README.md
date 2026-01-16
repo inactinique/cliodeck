@@ -1,8 +1,10 @@
-# ClioDesk Electron - Writing Assistant for Historians
+# ClioDesk - Writing Assistant for Historians
 
 **NOTE that *ClioDesk* is a vibe-coding experiment aimed at developping a Proof Of Concept. It is provided *as is*, at your own risk**.
 
 Multi-platform desktop application (Electron + React + TypeScript) to assist historians in writing articles (v1) and books (not implmented yet), with RAG (Retrieval-Augmented Generation) and Zotero (v1) / Tropy (not implemented yet) integrations.
+
+**License:** [GPLv3](https://www.gnu.org/licenses/gpl-3.0.html)
 
 ## Objective
 
@@ -347,12 +349,3 @@ The project rewrites ClioDesk (Swift/macOS) as a multi-platform Electron applica
 ## Documentation
 
 See the [ClioDesk wiki](https://github.com/inactinique/cliodeck/wiki).
-
-
-## License
-
-MIT
-
----
-
-**Current Status:** ClioDesk is nearing completion of version 1.0 (89% complete). All core features are implemented and functional. The project is in final release preparation phase.
