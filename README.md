@@ -17,46 +17,6 @@ Create a writing assistant that allows historians to:
 - Integrate Tropy for archival sources (not implemented yet)
 - Edit in markdown (v1) with contextual AI assistant (not implmented yet)
 
-## Progress Status
-
-**ClioDeck is approaching version 1.0**
-
-### ✅ Completed (Phases 1-5)
-
-**Phase 1: Core Infrastructure**
-- [x] Electron + React + TypeScript project initialized
-- [x] VectorStore with SQLite (documents, chunks, embeddings)
-- [x] IPC handlers and preload bridge
-- [x] ConfigManager with electron-store
-
-**Phase 2: Advanced Features**
-- [x] PDF indexing with adaptive chunking (cpuOptimized/standard/large)
-- [x] HNSW + BM25 hybrid search (16x faster than baseline)
-- [x] Word export (.docx) with .dotx template support
-- [x] Bibliography management with merge/replace modes
-- [x] System prompt customization (FR/EN)
-- [x] PDF renaming during import
-
-**Phase 3: Documentation**
-- [x] Technical architecture documentation (ARCHITECTURE.md)
-- [x] Build and deployment guide (BUILD_AND_DEPLOYMENT.md)
-- [x] Platform-specific installation guides (macOS, Linux)
-
-**Phase 4: Internationalization**
-- [x] Complete i18n implementation (FR/EN/DE)
-- [x] 667+ translation keys per language
-- [x] All UI components translated
-
-**Phase 5: Cleanup**
-- [x] Removed experimental features (contextual suggestions)
-- [x] Codebase cleanup and optimization
-
-### 🚧 In Progress (Phase 6: Release)
-
-- [x] Centralized logging system with production filters
-- [ ] Version bump to 1.0.0
-- [ ] Multi-platform build testing
-- [ ] GitHub release preparation
 
 ## Architecture
 
@@ -117,9 +77,8 @@ cliodeck/
 - **Ollama** - Local models (nomic-embed-text, gemma2:2b)
   - Embedding model: `nomic-embed-text` (768 dimensions)
   - Chat model: `gemma2:2b` (fast, multilingual)
+- embedded qwen-0.5
 - **BERTopic** - Topic modeling and clustering (Python)
-- **Claude API** - Cloud option (Anthropic)
-- **OpenAI API** - Alternative cloud option
 
 ## Installation
 
@@ -211,7 +170,7 @@ npm run clean
 
 ## Main Components
 
-### VectorStore (Completed)
+### VectorStore
 
 **File:** `backend/core/vector-store/VectorStore.ts`
 
@@ -274,7 +233,7 @@ const stats = vectorStore.getStatistics();
 console.log(stats.documentCount, stats.embeddingCount);
 ```
 
-### ConfigManager (Completed)
+### ConfigManager
 
 **File:** `src/main/services/config-manager.ts`
 
