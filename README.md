@@ -15,7 +15,7 @@ Create a writing assistant that allows historians to:
 - Query their digitized sources (PDFs) via RAG
 - Integrate Zotero for bibliography
 - Integrate Tropy for archival sources (not implemented yet)
-- Edit in markdown (v1) with contextual AI assistant (not implmented yet)
+- Edit in markdown (WYSIWYG v1) with contextual AI assistant (not implmented yet)
 
 
 ## Architecture
