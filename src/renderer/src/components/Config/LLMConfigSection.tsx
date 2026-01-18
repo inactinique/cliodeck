@@ -94,10 +94,29 @@ export const LLMConfigSection: React.FC<LLMConfigSectionProps> = ({
               placeholder="nomic-embed-text"
             />
             <div className="config-description">
-              <small>
-                ⚠️ Changer ce modèle nécessite de ré-indexer tous les PDFs
+              <div style={{
+                padding: '8px 12px',
+                backgroundColor: '#fff3cd',
+                border: '1px solid #ffc107',
+                borderRadius: '4px',
+                marginTop: '8px'
+              }}>
+                <strong>⚠️ Attention :</strong> Changer ce modèle nécessite de ré-indexer tous les PDFs.
                 <br />
-                Recommandé: nomic-embed-text (768 dimensions, multilingue)
+                <small>
+                  Les embeddings ne sont pas compatibles entre modèles différents.
+                  <br />
+                  Vous devrez supprimer tous les PDFs indexés et les ré-indexer après le changement.
+                </small>
+              </div>
+              <small style={{ display: 'block', marginTop: '8px' }}>
+                <strong>Modèles recommandés :</strong>
+                <br />
+                • <code>nomic-embed-text</code> - 768 dim, multilingue, recommandé
+                <br />
+                • <code>mxbai-embed-large</code> - 1024 dim, très performant
+                <br />
+                • <code>all-minilm</code> - 384 dim, léger et rapide
               </small>
             </div>
           </div>
