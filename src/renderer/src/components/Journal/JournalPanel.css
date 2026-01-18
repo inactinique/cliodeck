@@ -476,8 +476,8 @@
 }
 
 .chat-message.user {
-  background-color: #1a2733;
-  border-color: #1a4d6f;
+  background-color: var(--bg-card);
+  border-color: var(--color-accent);
 }
 
 .chat-message.assistant {

@@ -298,3 +298,15 @@
   color: var(--color-accent-hover);
   text-decoration: underline;
 }
+
+.database-path-display {
+  margin-top: 4px;
+  padding: 8px;
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  fontSize: 12px;
+  font-family: 'Consolas', 'Monaco', monospace;
+  word-break: break-all;
+  color: var(--text-secondary);
+}
