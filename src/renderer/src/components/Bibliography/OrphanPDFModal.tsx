@@ -61,10 +61,10 @@ export const OrphanPDFModal: React.FC<OrphanPDFModalProps> = ({
         includeSubdirectories: true,
       });
 
-      if (result.success) {
+      if (result.success && result.data) {
         setScanResult(result.data);
         // Select all by default
-        const allPaths = new Set(result.data.orphans.map((o: OrphanPDFInfo) => o.filePath));
+        const allPaths = new Set(result.data.orphans?.map((o: OrphanPDFInfo) => o.filePath) || []);
         setSelectedOrphans(allPaths);
       } else {
         console.error('Failed to scan for orphan PDFs:', result.error);

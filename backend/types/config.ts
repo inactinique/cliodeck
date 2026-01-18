@@ -8,6 +8,10 @@ export interface LLMConfig {
   openaiAPIKey?: string;
   openaiModel?: string;
 
+  // Embedding strategy
+  /** Embedding model strategy: 'nomic-fallback' (nomic with mxbai fallback), 'mxbai-only', 'custom' */
+  embeddingStrategy?: 'nomic-fallback' | 'mxbai-only' | 'custom';
+
   // Embedded LLM configuration (Qwen2.5-0.5B or similar)
   /** Provider for text generation: 'ollama', 'embedded', or 'auto' (try ollama first, then embedded) */
   generationProvider?: 'ollama' | 'embedded' | 'auto';
@@ -87,6 +91,7 @@ export const DEFAULT_CONFIG: AppConfig = {
     ollamaURL: 'http://127.0.0.1:11434',
     ollamaEmbeddingModel: 'nomic-embed-text',
     ollamaChatModel: 'gemma2:2b',
+    embeddingStrategy: 'nomic-fallback', // Default: nomic with fallback to mxbai
     // Embedded LLM: auto mode (try Ollama first, fallback to embedded)
     generationProvider: 'auto',
     embeddedModelId: 'qwen2.5-0.5b',

@@ -43,6 +43,7 @@ export interface LLMConfig {
   ollamaURL: string;
   ollamaEmbeddingModel: string;
   ollamaChatModel: string;
+  embeddingStrategy?: 'nomic-fallback' | 'mxbai-only' | 'custom';
 }
 
 export const ConfigPanel: React.FC = () => {
@@ -68,6 +69,7 @@ export const ConfigPanel: React.FC = () => {
     ollamaURL: 'http://127.0.0.1:11434',
     ollamaEmbeddingModel: 'nomic-embed-text',
     ollamaChatModel: 'gemma2:2b',
+    embeddingStrategy: 'nomic-fallback',
   });
 
   const [editorConfig, setEditorConfig] = useState<EditorConfig>({
@@ -127,7 +129,16 @@ export const ConfigPanel: React.FC = () => {
           ...rag, // Override with saved values
         });
       }
-      if (llm) setLLMConfig(llm);
+      if (llm) {
+        setLLMConfig({
+          backend: 'ollama',
+          ollamaURL: 'http://127.0.0.1:11434',
+          ollamaEmbeddingModel: 'nomic-embed-text',
+          ollamaChatModel: 'gemma2:2b',
+          embeddingStrategy: 'nomic-fallback',
+          ...llm, // Override with saved values
+        });
+      }
       if (editor) setEditorConfig(editor);
       if (zotero) setZoteroConfig(zotero);
     } catch (error) {
@@ -189,6 +200,7 @@ export const ConfigPanel: React.FC = () => {
         ollamaURL: 'http://127.0.0.1:11434',
         ollamaEmbeddingModel: 'nomic-embed-text',
         ollamaChatModel: 'gemma2:2b',
+        embeddingStrategy: 'nomic-fallback',
       });
       setEditorConfig({
         fontSize: 14,

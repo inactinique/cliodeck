@@ -90,7 +90,8 @@ class PDFService {
       this.ollamaClient = new OllamaClient(
         config.ollamaURL,
         config.ollamaChatModel,
-        config.ollamaEmbeddingModel
+        config.ollamaEmbeddingModel,
+        config.embeddingStrategy || 'nomic-fallback'
       );
 
       // Initialiser le LLM Provider Manager (gère Ollama + modèle embarqué)

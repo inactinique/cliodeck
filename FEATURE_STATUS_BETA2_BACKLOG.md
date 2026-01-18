@@ -88,17 +88,15 @@ This document provides the **final status** of all features from the BETA2_NOT_I
 
 ---
 
-### ⚠️ Feature #7: Three Embedding Options with Fallback
-**Status**: Not Implemented (Low Priority)
-**Recommendation**: Only implement if explicitly requested by users
+### ✅ Feature #7: Three Embedding Options with Fallback
+**Status**: Fully Implemented
+**Implementation Date**: 2026-01-18 (BETA 3.1)
 **Complexity**: MEDIUM
-**Rationale from BETA2_NOT_IMPLEMENTED.md**:
-- Current single-model approach is simpler and works well
-- Risk of confusion for users
-- Can be added once users request more flexibility
-- Requires UI changes (dropdown, explanations) and backend fallback logic
+**Documentation**: [FEATURE_EMBEDDING_STRATEGY.md](FEATURE_EMBEDDING_STRATEGY.md)
 
-**User Demand**: None observed yet
+**Summary**: Explicit embedding strategy selection with three options (nomic-fallback, mxbai-only, custom). Dropdown selector in Settings/LLM Configuration with full translations (EN/FR/DE).
+
+**User Request**: Explicitly requested by user after noticing missing UI control for embedding strategy.
 
 ---
 
@@ -123,11 +121,12 @@ This document provides the **final status** of all features from the BETA2_NOT_I
 
 ### Implementation Rate:
 - **High-Priority Features (1-6)**: 6/6 = **100%** ✅
-- **Low-Priority Features (7-8)**: 0/2 = **0%** (by design)
+- **Low-Priority Features (7-8)**: 1/2 = **50%** (Feature #7 implemented on user request)
 - **Total Backlog**: 7/8 = **87.5%** (excluding Feature #8 which is "not recommended")
 
 ### Effective Completion Rate:
-**100% of all valuable and recommended features have been implemented.**
+**100% of all valuable features have been implemented (Features #1-7).**
+**Only Feature #8 remains unimplemented (explicitly not recommended).**
 
 ---
 
@@ -135,7 +134,6 @@ This document provides the **final status** of all features from the BETA2_NOT_I
 
 ### Do NOT Implement (Unless Explicit User Demand):
 1. ❌ Feature #8: Standalone Embeddings - Too complex, low benefit
-2. ⚠️ Feature #7: Embedding Options Dropdown - Wait for user requests
 
 ### Consider for BETA 3.2+ (Based on User Feedback):
 1. **Quick Wins** (from BETA3_IMPLEMENTATION_SUMMARY.md):
@@ -172,13 +170,21 @@ This document provides the **final status** of all features from the BETA2_NOT_I
 
 ## Conclusion
 
-**BETA 3.1 successfully completed 100% of high-value features from the BETA 2 backlog.**
+**BETA 3.1 successfully completed 100% of valuable features from the BETA 2 backlog.**
 
-The only unimplemented features are:
-- Feature #7: Low priority, only if users request
-- Feature #8: Explicitly not recommended due to high complexity/low benefit
+**Implemented features (7/8)**:
+- ✅ Feature #1: Zotero Update/Sync Function
+- ✅ Feature #2: Modified PDF Detection & Re-indexation
+- ✅ Feature #3: Orphan PDF Cleanup
+- ✅ Feature #4: Merge Bibliography and PDFs Tabs
+- ✅ Feature #5: Bibliography Statistics Dashboard
+- ✅ Feature #6: Move Settings Actions to Bibliography (already done)
+- ✅ Feature #7: Three Embedding Options with Fallback (implemented on user request)
 
-**All core Zotero integration and bibliography management features are now complete and production-ready.**
+**Not implemented (1/8)**:
+- ❌ Feature #8: Standalone Embeddings - Explicitly not recommended due to high complexity/low benefit
+
+**All core Zotero integration, bibliography management, and embedding strategy features are now complete and production-ready.**
 
 ---
 

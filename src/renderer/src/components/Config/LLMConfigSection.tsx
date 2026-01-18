@@ -1,5 +1,6 @@
 import { CollapsibleSection } from '../common/CollapsibleSection';
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import type { LLMConfig } from './ConfigPanel';
 
 interface LLMConfigSectionProps {
@@ -15,21 +16,22 @@ export const LLMConfigSection: React.FC<LLMConfigSectionProps> = ({
   availableModels,
   onRefreshModels,
 }) => {
+  const { t } = useTranslation('common');
 
   const handleFieldChange = (field: keyof LLMConfig, value: any) => {
     onChange({ ...config, [field]: value });
   };
 
   return (
-    <CollapsibleSection title="Configuration LLM" defaultExpanded={false}>
+    <CollapsibleSection title={t('llm.title')} defaultExpanded={false}>
       <div className="config-section">
         <div className="config-section-content">
           {/* Ollama URL */}
           <div className="config-field">
             <label className="config-label">
-              URL Ollama
+              {t('llm.ollamaURL')}
               <span className="config-help">
-                Adresse du serveur Ollama (local ou distant)
+                {t('llm.ollamaURLHelp')}
               </span>
             </label>
             <input
@@ -44,9 +46,9 @@ export const LLMConfigSection: React.FC<LLMConfigSectionProps> = ({
           {/* Chat Model */}
           <div className="config-field">
             <label className="config-label">
-              Modèle de chat
+              {t('llm.chatModel')}
               <span className="config-help">
-                Modèle utilisé pour générer les réponses
+                {t('llm.chatModelHelp')}
               </span>
             </label>
             <div className="config-input-group">
@@ -60,14 +62,14 @@ export const LLMConfigSection: React.FC<LLMConfigSectionProps> = ({
               <button
                 className="config-btn-small"
                 onClick={onRefreshModels}
-                title="Rafraîchir la liste des modèles"
+                title={t('llm.refreshModels')}
               >
                 🔄
               </button>
             </div>
             <div className="config-description">
               <small>
-                Modèles recommandés:
+                {t('llm.embeddingStrategyRecommended')}
                 <br />
                 • gemma2:2b (rapide, CPU)
                 <br />
@@ -81,9 +83,9 @@ export const LLMConfigSection: React.FC<LLMConfigSectionProps> = ({
           {/* Embedding Model */}
           <div className="config-field">
             <label className="config-label">
-              Modèle d'embeddings
+              {t('llm.embeddingModel')}
               <span className="config-help">
-                Modèle pour convertir le texte en vecteurs
+                {t('llm.embeddingModelHelp')}
               </span>
             </label>
             <input
@@ -101,22 +103,56 @@ export const LLMConfigSection: React.FC<LLMConfigSectionProps> = ({
                 borderRadius: '4px',
                 marginTop: '8px'
               }}>
-                <strong>⚠️ Attention :</strong> Changer ce modèle nécessite de ré-indexer tous les PDFs.
+                <strong>{t('llm.embeddingStrategyWarning')}</strong>
                 <br />
                 <small>
-                  Les embeddings ne sont pas compatibles entre modèles différents.
-                  <br />
-                  Vous devrez supprimer tous les PDFs indexés et les ré-indexer après le changement.
+                  {t('llm.embeddingStrategyWarningDetails')}
                 </small>
               </div>
               <small style={{ display: 'block', marginTop: '8px' }}>
-                <strong>Modèles recommandés :</strong>
+                <strong>{t('llm.embeddingStrategyRecommended')}</strong>
                 <br />
                 • <code>nomic-embed-text</code> - 768 dim, multilingue, recommandé
                 <br />
                 • <code>mxbai-embed-large</code> - 1024 dim, très performant
                 <br />
                 • <code>all-minilm</code> - 384 dim, léger et rapide
+              </small>
+            </div>
+          </div>
+
+          {/* Embedding Strategy */}
+          <div className="config-field">
+            <label className="config-label">
+              {t('llm.embeddingStrategy')}
+              <span className="config-help">
+                {t('llm.embeddingStrategyHelp')}
+              </span>
+            </label>
+            <select
+              value={config.embeddingStrategy || 'nomic-fallback'}
+              onChange={(e) => handleFieldChange('embeddingStrategy', e.target.value as 'nomic-fallback' | 'mxbai-only' | 'custom')}
+              className="config-input"
+            >
+              <option value="nomic-fallback">
+                {t('llm.embeddingStrategyOptions.nomicFallback')}
+              </option>
+              <option value="mxbai-only">
+                {t('llm.embeddingStrategyOptions.mxbaiOnly')}
+              </option>
+              <option value="custom">
+                {t('llm.embeddingStrategyOptions.custom')}
+              </option>
+            </select>
+            <div className="config-description">
+              <small>
+                <strong>{t('llm.embeddingStrategyRecommended')}</strong>
+                <br />
+                • <strong>nomic-fallback</strong> : {t('llm.embeddingStrategyDescriptions.nomicFallback')}
+                <br />
+                • <strong>mxbai-only</strong> : {t('llm.embeddingStrategyDescriptions.mxbaiOnly')}
+                <br />
+                • <strong>custom</strong> : {t('llm.embeddingStrategyDescriptions.custom')}
               </small>
             </div>
           </div>

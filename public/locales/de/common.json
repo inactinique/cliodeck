@@ -271,6 +271,21 @@
     "embeddingModelHelp": "Modell für Vektor-Embeddings",
     "chatModel": "Chat-Modell",
     "chatModelHelp": "Modell für Textgenerierung",
+    "embeddingStrategy": "Embedding-Strategie",
+    "embeddingStrategyHelp": "Modellauswahl und Fallback-Verhalten bei Fehlern",
+    "embeddingStrategyWarning": "⚠️ Warnung: Das Ändern dieses Modells erfordert eine Neuindizierung aller PDFs.",
+    "embeddingStrategyWarningDetails": "Embeddings sind zwischen verschiedenen Modellen nicht kompatibel. Sie müssen alle indizierten PDFs löschen und nach der Änderung neu indizieren.",
+    "embeddingStrategyRecommended": "Empfohlene Modelle:",
+    "embeddingStrategyOptions": {
+      "nomicFallback": "nomic-embed-text mit Fallback auf mxbai-embed-large",
+      "mxbaiOnly": "nur mxbai-embed-large (kein Fallback)",
+      "custom": "Benutzerdefiniertes Modell (kein Fallback)"
+    },
+    "embeddingStrategyDescriptions": {
+      "nomicFallback": "Verwendet nomic-embed-text, wechselt bei Fehlern automatisch zu mxbai-embed-large (empfohlen)",
+      "mxbaiOnly": "Verwendet nur mxbai-embed-large, kein Fallback (für Konsistenz)",
+      "custom": "Verwendet das obige benutzerdefinierte Modell, kein Fallback (für fortgeschrittene Benutzer)"
+    },
     "availableModels": "Verfügbare Modelle",
     "refreshModels": "Modelle aktualisieren",
     "testConnection": "Verbindung testen",

@@ -118,7 +118,7 @@ export const usePDFModificationDetection = (
         projectPath,
       });
 
-      if (result.success && result.data.modifiedPDFs.length > 0) {
+      if (result.success && result.data?.modifiedPDFs && result.data.modifiedPDFs.length > 0) {
         setModifiedPDFs(result.data.modifiedPDFs);
       }
       setLastCheck(Date.now());

@@ -81,6 +81,7 @@ export class OllamaClient {
   private baseURL: string;
   public embeddingModel: string = 'nomic-embed-text';
   public chatModel: string = 'gemma2:2b';
+  public embeddingStrategy: 'nomic-fallback' | 'mxbai-only' | 'custom' = 'nomic-fallback';
 
   // Limite de caractères pour nomic-embed-text
   // Modèle supporte 8192 tokens, mais 1 token ≈ 4 chars en moyenne
@@ -90,11 +91,13 @@ export class OllamaClient {
   constructor(
     baseURL: string = 'http://127.0.0.1:11434',
     chatModel?: string,
-    embeddingModel?: string
+    embeddingModel?: string,
+    embeddingStrategy?: 'nomic-fallback' | 'mxbai-only' | 'custom'
   ) {
     this.baseURL = baseURL;
     if (chatModel) this.chatModel = chatModel;
     if (embeddingModel) this.embeddingModel = embeddingModel;
+    if (embeddingStrategy) this.embeddingStrategy = embeddingStrategy;
   }
 
   /**
@@ -274,26 +277,49 @@ export class OllamaClient {
    * Génère un embedding pour un chunk de texte (avec fallback automatique)
    */
   private async generateEmbeddingForChunk(text: string): Promise<Float32Array> {
+    // Determine primary model based on strategy
+    let primaryModel: string;
+    let fallbackModel: string | null = null;
+
+    switch (this.embeddingStrategy) {
+      case 'nomic-fallback':
+        primaryModel = 'nomic-embed-text';
+        fallbackModel = 'mxbai-embed-large';
+        break;
+      case 'mxbai-only':
+        primaryModel = 'mxbai-embed-large';
+        fallbackModel = null; // No fallback
+        break;
+      case 'custom':
+        primaryModel = this.embeddingModel;
+        fallbackModel = null; // No fallback for custom models
+        break;
+      default:
+        // Default to nomic-fallback for backward compatibility
+        primaryModel = this.embeddingModel || 'nomic-embed-text';
+        fallbackModel = primaryModel === 'nomic-embed-text' ? 'mxbai-embed-large' : null;
+    }
+
     try {
-      // Essayer avec le modèle configuré (nomic-embed-text normalement)
-      return await this.generateEmbeddingWithModel(text, this.embeddingModel);
+      // Try primary model
+      return await this.generateEmbeddingWithModel(text, primaryModel);
     } catch (error) {
-      // Si échec avec nomic-embed-text, fallback vers mxbai-embed-large
-      if (this.embeddingModel === 'nomic-embed-text') {
-        console.warn('⚠️ nomic-embed-text failed, falling back to mxbai-embed-large');
+      // Try fallback if available
+      if (fallbackModel) {
+        console.warn(`⚠️ ${primaryModel} failed, falling back to ${fallbackModel}`);
         console.warn(`   Error: ${error instanceof Error ? error.message : String(error)}`);
 
         try {
-          const result = await this.generateEmbeddingWithModel(text, 'mxbai-embed-large');
-          console.log('✅ Fallback to mxbai-embed-large successful');
+          const result = await this.generateEmbeddingWithModel(text, fallbackModel);
+          console.log(`✅ Fallback to ${fallbackModel} successful`);
           return result;
         } catch (fallbackError) {
-          console.error('❌ Fallback to mxbai-embed-large also failed:', fallbackError);
+          console.error(`❌ Fallback to ${fallbackModel} also failed:`, fallbackError);
           throw fallbackError;
         }
       }
 
-      // Si ce n'est pas nomic ou si le fallback a échoué, propager l'erreur
+      // No fallback available, propagate error
       throw error;
     }
   }
