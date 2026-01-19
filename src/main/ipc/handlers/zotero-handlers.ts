@@ -159,6 +159,7 @@ export function setupZoteroHandlers() {
     diff: any;
     strategy: 'local' | 'remote' | 'manual';
     resolution?: any;
+    collectionKey?: string;
   }) => {
     console.log('📞 IPC Call: zotero:apply-updates', {
       strategy: options.strategy,
@@ -166,6 +167,31 @@ export function setupZoteroHandlers() {
     });
     try {
       const result = await zoteroService.applyUpdates(options);
+
+      // After applying updates, refresh document-collection links
+      if (result.success) {
+        const vectorStore = pdfService.getVectorStore();
+        if (vectorStore) {
+          // Fetch fresh data from Zotero to update collections and document links
+          const refreshResult = await zoteroService.refreshCollectionLinks({
+            userId: options.userId,
+            apiKey: options.apiKey,
+            groupId: options.groupId,
+            collectionKey: options.collectionKey,
+          });
+
+          if (refreshResult.collections && refreshResult.collections.length > 0) {
+            vectorStore.saveCollections(refreshResult.collections);
+            console.log(`📁 Updated ${refreshResult.collections.length} collections in VectorStore`);
+          }
+
+          if (refreshResult.bibtexKeyToCollections && Object.keys(refreshResult.bibtexKeyToCollections).length > 0) {
+            const linkedCount = vectorStore.linkDocumentsToCollectionsByBibtexKey(refreshResult.bibtexKeyToCollections);
+            console.log(`🔗 Linked ${linkedCount} documents to their Zotero collections`);
+          }
+        }
+      }
+
       console.log('📤 IPC Response: zotero:apply-updates', {
         success: result.success,
         addedCount: result.addedCount,

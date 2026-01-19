@@ -395,6 +395,68 @@ class ZoteroService {
       return { success: false, error: error.message };
     }
   }
+
+  /**
+   * Refresh collection links by fetching current Zotero data
+   * Used after apply-updates to ensure document-collection links are current
+   */
+  async refreshCollectionLinks(options: {
+    userId: string;
+    apiKey: string;
+    groupId?: string;
+    collectionKey?: string;
+  }): Promise<{
+    collections: Array<{ key: string; name: string; parentKey?: string }>;
+    bibtexKeyToCollections: Record<string, string[]>;
+  }> {
+    try {
+      const api = new ZoteroAPI({
+        userId: options.userId,
+        apiKey: options.apiKey,
+        groupId: options.groupId,
+      });
+
+      // Fetch all collections
+      const allCollections = await api.listCollections();
+      const collections = allCollections.map((c) => ({
+        key: c.key,
+        name: c.data.name,
+        parentKey: c.data.parentCollection,
+      }));
+
+      // Fetch items to build bibtexKey -> collections mapping
+      const items = await api.listItems({
+        collectionKey: options.collectionKey,
+      });
+
+      // Filter to bibliographic items only
+      const bibliographicItems = items.filter(
+        (item) => item.data.itemType !== 'attachment' && item.data.itemType !== 'note'
+      );
+
+      // Build bibtexKey -> collections mapping
+      const bibtexKeyToCollections: Record<string, string[]> = {};
+      for (const item of bibliographicItems) {
+        if (item.data.collections && item.data.collections.length > 0) {
+          const bibtexKey = generateBibtexKeyFromZoteroItem(item);
+          bibtexKeyToCollections[bibtexKey] = item.data.collections;
+        }
+      }
+
+      console.log(`🔄 Refreshed: ${collections.length} collections, ${Object.keys(bibtexKeyToCollections).length} items with collections`);
+
+      return {
+        collections,
+        bibtexKeyToCollections,
+      };
+    } catch (error: any) {
+      console.error('Failed to refresh collection links:', error);
+      return {
+        collections: [],
+        bibtexKeyToCollections: {},
+      };
+    }
+  }
 }
 
 export const zoteroService = new ZoteroService();
