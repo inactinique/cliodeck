@@ -105,11 +105,15 @@ export const useChatStore = create<ChatState>((set, get) => ({
       });
 
       // Call IPC to send chat message with context enabled and RAG parameters
-      logger.ipc('chat.send', { query, context: true, ragParams });
-      const result = await window.electron.chat.send(query, {
+      // Map selectedCollectionKeys to collectionKeys for IPC
+      const { selectedCollectionKeys, ...otherRagParams } = ragParams;
+      const ipcOptions = {
         context: true,
-        ...ragParams, // Spread RAG parameters (model, topK, timeout, temperature, etc.)
-      });
+        ...otherRagParams,
+        collectionKeys: selectedCollectionKeys?.length > 0 ? selectedCollectionKeys : undefined,
+      };
+      logger.ipc('chat.send', { query, ipcOptions });
+      const result = await window.electron.chat.send(query, ipcOptions);
       logger.ipc('chat.send response', result);
 
       // Add assistant message with the response

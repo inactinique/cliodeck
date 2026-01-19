@@ -3,6 +3,7 @@
  */
 import { ipcMain } from 'electron';
 import { zoteroService } from '../../services/zotero-service.js';
+import { pdfService } from '../../services/pdf-service.js';
 import { successResponse, errorResponse } from '../utils/error-handler.js';
 import { validate, ZoteroTestConnectionSchema, ZoteroSyncSchema } from '../utils/validation.js';
 
@@ -50,10 +51,21 @@ export function setupZoteroHandlers() {
       const validatedData = validate(ZoteroSyncSchema, options);
       console.log('  userId:', validatedData.userId, 'collectionKey:', validatedData.collectionKey);
       const result = await zoteroService.sync(validatedData);
+
+      // Save collections to VectorStore if sync was successful
+      if (result.success && result.collections && result.collections.length > 0) {
+        const vectorStore = pdfService.getVectorStore();
+        if (vectorStore) {
+          vectorStore.saveCollections(result.collections);
+          console.log(`📁 Saved ${result.collections.length} collections to VectorStore`);
+        }
+      }
+
       console.log('📤 IPC Response: zotero:sync', {
         success: result.success,
         itemCount: result.itemCount,
         pdfCount: result.pdfCount,
+        collectionCount: result.collections?.length,
       });
       return result;
     } catch (error: any) {

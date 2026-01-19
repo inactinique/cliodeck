@@ -280,6 +280,7 @@ const api = {
     getTextStatistics: (options?: {
       topN?: number;
     }) => ipcRenderer.invoke('corpus:get-text-statistics', options),
+    getCollections: () => ipcRenderer.invoke('corpus:get-collections'),
   },
 
   // Topic Modeling Environment

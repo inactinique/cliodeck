@@ -88,6 +88,8 @@ class ZoteroService {
     itemCount?: number;
     pdfCount?: number;
     bibtexPath?: string;
+    collections?: Array<{ key: string; name: string; parentKey?: string }>;
+    itemCollectionMap?: Record<string, string[]>;
     error?: string;
   }> {
     try {
@@ -109,11 +111,33 @@ class ZoteroService {
         targetDirectory,
       });
 
+      // Fetch all collections for the library/group
+      const allCollections = await api.listCollections();
+      const collectionsData = allCollections.map((c) => ({
+        key: c.key,
+        name: c.data.name,
+        parentKey: c.data.parentCollection,
+      }));
+
+      // Build item -> collections mapping from synced items
+      const itemCollectionMap: Record<string, string[]> = {};
+      for (const item of result.items) {
+        if (item.data.collections && item.data.collections.length > 0) {
+          // Use zoteroKey (item.key) as the key
+          itemCollectionMap[item.key] = item.data.collections;
+        }
+      }
+
+      console.log(`📁 ${collectionsData.length} collections récupérées`);
+      console.log(`📎 ${Object.keys(itemCollectionMap).length} items avec collections`);
+
       return {
         success: true,
         itemCount: result.items.length,
         pdfCount: result.pdfPaths.length,
         bibtexPath: result.bibtexPath,
+        collections: collectionsData,
+        itemCollectionMap,
       };
     } catch (error: any) {
       console.error('Zotero sync failed:', error);

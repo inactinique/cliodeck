@@ -182,6 +182,27 @@ export class VectorStore {
       );
     `);
 
+    // Table des collections Zotero
+    this.db.exec(`
+      CREATE TABLE IF NOT EXISTS zotero_collections (
+        key TEXT PRIMARY KEY,
+        name TEXT NOT NULL,
+        parent_key TEXT,
+        FOREIGN KEY (parent_key) REFERENCES zotero_collections(key) ON DELETE SET NULL
+      );
+    `);
+
+    // Table de liaison documents-collections (many-to-many)
+    this.db.exec(`
+      CREATE TABLE IF NOT EXISTS document_collections (
+        document_id TEXT NOT NULL,
+        collection_key TEXT NOT NULL,
+        PRIMARY KEY (document_id, collection_key),
+        FOREIGN KEY (document_id) REFERENCES documents(id) ON DELETE CASCADE,
+        FOREIGN KEY (collection_key) REFERENCES zotero_collections(key) ON DELETE CASCADE
+      );
+    `);
+
     // Index pour accélérer les recherches
     this.db.exec(`
       CREATE INDEX IF NOT EXISTS idx_chunks_document_id ON chunks(document_id);
@@ -194,6 +215,7 @@ export class VectorStore {
       CREATE INDEX IF NOT EXISTS idx_topic_assignments_analysis ON topic_assignments(analysis_id);
       CREATE INDEX IF NOT EXISTS idx_topic_assignments_document ON topic_assignments(document_id);
       CREATE INDEX IF NOT EXISTS idx_topic_outliers_analysis ON topic_outliers(analysis_id);
+      CREATE INDEX IF NOT EXISTS idx_doc_collections_coll ON document_collections(collection_key);
     `);
 
     console.log('✅ Tables créées');
@@ -1026,6 +1048,121 @@ export class VectorStore {
   deleteAllTopicAnalyses(): void {
     this.db.prepare('DELETE FROM topic_analyses').run();
     console.log('✅ All topic analyses deleted');
+  }
+
+  // MARK: - Zotero Collection Operations
+
+  /**
+   * Sauvegarde plusieurs collections Zotero en batch
+   */
+  saveCollections(collections: Array<{ key: string; name: string; parentKey?: string }>): void {
+    const stmt = this.db.prepare(`
+      INSERT OR REPLACE INTO zotero_collections (key, name, parent_key)
+      VALUES (?, ?, ?)
+    `);
+
+    const transaction = this.db.transaction(() => {
+      for (const coll of collections) {
+        stmt.run(coll.key, coll.name, coll.parentKey || null);
+      }
+    });
+    transaction();
+
+    console.log(`✅ ${collections.length} collections sauvegardées`);
+  }
+
+  /**
+   * Récupère toutes les collections Zotero
+   */
+  getAllCollections(): Array<{ key: string; name: string; parentKey?: string }> {
+    const stmt = this.db.prepare('SELECT key, name, parent_key FROM zotero_collections ORDER BY name');
+    const rows = stmt.all() as Array<{ key: string; name: string; parent_key: string | null }>;
+    return rows.map((row) => ({
+      key: row.key,
+      name: row.name,
+      parentKey: row.parent_key || undefined,
+    }));
+  }
+
+  /**
+   * Lie un document à ses collections Zotero
+   */
+  setDocumentCollections(documentId: string, collectionKeys: string[]): void {
+    // D'abord supprimer les liens existants
+    this.db.prepare('DELETE FROM document_collections WHERE document_id = ?').run(documentId);
+
+    // Puis ajouter les nouveaux liens
+    if (collectionKeys.length > 0) {
+      const stmt = this.db.prepare(`
+        INSERT OR IGNORE INTO document_collections (document_id, collection_key)
+        VALUES (?, ?)
+      `);
+
+      const transaction = this.db.transaction(() => {
+        for (const collKey of collectionKeys) {
+          stmt.run(documentId, collKey);
+        }
+      });
+      transaction();
+    }
+
+    console.log(`✅ Document ${documentId.substring(0, 8)} lié à ${collectionKeys.length} collection(s)`);
+  }
+
+  /**
+   * Récupère les clés de collections pour un document
+   */
+  getDocumentCollections(documentId: string): string[] {
+    const stmt = this.db.prepare('SELECT collection_key FROM document_collections WHERE document_id = ?');
+    const rows = stmt.all(documentId) as Array<{ collection_key: string }>;
+    return rows.map((row) => row.collection_key);
+  }
+
+  /**
+   * Récupère tous les IDs de documents appartenant aux collections spécifiées
+   * @param collectionKeys Clés des collections à filtrer
+   * @param recursive Si true, inclut aussi les sous-collections
+   */
+  getDocumentIdsInCollections(collectionKeys: string[], recursive: boolean = true): string[] {
+    if (collectionKeys.length === 0) {
+      return [];
+    }
+
+    let allCollectionKeys = [...collectionKeys];
+
+    // Si récursif, inclure aussi toutes les sous-collections
+    if (recursive) {
+      const allCollections = this.getAllCollections();
+      const collectSubcollections = (parentKeys: string[]): string[] => {
+        const children = allCollections
+          .filter((c) => c.parentKey && parentKeys.includes(c.parentKey))
+          .map((c) => c.key);
+        if (children.length > 0) {
+          return [...children, ...collectSubcollections(children)];
+        }
+        return [];
+      };
+      allCollectionKeys = [...allCollectionKeys, ...collectSubcollections(collectionKeys)];
+    }
+
+    // Construire la requête paramétrée
+    const placeholders = allCollectionKeys.map(() => '?').join(',');
+    const stmt = this.db.prepare(`
+      SELECT DISTINCT document_id
+      FROM document_collections
+      WHERE collection_key IN (${placeholders})
+    `);
+
+    const rows = stmt.all(...allCollectionKeys) as Array<{ document_id: string }>;
+    return rows.map((row) => row.document_id);
+  }
+
+  /**
+   * Supprime toutes les collections (utile lors d'une re-synchronisation)
+   */
+  deleteAllCollections(): void {
+    this.db.prepare('DELETE FROM zotero_collections').run();
+    console.log('✅ Toutes les collections supprimées');
   }
 
   // Fermer la base de données

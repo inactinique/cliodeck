@@ -15,6 +15,9 @@ interface EnrichedRAGOptions {
   additionalGraphDocs?: number;   // Nombre de documents liés à inclure
   window?: BrowserWindow;         // Fenêtre pour streaming
 
+  // Collection filtering (filter RAG search by Zotero collections)
+  collectionKeys?: string[];      // Zotero collection keys to filter by
+
   // Provider selection
   provider?: 'ollama' | 'embedded' | 'auto';  // LLM provider to use
 
@@ -182,7 +185,9 @@ class ChatService {
         });
 
         // Check cache first (identical queries = instant results)
-        const cacheKey = `${queryHash}-${options.topK || 5}`;
+        // Include collection filter in cache key to avoid mixing results
+        const collectionSuffix = options.collectionKeys?.length ? `-coll:${options.collectionKeys.sort().join(',')}` : '';
+        const cacheKey = `${queryHash}-${options.topK || 5}${collectionSuffix}`;
         const cachedResults = this.ragCache.get(cacheKey);
 
         if (cachedResults) {
@@ -190,7 +195,10 @@ class ChatService {
           searchResults = cachedResults;
         } else {
           console.log(`🔍 Cache MISS for query hash ${queryHash}, performing search...`);
-          searchResults = await pdfService.search(message, { topK: options.topK });
+          searchResults = await pdfService.search(message, {
+            topK: options.topK,
+            collectionKeys: options.collectionKeys,
+          });
 
           // Store in cache for future identical queries
           this.ragCache.set(cacheKey, searchResults);

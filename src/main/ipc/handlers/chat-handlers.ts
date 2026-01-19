@@ -47,6 +47,8 @@ export function setupChatHandlers() {
         useGraphContext: ragConfig.useGraphContext || false,
         additionalGraphDocs: ragConfig.additionalGraphDocs || 3,
         window,
+        // Collection filtering (from RAG settings panel)
+        collectionKeys: validatedData.options?.collectionKeys,
         // Provider selection (from RAG settings panel)
         provider: validatedData.options?.provider || llmConfig.generationProvider || 'auto',
         // Per-query parameters (from RAG settings panel)
