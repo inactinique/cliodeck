@@ -377,6 +377,7 @@
     "newLineHint": "Shift + Enter für neue Zeile",
     "you": "Sie",
     "assistant": "Assistent",
+    "noContextWarning": "Diese Antwort basiert nicht auf Ihren Dokumenten. Es wurden keine relevanten Passagen in Ihrem Korpus gefunden.",
     "sources": "Quellen",
     "source": "Quelle",
     "excerpt": "Auszug:",

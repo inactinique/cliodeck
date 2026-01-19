@@ -576,6 +576,15 @@ export class EnhancedVectorStore {
   deleteAllCollections(): void {
     this.vectorStore.deleteAllCollections();
   }
+
+  /**
+   * Link documents to their Zotero collections using bibtexKey
+   * @param bibtexKeyToCollections Map of bibtexKey -> array of collection keys
+   * @returns Number of documents successfully linked
+   */
+  linkDocumentsToCollectionsByBibtexKey(bibtexKeyToCollections: Record<string, string[]>): number {
+    return this.vectorStore.linkDocumentsToCollectionsByBibtexKey(bibtexKeyToCollections);
+  }
 }
 
 export interface EnhancedStats {

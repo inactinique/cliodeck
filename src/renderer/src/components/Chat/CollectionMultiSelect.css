@@ -77,16 +77,16 @@
   margin-top: 4px;
   max-height: 200px;
   overflow-y: auto;
-  background: var(--bg-elevated, #fff);
-  border: 1px solid var(--border-color, #ccc);
+  background: var(--bg-card, #2d2d2d);
+  border: 1px solid var(--border-color, #3e3e42);
   border-radius: var(--radius-sm, 4px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
 .no-collections {
   padding: 12px;
   text-align: center;
-  color: var(--text-secondary, #666);
+  color: var(--text-secondary, #a0a0a0);
   font-size: var(--font-size-sm, 13px);
   font-style: italic;
 }
@@ -101,12 +101,12 @@
 }
 
 .collection-option:hover {
-  background: var(--hover-bg, rgba(0, 0, 0, 0.05));
+  background: var(--bg-card-hover, rgba(255, 255, 255, 0.1));
 }
 
 .collection-option:focus {
   outline: none;
-  background: var(--hover-bg, rgba(0, 0, 0, 0.05));
+  background: var(--bg-card-hover, rgba(255, 255, 255, 0.1));
 }
 
 .collection-option.selected {
@@ -120,7 +120,7 @@
 .collection-name {
   flex: 1;
   font-size: var(--font-size-sm, 13px);
-  color: var(--text-primary, #333);
+  color: var(--text-primary, #ffffff);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;

@@ -136,7 +136,7 @@ class ChatService {
   async sendMessage(
     message: string,
     options: EnrichedRAGOptions = {}
-  ): Promise<string> {
+  ): Promise<{ response: string; ragUsed: boolean; sourcesCount: number }> {
     const startTime = Date.now();
     const queryHash = hashString(message);
 
@@ -484,7 +484,11 @@ class ChatService {
         }
       }
 
-      return fullResponse;
+      return {
+        response: fullResponse,
+        ragUsed: searchResults.length > 0,
+        sourcesCount: searchResults.length,
+      };
     } catch (error) {
       console.error('❌ [RAG DETAILED DEBUG] Chat error:', {
         queryHash: queryHash,

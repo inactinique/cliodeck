@@ -443,6 +443,7 @@
     "newLineHint": "Shift + Enter pour nouvelle ligne",
     "you": "Vous",
     "assistant": "Assistant",
+    "noContextWarning": "Cette réponse n'est pas basée sur vos documents. Aucun passage pertinent n'a été trouvé dans votre corpus.",
     "sources": "Sources",
     "source": "Source",
     "excerpt": "Extrait:",

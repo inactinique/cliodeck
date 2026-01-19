@@ -58,6 +58,12 @@ export function setupZoteroHandlers() {
         if (vectorStore) {
           vectorStore.saveCollections(result.collections);
           console.log(`📁 Saved ${result.collections.length} collections to VectorStore`);
+
+          // Link existing documents to their Zotero collections using bibtexKey
+          if (result.bibtexKeyToCollections && Object.keys(result.bibtexKeyToCollections).length > 0) {
+            const linkedCount = vectorStore.linkDocumentsToCollectionsByBibtexKey(result.bibtexKeyToCollections);
+            console.log(`🔗 Linked ${linkedCount} documents to their Zotero collections`);
+          }
         }
       }
 

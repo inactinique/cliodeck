@@ -1165,6 +1165,49 @@ export class VectorStore {
     console.log('✅ Toutes les collections supprimées');
   }
 
+  /**
+   * Lie des documents à leurs collections Zotero en utilisant le bibtexKey
+   * @param bibtexKeyToCollections Map de bibtexKey -> array de collection keys
+   * @returns Nombre de documents liés avec succès
+   */
+  linkDocumentsToCollectionsByBibtexKey(bibtexKeyToCollections: Record<string, string[]>): number {
+    let linkedCount = 0;
+
+    // Get all documents with their bibtex_key
+    const documents = this.db
+      .prepare('SELECT id, bibtex_key FROM documents WHERE bibtex_key IS NOT NULL')
+      .all() as Array<{ id: string; bibtex_key: string }>;
+
+    console.log(`🔗 Attempting to link ${documents.length} documents to collections...`);
+    console.log(`📋 Collection mapping has ${Object.keys(bibtexKeyToCollections).length} entries`);
+
+    const insertStmt = this.db.prepare(`
+      INSERT OR IGNORE INTO document_collections (document_id, collection_key)
+      VALUES (?, ?)
+    `);
+
+    const transaction = this.db.transaction(() => {
+      for (const doc of documents) {
+        const collectionKeys = bibtexKeyToCollections[doc.bibtex_key];
+        if (collectionKeys && collectionKeys.length > 0) {
+          // First, remove existing links for this document
+          this.db.prepare('DELETE FROM document_collections WHERE document_id = ?').run(doc.id);
+
+          // Then add new links
+          for (const collKey of collectionKeys) {
+            insertStmt.run(doc.id, collKey);
+          }
+          linkedCount++;
+          console.log(`  ✅ Linked document "${doc.bibtex_key}" to ${collectionKeys.length} collection(s)`);
+        }
+      }
+    });
+
+    transaction();
+    console.log(`✅ Successfully linked ${linkedCount} documents to their Zotero collections`);
+    return linkedCount;
+  }
+
   // Fermer la base de données
   close(): void {
     this.db.close();

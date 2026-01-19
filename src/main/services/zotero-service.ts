@@ -1,9 +1,41 @@
 import path from 'path';
-import { ZoteroAPI } from '../../../backend/integrations/zotero/ZoteroAPI.js';
+import { ZoteroAPI, ZoteroItem } from '../../../backend/integrations/zotero/ZoteroAPI.js';
 import { ZoteroSync } from '../../../backend/integrations/zotero/ZoteroSync.js';
 import { Citation } from '../../../backend/types/citation.js';
 import { SyncDiff } from '../../../backend/integrations/zotero/ZoteroDiffEngine.js';
 import { ConflictStrategy, SyncResolution } from '../../../backend/integrations/zotero/ZoteroSyncResolver.js';
+
+/**
+ * Generate a bibtexKey from a Zotero item (Author_Year format)
+ * This matches the logic in ZoteroDiffEngine.zoteroItemToCitation
+ */
+function generateBibtexKeyFromZoteroItem(item: ZoteroItem): string {
+  const data = item.data;
+
+  // Extract first author's last name
+  const firstCreator = data.creators?.find((c) => c.creatorType === 'author');
+  let authorName = 'Unknown';
+  if (firstCreator) {
+    if (firstCreator.lastName) {
+      authorName = firstCreator.lastName;
+    } else if (firstCreator.name) {
+      // For single-field names, take the last word as surname
+      const parts = firstCreator.name.split(' ');
+      authorName = parts[parts.length - 1];
+    }
+  }
+
+  // Extract year from date
+  let year = '';
+  if (data.date) {
+    const yearMatch = data.date.match(/\d{4}/);
+    year = yearMatch ? yearMatch[0] : '';
+  }
+
+  // Generate BibTeX key (Author_Year format)
+  const bibtexKey = `${authorName.replace(/\s+/g, '')}_${year}`;
+  return bibtexKey;
+}
 
 class ZoteroService {
   /**
@@ -90,6 +122,7 @@ class ZoteroService {
     bibtexPath?: string;
     collections?: Array<{ key: string; name: string; parentKey?: string }>;
     itemCollectionMap?: Record<string, string[]>;
+    bibtexKeyToCollections?: Record<string, string[]>;
     error?: string;
   }> {
     try {
@@ -120,16 +153,29 @@ class ZoteroService {
       }));
 
       // Build item -> collections mapping from synced items
+      // Also build bibtexKey -> collections mapping for linking documents
       const itemCollectionMap: Record<string, string[]> = {};
-      for (const item of result.items) {
+      const bibtexKeyToCollections: Record<string, string[]> = {};
+
+      // Filter to only bibliographic items (not attachments or notes)
+      const bibliographicItems = result.items.filter(
+        (item) => item.data.itemType !== 'attachment' && item.data.itemType !== 'note'
+      );
+
+      for (const item of bibliographicItems) {
         if (item.data.collections && item.data.collections.length > 0) {
-          // Use zoteroKey (item.key) as the key
+          // Use zoteroKey (item.key) as the key for itemCollectionMap
           itemCollectionMap[item.key] = item.data.collections;
+
+          // Generate bibtexKey and map to collections
+          const bibtexKey = generateBibtexKeyFromZoteroItem(item);
+          bibtexKeyToCollections[bibtexKey] = item.data.collections;
         }
       }
 
       console.log(`📁 ${collectionsData.length} collections récupérées`);
-      console.log(`📎 ${Object.keys(itemCollectionMap).length} items avec collections`);
+      console.log(`📎 ${Object.keys(itemCollectionMap).length} items avec collections (zoteroKey)`);
+      console.log(`📎 ${Object.keys(bibtexKeyToCollections).length} items avec collections (bibtexKey)`);
 
       return {
         success: true,
@@ -138,6 +184,7 @@ class ZoteroService {
         bibtexPath: result.bibtexPath,
         collections: collectionsData,
         itemCollectionMap,
+        bibtexKeyToCollections,
       };
     } catch (error: any) {
       console.error('Zotero sync failed:', error);
