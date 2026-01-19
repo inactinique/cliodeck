@@ -5,6 +5,7 @@ import { ipcMain } from 'electron';
 import { bibliographyService } from '../../services/bibliography-service.js';
 import { successResponse, errorResponse } from '../utils/error-handler.js';
 import { OrphanPDFDetector } from '../../../../backend/services/OrphanPDFDetector.js';
+import { BibliographyMetadataService } from '../../../../backend/services/BibliographyMetadataService.js';
 
 export function setupBibliographyHandlers() {
   ipcMain.handle('bibliography:load', async (_event, filePath: string) => {
@@ -166,6 +167,70 @@ export function setupBibliographyHandlers() {
     } catch (error: any) {
       console.error('❌ bibliography:archive-orphan-pdfs error:', error);
       return errorResponse(error);
+    }
+  });
+
+  // Save bibliography metadata (zoteroAttachments, etc.)
+  ipcMain.handle('bibliography:save-metadata', async (_event, options: {
+    projectPath: string;
+    citations: any[];
+  }) => {
+    console.log('📞 IPC Call: bibliography:save-metadata', {
+      projectPath: options.projectPath,
+      citationCount: options.citations.length
+    });
+    try {
+      await BibliographyMetadataService.saveMetadata(options.projectPath, options.citations);
+      console.log('📤 IPC Response: bibliography:save-metadata - Success');
+      return successResponse({ success: true });
+    } catch (error: any) {
+      console.error('❌ bibliography:save-metadata error:', error);
+      return errorResponse(error);
+    }
+  });
+
+  // Load bibliography metadata
+  ipcMain.handle('bibliography:load-metadata', async (_event, projectPath: string) => {
+    console.log('📞 IPC Call: bibliography:load-metadata', { projectPath });
+    try {
+      const metadata = await BibliographyMetadataService.loadMetadata(projectPath);
+      console.log('📤 IPC Response: bibliography:load-metadata', {
+        hasMetadata: !!metadata,
+        citationCount: metadata ? Object.keys(metadata.citations).length : 0
+      });
+      return successResponse({ metadata });
+    } catch (error: any) {
+      console.error('❌ bibliography:load-metadata error:', error);
+      return errorResponse(error);
+    }
+  });
+
+  // Load bibliography with metadata merged
+  ipcMain.handle('bibliography:load-with-metadata', async (_event, options: {
+    filePath: string;
+    projectPath: string;
+  }) => {
+    console.log('📞 IPC Call: bibliography:load-with-metadata', {
+      filePath: options.filePath,
+      projectPath: options.projectPath
+    });
+    try {
+      // Load citations from BibTeX
+      const citations = await bibliographyService.loadFromFile(options.filePath);
+
+      // Load and merge metadata
+      const metadata = await BibliographyMetadataService.loadMetadata(options.projectPath);
+      const mergedCitations = BibliographyMetadataService.mergeCitationsWithMetadata(citations, metadata);
+
+      console.log('📤 IPC Response: bibliography:load-with-metadata', {
+        totalCitations: mergedCitations.length,
+        withMetadata: metadata ? Object.keys(metadata.citations).length : 0
+      });
+
+      return successResponse({ citations: mergedCitations });
+    } catch (error: any) {
+      console.error('❌ bibliography:load-with-metadata error:', error);
+      return { ...errorResponse(error), citations: [] };
     }
   });
 

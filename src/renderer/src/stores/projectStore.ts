@@ -105,8 +105,9 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
         try {
           const { useBibliographyStore } = await import('./bibliographyStore');
           console.log('📚 Loading bibliography from:', bibliographyPath);
-          await useBibliographyStore.getState().loadBibliography(bibliographyPath);
-          console.log('✅ Bibliography loaded for project');
+          // Use loadBibliographyWithMetadata to restore zoteroAttachments from metadata file
+          await useBibliographyStore.getState().loadBibliographyWithMetadata(bibliographyPath, project.path);
+          console.log('✅ Bibliography loaded for project (with metadata)');
           // Refresh indexed PDFs to update the Chat panel state
           await useBibliographyStore.getState().refreshIndexedPDFs();
           console.log('✅ Indexed PDFs refreshed');

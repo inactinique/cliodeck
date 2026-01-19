@@ -70,6 +70,10 @@ const api = {
   // Bibliography
   bibliography: {
     load: (filePath: string) => ipcRenderer.invoke('bibliography:load', filePath),
+    loadWithMetadata: (options: {
+      filePath: string;
+      projectPath: string;
+    }) => ipcRenderer.invoke('bibliography:load-with-metadata', options),
     parse: (content: string) => ipcRenderer.invoke('bibliography:parse', content),
     search: (query: string) => ipcRenderer.invoke('bibliography:search', query),
     getStatistics: (citations?: any[]) => ipcRenderer.invoke('bibliography:get-statistics', citations),
@@ -94,6 +98,11 @@ const api = {
       projectPath: string;
       archiveSubdir?: string;
     }) => ipcRenderer.invoke('bibliography:archive-orphan-pdfs', options),
+    saveMetadata: (options: {
+      projectPath: string;
+      citations: any[];
+    }) => ipcRenderer.invoke('bibliography:save-metadata', options),
+    loadMetadata: (projectPath: string) => ipcRenderer.invoke('bibliography:load-metadata', projectPath),
   },
 
   // Editor

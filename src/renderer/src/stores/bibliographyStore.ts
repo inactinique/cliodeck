@@ -75,6 +75,7 @@ interface BibliographyState {
 
   // Actions
   loadBibliography: (filePath: string) => Promise<void>;
+  loadBibliographyWithMetadata: (filePath: string, projectPath: string) => Promise<void>;
   mergeBibliography: (filePath: string) => Promise<{ newCitations: number; duplicates: number; total: number }>;
   searchCitations: (query: string) => void;
   setSortBy: (field: 'author' | 'year' | 'title') => void;
@@ -139,6 +140,36 @@ export const useBibliographyStore = create<BibliographyState>((set, get) => ({
       }
     } catch (error) {
       console.error('Failed to load bibliography:', error);
+      throw error;
+    }
+  },
+
+  loadBibliographyWithMetadata: async (filePath: string, projectPath: string) => {
+    try {
+      const result = await window.electron.bibliography.loadWithMetadata({
+        filePath,
+        projectPath,
+      });
+
+      if (result.success && Array.isArray(result.citations)) {
+        // Count citations with zotero metadata
+        const withZotero = result.citations.filter(
+          (c: Citation) => c.zoteroAttachments && c.zoteroAttachments.length > 0
+        ).length;
+        console.log(`📚 Loaded ${result.citations.length} citations (${withZotero} with Zotero metadata)`);
+
+        set({
+          citations: result.citations,
+          filteredCitations: result.citations,
+        });
+
+        get().applyFilters();
+      } else {
+        console.error('Invalid response from bibliography.loadWithMetadata:', result);
+        throw new Error(result.error || 'Failed to load bibliography with metadata');
+      }
+    } catch (error) {
+      console.error('Failed to load bibliography with metadata:', error);
       throw error;
     }
   },
@@ -631,13 +662,33 @@ export const useBibliographyStore = create<BibliographyState>((set, get) => ({
 
       console.log(`✅ PDF downloaded to: ${downloadResult.filePath}`);
 
-      // Update citation with local file path
-      const updatedCitations = citations.map((c) =>
-        c.id === citationId ? { ...c, file: downloadResult.filePath } : c
-      );
+      // Update citation with local file path and mark attachment as downloaded
+      const updatedCitations = citations.map((c) => {
+        if (c.id === citationId) {
+          // Also update the zoteroAttachment to mark it as downloaded with local path
+          const updatedAttachments = c.zoteroAttachments?.map((att) =>
+            att.key === attachmentKey
+              ? { ...att, downloaded: true, localPath: downloadResult.filePath }
+              : att
+          );
+          return { ...c, file: downloadResult.filePath, zoteroAttachments: updatedAttachments };
+        }
+        return c;
+      });
 
       set({ citations: updatedCitations });
       get().applyFilters();
+
+      // Save updated metadata to persist the local file path
+      try {
+        await window.electron.bibliography.saveMetadata({
+          projectPath,
+          citations: updatedCitations,
+        });
+        console.log('💾 Metadata saved after PDF download');
+      } catch (metaError) {
+        console.error('⚠️ Failed to save metadata after PDF download:', metaError);
+      }
 
       // Index the downloaded PDF
       console.log(`🔍 Indexing downloaded PDF for citation: ${citation.title}`);

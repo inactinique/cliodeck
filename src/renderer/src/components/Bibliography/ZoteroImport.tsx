@@ -132,6 +132,19 @@ export const ZoteroImport: React.FC = () => {
             (c: any) => c.zoteroAttachments && c.zoteroAttachments.length > 0
           ).length;
           console.log(`📎 ${withPDFs} citations have PDF attachments available in Zotero`);
+
+          // Save metadata to persist zoteroAttachments across restarts
+          if (targetDirectory) {
+            try {
+              await window.electron.bibliography.saveMetadata({
+                projectPath: targetDirectory,
+                citations: enrichResult.citations,
+              });
+              console.log('💾 Bibliography metadata saved for persistence');
+            } catch (metaError) {
+              console.error('⚠️ Failed to save bibliography metadata:', metaError);
+            }
+          }
         } else {
           console.warn('⚠️ Failed to enrich citations with attachment info:', enrichResult.error);
         }
@@ -226,6 +239,19 @@ export const ZoteroImport: React.FC = () => {
       if (result.success && result.finalCitations) {
         // Update bibliography store with new citations
         useBibliographyStore.setState({ citations: result.finalCitations });
+
+        // Save metadata to persist zoteroAttachments across restarts
+        if (currentProject?.path) {
+          try {
+            await window.electron.bibliography.saveMetadata({
+              projectPath: currentProject.path,
+              citations: result.finalCitations,
+            });
+            console.log('💾 Bibliography metadata saved after sync');
+          } catch (metaError) {
+            console.error('⚠️ Failed to save bibliography metadata:', metaError);
+          }
+        }
 
         // Show summary
         alert(
