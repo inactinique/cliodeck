@@ -224,19 +224,36 @@ export class ZoteroAPI {
 
   /**
    * Exporte une collection en BibTeX (inclut récursivement les sous-collections)
+   * Déduplique les entrées pour éviter les doublons quand un item est dans plusieurs collections
    */
   async exportCollectionAsBibTeX(collectionKey: string, includeSubcollections: boolean = true): Promise<string> {
-    const allBibTeX: string[] = [];
-    let totalEntries = 0;
+    // Use a Map to store unique entries by their BibTeX key
+    const uniqueEntries = new Map<string, string>();
+
+    // Helper function to extract entries from BibTeX string and add to map
+    const addEntriesToMap = (bibtex: string) => {
+      // Split by @ to get individual entries
+      const entries = bibtex.split(/(?=@\w+\{)/);
+      for (const entry of entries) {
+        const trimmed = entry.trim();
+        if (!trimmed || !trimmed.startsWith('@')) continue;
+
+        // Extract the BibTeX key (e.g., @article{smith2020, -> smith2020)
+        const keyMatch = trimmed.match(/@\w+\{([^,]+),/);
+        if (keyMatch && keyMatch[1]) {
+          const bibKey = keyMatch[1].trim();
+          // Only add if not already present (keep first occurrence)
+          if (!uniqueEntries.has(bibKey)) {
+            uniqueEntries.set(bibKey, trimmed);
+          }
+        }
+      }
+    };
 
     // Export main collection
     const mainBibTeX = await this.exportSingleCollectionAsBibTeX(collectionKey);
-    const mainEntryCount = (mainBibTeX.match(/@\w+\{/g) || []).length;
-    if (mainBibTeX && mainBibTeX.trim().length > 0) {
-      allBibTeX.push(mainBibTeX);
-      totalEntries += mainEntryCount;
-    }
-    console.log(`📚 Collection principale: ${mainEntryCount} entrées`);
+    addEntriesToMap(mainBibTeX);
+    console.log(`📚 Collection principale: ${uniqueEntries.size} entrées uniques`);
 
     // Export subcollections if requested
     if (includeSubcollections) {
@@ -244,18 +261,17 @@ export class ZoteroAPI {
       console.log(`🔍 ${subcollections.length} sous-collections trouvées`);
 
       for (const subcol of subcollections) {
+        const beforeCount = uniqueEntries.size;
         const subBibTeX = await this.exportCollectionAsBibTeX(subcol.key, true); // Recursive
-        const subEntryCount = (subBibTeX.match(/@\w+\{/g) || []).length;
-        if (subBibTeX && subBibTeX.trim().length > 0 && subEntryCount > 0) {
-          allBibTeX.push(subBibTeX);
-          totalEntries += subEntryCount;
-        }
-        console.log(`  📁 Sous-collection "${subcol.data.name}": ${subEntryCount} entrées`);
+        // Parse and add entries (deduplication happens in addEntriesToMap)
+        addEntriesToMap(subBibTeX);
+        const newEntries = uniqueEntries.size - beforeCount;
+        console.log(`  📁 Sous-collection "${subcol.data.name}": ${newEntries} nouvelles entrées`);
       }
     }
 
-    console.log(`📚 Total BibTeX entries fetched: ${totalEntries}`);
-    return allBibTeX.join('\n\n');
+    console.log(`📚 Total BibTeX entries (deduplicated): ${uniqueEntries.size}`);
+    return Array.from(uniqueEntries.values()).join('\n\n');
   }
 
   /**

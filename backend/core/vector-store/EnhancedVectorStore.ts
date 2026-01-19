@@ -537,6 +537,45 @@ export class EnhancedVectorStore {
   close(): void {
     this.vectorStore.close();
   }
+
+  // ============================================
+  // Zotero Collections Methods (delegated)
+  // ============================================
+
+  /**
+   * Save Zotero collections to database
+   */
+  saveCollections(collections: Array<{ key: string; name: string; parentKey?: string }>): void {
+    this.vectorStore.saveCollections(collections);
+  }
+
+  /**
+   * Get all Zotero collections
+   */
+  getAllCollections(): Array<{ key: string; name: string; parentKey?: string }> {
+    return this.vectorStore.getAllCollections();
+  }
+
+  /**
+   * Set collections for a document
+   */
+  setDocumentCollections(documentId: string, collectionKeys: string[]): void {
+    this.vectorStore.setDocumentCollections(documentId, collectionKeys);
+  }
+
+  /**
+   * Get document IDs that belong to specified collections
+   */
+  getDocumentIdsInCollections(collectionKeys: string[], recursive: boolean = true): string[] {
+    return this.vectorStore.getDocumentIdsInCollections(collectionKeys, recursive);
+  }
+
+  /**
+   * Delete all collections (used when re-syncing)
+   */
+  deleteAllCollections(): void {
+    this.vectorStore.deleteAllCollections();
+  }
 }
 
 export interface EnhancedStats {
