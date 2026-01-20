@@ -31,7 +31,7 @@ export const EmbeddedLLMSection: React.FC = () => {
 
   const [models, setModels] = useState<ModelInfo[]>([]);
   const [downloadProgress, setDownloadProgress] = useState<DownloadProgress | null>(null);
-  const [isDownloading, setIsDownloading] = useState(false);
+  const [downloadingModelId, setDownloadingModelId] = useState<string | null>(null);
   const [usedSpace, setUsedSpace] = useState<string>('0 MB');
   const [modelsDirectory, setModelsDirectory] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
@@ -45,7 +45,7 @@ export const EmbeddedLLMSection: React.FC = () => {
     const unsubscribe = window.electron.embeddedLLM.onDownloadProgress((progress) => {
       setDownloadProgress(progress);
       if (progress.status === 'complete' || progress.status === 'error' || progress.status === 'cancelled') {
-        setIsDownloading(false);
+        setDownloadingModelId(null);
         loadData(); // Refresh model list
       }
     });
@@ -79,8 +79,8 @@ export const EmbeddedLLMSection: React.FC = () => {
       if (directoryRes?.success) {
         setModelsDirectory(directoryRes.directory || '');
       }
-      if (downloadingRes?.success) {
-        setIsDownloading(downloadingRes.downloading || false);
+      if (downloadingRes?.success && downloadingRes.downloading && downloadingRes.modelId) {
+        setDownloadingModelId(downloadingRes.modelId);
       }
     } catch (err) {
       console.error('Failed to load embedded LLM data:', err);
@@ -93,7 +93,7 @@ export const EmbeddedLLMSection: React.FC = () => {
   const handleDownload = async (modelId: string) => {
     try {
       setError(null);
-      setIsDownloading(true);
+      setDownloadingModelId(modelId);
       setDownloadProgress({
         percent: 0,
         downloadedMB: 0,
@@ -108,7 +108,7 @@ export const EmbeddedLLMSection: React.FC = () => {
     } catch (err: any) {
       console.error('Download failed:', err);
       setError(err.message || t('embeddedLLM.downloadError'));
-      setIsDownloading(false);
+      setDownloadingModelId(null);
     }
   };
 
@@ -232,13 +232,28 @@ export const EmbeddedLLMSection: React.FC = () => {
                             <Trash2 size={16} />
                           </button>
                         </>
-                      ) : isDownloading ? (
+                      ) : downloadingModelId === model.id ? (
                         <button
                           onClick={handleCancelDownload}
                           className="config-btn-small"
                           style={{ padding: '6px 12px' }}
                         >
                           {t('embeddedLLM.cancel')}
+                        </button>
+                      ) : downloadingModelId !== null ? (
+                        <button
+                          className="config-btn-small"
+                          disabled
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '6px',
+                            padding: '6px 12px',
+                            opacity: 0.5
+                          }}
+                        >
+                          <Download size={16} />
+                          {t('embeddedLLM.download')}
                         </button>
                       ) : (
                         <button
@@ -259,8 +274,8 @@ export const EmbeddedLLMSection: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* Download Progress */}
-                  {isDownloading && downloadProgress && (
+                  {/* Download Progress - only show for the model being downloaded */}
+                  {downloadingModelId === model.id && downloadProgress && (
                     <div style={{ marginTop: '12px' }}>
                       <div style={{
                         height: '6px',

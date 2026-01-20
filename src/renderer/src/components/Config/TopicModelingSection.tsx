@@ -2,6 +2,7 @@
  * TopicModelingSection - Gestion de l'environnement Python pour le topic modeling
  */
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { CollapsibleSection } from '../common/CollapsibleSection';
 import './ConfigPanel.css';
 
@@ -13,12 +14,13 @@ interface TopicModelingStatus {
 }
 
 export const TopicModelingSection: React.FC = () => {
+  const { t } = useTranslation('common');
   const [status, setStatus] = useState<TopicModelingStatus | null>(null);
   const [loading, setLoading] = useState(false);
   const [installing, setInstalling] = useState(false);
   const [installProgress, setInstallProgress] = useState<string[]>([]);
 
-  // Charger le statut au montage
+  // Load status on mount
   useEffect(() => {
     checkStatus();
   }, []);
@@ -35,7 +37,7 @@ export const TopicModelingSection: React.FC = () => {
       }
     } catch (error: any) {
       console.error('Failed to check topic modeling status:', error);
-      setStatus({ installed: false, error: error.message || 'Erreur inconnue' });
+      setStatus({ installed: false, error: error.message || t('topicModeling.installError') });
     } finally {
       setLoading(false);
     }
@@ -45,7 +47,7 @@ export const TopicModelingSection: React.FC = () => {
     setInstalling(true);
     setInstallProgress([]);
 
-    // Écouter les messages de progression
+    // Listen for progress messages
     const removeListener = window.electron.topicModeling.onSetupProgress((message) => {
       setInstallProgress((prev) => [...prev, message]);
     });
@@ -54,18 +56,18 @@ export const TopicModelingSection: React.FC = () => {
       const result = await window.electron.topicModeling.setupEnvironment();
 
       if (result.success && result.data.success) {
-        setInstallProgress((prev) => [...prev, '✅ Installation terminée avec succès']);
-        // Recharger le statut
+        setInstallProgress((prev) => [...prev, `✅ ${t('topicModeling.installSuccess')}`]);
+        // Reload status
         await checkStatus();
       } else {
         setInstallProgress((prev) => [
           ...prev,
-          `❌ Erreur: ${result.data?.error || result.error || 'Installation échouée'}`,
+          `❌ ${t('topicModeling.installError')}: ${result.data?.error || result.error || 'Unknown error'}`,
         ]);
       }
     } catch (error: any) {
       console.error('Failed to setup environment:', error);
-      setInstallProgress((prev) => [...prev, `❌ Erreur: ${error.message}`]);
+      setInstallProgress((prev) => [...prev, `❌ ${t('topicModeling.installError')}: ${error.message}`]);
     } finally {
       setInstalling(false);
       removeListener();
@@ -73,30 +75,29 @@ export const TopicModelingSection: React.FC = () => {
   };
 
   return (
-    <CollapsibleSection title="Topic Modeling (Optionnel)" defaultExpanded={false}>
+    <CollapsibleSection title={t('topicModeling.title')} defaultExpanded={false}>
       <div className="config-section">
         <div className="config-section-content">
           <p className="config-help">
-            Le topic modeling utilise BERTopic (Python) pour identifier les thèmes principaux dans votre corpus.
-            Cette fonctionnalité est optionnelle et nécessite l'installation d'un environnement Python.
+            {t('topicModeling.description')}
           </p>
 
           {loading ? (
-            <p className="config-help">Chargement...</p>
+            <p className="config-help">{t('topicModeling.loading')}</p>
           ) : (
             <>
               <div className="topic-modeling-status">
                 <div className={`status-indicator ${status?.installed ? 'status-success' : 'status-warning'}`}>
                   <span className="status-dot"></span>
                   <span className="status-text">
-                    {status?.installed ? 'Installé' : 'Non installé'}
+                    {status?.installed ? t('topicModeling.installed') : t('topicModeling.notInstalled')}
                   </span>
                 </div>
 
                 {status?.installed && status.pythonVersion && (
                   <div className="status-details">
-                    <p>Version Python: {status.pythonVersion}</p>
-                    <p className="status-path">Venv: {status.venvPath}</p>
+                    <p>{t('topicModeling.pythonVersion')}: {status.pythonVersion}</p>
+                    <p className="status-path">{t('topicModeling.venvPath')}: {status.venvPath}</p>
                   </div>
                 )}
 
@@ -110,17 +111,17 @@ export const TopicModelingSection: React.FC = () => {
               <div className="config-actions">
                 {(!status || !status.installed) && (
                   <button onClick={setupEnvironment} disabled={installing} className="btn-primary">
-                    {installing ? 'Installation en cours...' : 'Installer l\'environnement Python'}
+                    {installing ? t('topicModeling.installingButton') : t('topicModeling.installButton')}
                   </button>
                 )}
 
                 {status && status.installed && (
                   <>
                     <button onClick={setupEnvironment} disabled={installing} className="btn-secondary">
-                      {installing ? 'Réinstallation en cours...' : 'Réinstaller'}
+                      {installing ? t('topicModeling.reinstallingButton') : t('topicModeling.reinstallButton')}
                     </button>
                     <button onClick={checkStatus} disabled={loading || installing} className="btn-secondary">
-                      Vérifier
+                      {t('topicModeling.checkButton')}
                     </button>
                   </>
                 )}
@@ -140,7 +141,7 @@ export const TopicModelingSection: React.FC = () => {
 
               {!installing && installProgress.length > 0 && (
                 <button onClick={() => setInstallProgress([])} className="btn-text">
-                  Effacer le log
+                  {t('topicModeling.clearLog')}
                 </button>
               )}
             </>

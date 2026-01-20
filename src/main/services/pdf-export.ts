@@ -399,6 +399,27 @@ $body$
   }
 };
 
+/**
+ * Unescape citation keys that were escaped by Milkdown editor
+ * Transforms \[@citation\_key] back to [@citation_key]
+ */
+const unescapeCitations = (content: string): string => {
+  // Pattern to match escaped citations: \[@key\_with\_underscores]
+  // This handles the backslash before @ and underscores within citation keys
+  return content
+    // First, unescape the opening bracket: \[@ -> [@
+    .replace(/\\(\[@)/g, '$1')
+    // Then, unescape underscores within citation brackets [@...\_...] -> [@..._...]
+    .replace(/(\[@[^\]]*)\\_([^\]]*\])/g, (_match, before, after) => {
+      // Recursively unescape all underscores in the citation
+      let result = before + '_' + after;
+      while (result.includes('\\_')) {
+        result = result.replace('\\_', '_');
+      }
+      return result;
+    });
+};
+
 // MARK: - Service
 
 export class PDFExportService {
@@ -487,11 +508,12 @@ export class PDFExportService {
         }
       }
 
-      // Write markdown content
+      // Write markdown content (unescape citations that were escaped by Milkdown)
       const mdPath = join(tempDir, 'input.md');
-      await writeFile(mdPath, options.content);
+      const cleanedContent = unescapeCitations(options.content);
+      await writeFile(mdPath, cleanedContent);
       console.log('📝 Markdown content written:', mdPath);
-      console.log('📝 Content preview (first 500 chars):', options.content.substring(0, 500));
+      console.log('📝 Content preview (first 500 chars):', cleanedContent.substring(0, 500));
 
       // Write template
       const templatePath = join(tempDir, 'template.latex');

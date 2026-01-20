@@ -17,13 +17,22 @@ export const CitationCard: React.FC<CitationCardProps> = ({ citation }) => {
   const [isIndexing, setIsIndexing] = useState(false);
   const [showPDFSelection, setShowPDFSelection] = useState(false);
   const [showMetadataModal, setShowMetadataModal] = useState(false);
-  const { selectCitation, insertCitation, indexPDFFromCitation, reindexPDFFromCitation, isFileIndexed, downloadAndIndexZoteroPDF, updateCitationMetadata, getAllTags } = useBibliographyStore();
+  const { selectCitation, insertCitation, indexPDFFromCitation, reindexPDFFromCitation, downloadAndIndexZoteroPDF, updateCitationMetadata, getAllTags, indexedFilePaths, indexedBibtexKeys } = useBibliographyStore();
   const { currentProject } = useProjectStore();
 
   const hasPDF = !!citation.file;
   const hasZoteroPDFs = !!citation.zoteroAttachments && citation.zoteroAttachments.length > 0;
   const zoteroCount = citation.zoteroAttachments?.length || 0;
-  const isIndexed = hasPDF && isFileIndexed(citation.file!);
+  // Check if indexed by file path OR by bibtexKey (for cases where PDFs were indexed separately)
+  // Subscribe to the actual state (indexedFilePaths, indexedBibtexKeys) to trigger re-renders
+  const isIndexedByFile = hasPDF && indexedFilePaths.has(citation.file!);
+  const isIndexedByKey = indexedBibtexKeys.has(citation.id);
+  const isIndexed = isIndexedByFile || isIndexedByKey;
+
+  // Debug: log for first citation only
+  if (citation.id === 'unesco_ai_2025') {
+    console.log(`🔍 CitationCard[${citation.id}]: indexedBibtexKeys.size=${indexedBibtexKeys.size}, isIndexedByKey=${isIndexedByKey}, isIndexed=${isIndexed}`);
+  }
 
   // Note: refreshIndexedPDFs is called once at the BibliographyPanel level,
   // no need to call it for each card
@@ -114,7 +123,7 @@ export const CitationCard: React.FC<CitationCardProps> = ({ citation }) => {
           <div className="citation-main">
             <div className="citation-author">{citation.author}</div>
             <div className="citation-year">({citation.year})</div>
-            {hasPDF && (
+            {(hasPDF || isIndexedByKey) && (
               <span className="pdf-badge" title={isIndexed ? t('bibliography.indexed') : t('bibliography.notIndexed')}>
                 {isIndexed ? '✅' : '📄'}
               </span>
@@ -176,7 +185,7 @@ export const CitationCard: React.FC<CitationCardProps> = ({ citation }) => {
               <button className="action-btn primary" onClick={handleInsert}>
                 ✍️ {t('bibliography.insertCitation')}
               </button>
-              {(hasPDF || hasZoteroPDFs) && (
+              {(hasPDF || hasZoteroPDFs || isIndexedByKey) && (
                 <button
                   className={`action-btn ${isIndexed ? 'indexed' : 'secondary'}`}
                   onClick={handleIndexPDF}

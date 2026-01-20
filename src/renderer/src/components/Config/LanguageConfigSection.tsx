@@ -11,6 +11,21 @@ export const LanguageConfigSection: React.FC = () => {
   const handleLanguageChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
     const newLanguage = e.target.value as SupportedLanguage;
     await setLanguage(newLanguage);
+
+    // Sync systemPromptLanguage with the new language (only FR/EN are supported for prompts)
+    if (newLanguage === 'fr' || newLanguage === 'en') {
+      try {
+        const currentRag = await window.electron.config.get('rag') || {};
+        console.log('Syncing systemPromptLanguage to:', newLanguage, 'current RAG config:', currentRag);
+        await window.electron.config.set('rag', {
+          ...currentRag,
+          systemPromptLanguage: newLanguage
+        });
+        console.log('systemPromptLanguage synced successfully');
+      } catch (error) {
+        console.error('Failed to sync systemPromptLanguage:', error);
+      }
+    }
   };
 
   return (

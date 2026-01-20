@@ -120,7 +120,7 @@ export const useJournalStore = create<JournalState>((set, get) => ({
   allChatMessages: [],
   loading: false,
   error: null,
-  hideEmptySessions: false,
+  hideEmptySessions: true,  // Hide empty sessions by default
   viewScope: 'session',
   filters: {},
 

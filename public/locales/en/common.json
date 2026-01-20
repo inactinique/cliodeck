@@ -270,7 +270,15 @@
     "cslSaveError": "Error saving CSL path",
     "cslRemoveError": "Error removing CSL path",
     "openInFinder": "Open in Finder",
-    "openFolderError": "Error opening project folder"
+    "openFolderError": "Error opening project folder",
+    "zoteroSettings": "Zotero Settings",
+    "zoteroSettingsHelp": "Configure Zotero group and collection specific to this project. These settings override global Zotero configuration.",
+    "zoteroGroupId": "Group ID",
+    "zoteroGroupIdPlaceholder": "Enter Zotero group ID",
+    "zoteroGroupIdHelp": "The numeric ID of your Zotero group (found in the group URL)",
+    "zoteroCollectionKey": "Collection Key",
+    "zoteroCollectionKeyPlaceholder": "Enter collection key (optional)",
+    "zoteroCollectionKeyHelp": "The key of a specific collection within the group (optional)"
   },
   "export": {
     "pdf": {
@@ -353,6 +361,8 @@
       "custom": "Uses the custom model above, no fallback (for advanced users)"
     },
     "availableModels": "Available models",
+    "modelsAvailable": "models available",
+    "noModelsLoaded": "Click 🔄 to load models from Ollama",
     "refreshModels": "Refresh models",
     "testConnection": "Test connection",
     "connectionSuccess": "Connection successful!",
@@ -755,5 +765,22 @@
     "dismiss": "Dismiss",
     "showMore": "Show more",
     "showLess": "Show less"
+  },
+  "topicModeling": {
+    "title": "Topic Modeling (Optional)",
+    "description": "Topic modeling uses BERTopic (Python) to identify the main themes in your corpus. This feature is optional and requires installing a Python environment.",
+    "loading": "Loading...",
+    "installed": "Installed",
+    "notInstalled": "Not installed",
+    "pythonVersion": "Python version",
+    "venvPath": "Venv",
+    "installButton": "Install Python environment",
+    "installingButton": "Installing...",
+    "reinstallButton": "Reinstall",
+    "reinstallingButton": "Reinstalling...",
+    "checkButton": "Check",
+    "clearLog": "Clear log",
+    "installSuccess": "Installation completed successfully",
+    "installError": "Error"
   }
 }

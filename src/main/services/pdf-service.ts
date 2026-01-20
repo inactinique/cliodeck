@@ -514,10 +514,15 @@ class PDFService {
       totalCitationsExtracted: totalCitationsExtracted, // Total des citations extraites
       languageCount: languages.size,
       languages: Array.from(languages),
-      yearRange: years.size > 0 ? {
-        min: Math.min(...Array.from(years).map(y => parseInt(y))),
-        max: Math.max(...Array.from(years).map(y => parseInt(y))),
-      } : null,
+      yearRange: (() => {
+        const validYears = Array.from(years)
+          .map(y => parseInt(y))
+          .filter(y => !isNaN(y) && y > 0);
+        return validYears.length > 0 ? {
+          min: Math.min(...validYears),
+          max: Math.max(...validYears),
+        } : null;
+      })(),
       authorCount: authors.size,
     };
   }

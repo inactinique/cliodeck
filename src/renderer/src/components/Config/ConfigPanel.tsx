@@ -7,7 +7,6 @@ import { EmbeddedLLMSection } from './EmbeddedLLMSection';
 import { EditorConfigSection, type EditorConfig } from './EditorConfigSection';
 import { UIConfigSection } from './UIConfigSection';
 import { LanguageConfigSection } from './LanguageConfigSection';
-import { ActionsSection } from './ActionsSection';
 import { TopicModelingSection } from './TopicModelingSection';
 import { ZoteroConfigSection, type ZoteroConfig } from './ZoteroConfigSection';
 import { useEditorStore } from '../../stores/editorStore';
@@ -93,7 +92,20 @@ export const ConfigPanel: React.FC = () => {
   // Load configuration on mount
   useEffect(() => {
     loadConfig();
+    handleRefreshModels();
   }, []);
+
+  // Refresh Ollama models list
+  const handleRefreshModels = async () => {
+    try {
+      const response = await window.electron.ollama.listModels();
+      if (response.success && response.models) {
+        setAvailableModels(response.models.map((m: any) => m.name || m.id));
+      }
+    } catch (error) {
+      console.error('Failed to refresh Ollama models:', error);
+    }
+  };
 
   // Sync editorConfig with editorStore on mount
   useEffect(() => {
@@ -254,7 +266,7 @@ export const ConfigPanel: React.FC = () => {
           config={llmConfig}
           onChange={setLLMConfig}
           availableModels={availableModels}
-          onRefreshModels={() => {/* TODO */}}
+          onRefreshModels={handleRefreshModels}
         />
 
         <EmbeddedLLMSection />
@@ -270,8 +282,6 @@ export const ConfigPanel: React.FC = () => {
         />
 
         <TopicModelingSection />
-
-        <ActionsSection />
       </div>
     </div>
   );

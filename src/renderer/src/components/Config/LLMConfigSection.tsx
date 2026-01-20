@@ -52,13 +52,28 @@ export const LLMConfigSection: React.FC<LLMConfigSectionProps> = ({
               </span>
             </label>
             <div className="config-input-group">
-              <input
-                type="text"
-                value={config.ollamaChatModel}
-                onChange={(e) => handleFieldChange('ollamaChatModel', e.target.value)}
-                className="config-input"
-                placeholder="gemma2:2b"
-              />
+              {availableModels.length > 0 ? (
+                <select
+                  value={config.ollamaChatModel}
+                  onChange={(e) => handleFieldChange('ollamaChatModel', e.target.value)}
+                  className="config-input"
+                >
+                  {!availableModels.includes(config.ollamaChatModel) && config.ollamaChatModel && (
+                    <option value={config.ollamaChatModel}>{config.ollamaChatModel}</option>
+                  )}
+                  {availableModels.map((model) => (
+                    <option key={model} value={model}>{model}</option>
+                  ))}
+                </select>
+              ) : (
+                <input
+                  type="text"
+                  value={config.ollamaChatModel}
+                  onChange={(e) => handleFieldChange('ollamaChatModel', e.target.value)}
+                  className="config-input"
+                  placeholder="gemma2:2b"
+                />
+              )}
               <button
                 className="config-btn-small"
                 onClick={onRefreshModels}
@@ -69,7 +84,9 @@ export const LLMConfigSection: React.FC<LLMConfigSectionProps> = ({
             </div>
             <div className="config-description">
               <small>
-                {t('llm.embeddingStrategyRecommended')}
+                {availableModels.length > 0
+                  ? `${availableModels.length} ${t('llm.modelsAvailable')}`
+                  : t('llm.noModelsLoaded')}
                 <br />
                 • gemma2:2b (rapide, CPU)
                 <br />

@@ -682,5 +682,22 @@
     "filtered": "gefiltert",
     "noResults": "Keine Ergebnisse",
     "tryDifferentSearch": "Versuchen Sie einen anderen Suchbegriff"
+  },
+  "topicModeling": {
+    "title": "Topic Modeling (Optional)",
+    "description": "Topic Modeling verwendet BERTopic (Python), um die Hauptthemen in Ihrem Korpus zu identifizieren. Diese Funktion ist optional und erfordert die Installation einer Python-Umgebung.",
+    "loading": "Laden...",
+    "installed": "Installiert",
+    "notInstalled": "Nicht installiert",
+    "pythonVersion": "Python-Version",
+    "venvPath": "Venv",
+    "installButton": "Python-Umgebung installieren",
+    "installingButton": "Installation läuft...",
+    "reinstallButton": "Neu installieren",
+    "reinstallingButton": "Neuinstallation läuft...",
+    "checkButton": "Prüfen",
+    "clearLog": "Log löschen",
+    "installSuccess": "Installation erfolgreich abgeschlossen",
+    "installError": "Fehler"
   }
 }

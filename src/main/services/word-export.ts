@@ -348,6 +348,24 @@ class MarkdownToWordParser {
   }
 }
 
+/**
+ * Unescape citation keys that were escaped by Milkdown editor
+ * Transforms \[@citation\_key] back to [@citation_key]
+ */
+const unescapeCitations = (content: string): string => {
+  return content
+    // Unescape the opening bracket: \[@ -> [@
+    .replace(/\\(\[@)/g, '$1')
+    // Unescape underscores within citation brackets [@...\_...] -> [@..._...]
+    .replace(/(\[@[^\]]*)\\_([^\]]*\])/g, (_match, before, after) => {
+      let result = before + '_' + after;
+      while (result.includes('\\_')) {
+        result = result.replace('\\_', '_');
+      }
+      return result;
+    });
+};
+
 // MARK: - Service
 
 export class WordExportService {
@@ -422,7 +440,8 @@ export class WordExportService {
       }
       yamlFrontmatter += '---\n\n';
 
-      const fullContent = yamlFrontmatter + options.content;
+      const cleanedContent = unescapeCitations(options.content);
+      const fullContent = yamlFrontmatter + cleanedContent;
       await writeFile(inputPath, fullContent);
 
       // Build pandoc arguments

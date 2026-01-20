@@ -8,6 +8,8 @@ import { PDFExportModal } from '../Export/PDFExportModal';
 import { WordExportModal } from '../Export/WordExportModal';
 import { BeamerConfig } from './BeamerConfig';
 import { CSLSettings } from './CSLSettings';
+import { ActionsSection } from '../Config/ActionsSection';
+import { ZoteroProjectSettings } from './ZoteroProjectSettings';
 import './ProjectPanel.css';
 
 export const ProjectPanel: React.FC = () => {
@@ -273,6 +275,12 @@ export const ProjectPanel: React.FC = () => {
                 />
               </CollapsibleSection>
             )}
+
+            {/* Zotero Project Settings */}
+            <ZoteroProjectSettings projectPath={currentProject.path} />
+
+            {/* Database Actions - project-specific */}
+            <ActionsSection />
 
             <button
               className="project-btn"

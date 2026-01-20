@@ -164,7 +164,7 @@
   color: var(--text-tertiary);
   overflow: hidden;
   text-overflow: ellipsis;
-  var(--text-primary)-space: nowrap;
+  white-space: nowrap;
 }
 
 .create-project-modal {

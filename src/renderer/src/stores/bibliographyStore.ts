@@ -63,6 +63,7 @@ interface BibliographyState {
 
   // Indexed PDFs tracking
   indexedFilePaths: Set<string>;
+  indexedBibtexKeys: Set<string>;
 
   // Batch indexing state
   batchIndexing: BatchIndexingState;
@@ -96,6 +97,7 @@ interface BibliographyState {
   indexAllPDFs: () => Promise<{ indexed: number; skipped: number; errors: string[] }>;
   refreshIndexedPDFs: () => Promise<void>;
   isFileIndexed: (filePath: string) => boolean;
+  isBibtexKeyIndexed: (bibtexKey: string) => boolean;
   downloadAndIndexZoteroPDF: (citationId: string, attachmentKey: string, projectPath: string) => Promise<void>;
   downloadAllMissingPDFs: (projectPath: string) => Promise<{ downloaded: number; skipped: number; errors: string[] }>;
 
@@ -110,6 +112,7 @@ export const useBibliographyStore = create<BibliographyState>((set, get) => ({
   filteredCitations: [],
   selectedCitationId: null,
   indexedFilePaths: new Set<string>(),
+  indexedBibtexKeys: new Set<string>(),
   batchIndexing: {
     isIndexing: false,
     current: 0,
@@ -611,6 +614,12 @@ export const useBibliographyStore = create<BibliographyState>((set, get) => ({
 
         // Also get bibtex keys to match with citations
         const indexedBibtexKeys = new Set<string>();
+
+        // Debug: log first few documents to see structure
+        if (result.documents.length > 0) {
+          console.log('📄 Sample document structure:', JSON.stringify(result.documents[0], null, 2));
+        }
+
         result.documents.forEach((doc: any) => {
           // Document stores file path as fileURL (from backend)
           if (doc.fileURL) {
@@ -621,17 +630,26 @@ export const useBibliographyStore = create<BibliographyState>((set, get) => ({
           }
         });
 
+        // Debug: log sample bibtexKeys
+        const sampleKeys = Array.from(indexedBibtexKeys).slice(0, 5);
+        console.log('📎 Sample indexed bibtexKeys:', sampleKeys);
+
         // Match citations by bibtexKey and add their file paths
         const { citations } = get();
         console.log(`📋 Matching ${indexedBibtexKeys.size} bibtexKeys against ${citations.length} citations`);
+
+        // Debug: log sample citation IDs
+        const sampleCitationIds = citations.slice(0, 5).map(c => c.id);
+        console.log('📚 Sample citation IDs:', sampleCitationIds);
+
         citations.forEach((citation) => {
           if (citation.file && indexedBibtexKeys.has(citation.id)) {
             indexedPaths.add(citation.file);
           }
         });
 
-        set({ indexedFilePaths: indexedPaths });
-        console.log(`📚 Refreshed indexed PDFs: ${indexedPaths.size} files (${indexedBibtexKeys.size} bibtexKeys matched)`);
+        set({ indexedFilePaths: indexedPaths, indexedBibtexKeys });
+        console.log(`📚 Refreshed indexed PDFs: ${indexedPaths.size} files, ${indexedBibtexKeys.size} bibtexKeys`);
       } else {
         console.warn('⚠️ refreshIndexedPDFs: pdf.getAll returned no documents or failed', result);
       }
@@ -642,6 +660,10 @@ export const useBibliographyStore = create<BibliographyState>((set, get) => ({
 
   isFileIndexed: (filePath: string) => {
     return get().indexedFilePaths.has(filePath);
+  },
+
+  isBibtexKeyIndexed: (bibtexKey: string) => {
+    return get().indexedBibtexKeys.has(bibtexKey);
   },
 
   downloadAndIndexZoteroPDF: async (citationId: string, attachmentKey: string, projectPath: string) => {
