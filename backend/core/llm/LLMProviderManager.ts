@@ -23,6 +23,8 @@ export interface LLMProviderConfig {
   ollamaChatModel?: string;
   /** Modèle d'embeddings Ollama */
   ollamaEmbeddingModel?: string;
+  /** Stratégie d'embeddings: 'nomic-fallback', 'mxbai-only', 'custom' */
+  embeddingStrategy?: 'nomic-fallback' | 'mxbai-only' | 'custom';
 }
 
 export interface ProviderStatus {
@@ -48,7 +50,8 @@ export class LLMProviderManager {
     this.ollamaClient = new OllamaClient(
       config.ollamaURL || 'http://127.0.0.1:11434',
       config.ollamaChatModel,
-      config.ollamaEmbeddingModel
+      config.ollamaEmbeddingModel,
+      config.embeddingStrategy || 'nomic-fallback'
     );
 
     // Initialiser le client embarqué (non chargé tant qu'on n'appelle pas initialize)

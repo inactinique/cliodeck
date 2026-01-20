@@ -93,3 +93,9 @@ export interface DocumentPage {
   pageNumber: number;
   text: string;
 }
+
+export interface ZoteroCollectionInfo {
+  key: string;
+  name: string;
+  parentKey?: string;
+}

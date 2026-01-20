@@ -155,9 +155,19 @@ export const RAGConfigSection: React.FC<RAGConfigSectionProps> = ({ config, onCh
               <option value="large">Large (gros chunks, plus de contexte)</option>
             </select>
             <div className="config-description">
-              <small>
-                ⚠️ Changer cette option nécessite de ré-indexer tous les PDFs
-              </small>
+              <div style={{
+                padding: '8px 12px',
+                backgroundColor: '#fff3cd',
+                border: '1px solid #ffc107',
+                borderRadius: '4px',
+                marginTop: '8px'
+              }}>
+                <strong>⚠️ Attention :</strong> Changer cette option nécessite de ré-indexer tous les PDFs.
+                <br />
+                <small>
+                  Les chunks existants ne seront pas mis à jour automatiquement.
+                </small>
+              </div>
             </div>
           </div>
 

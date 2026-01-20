@@ -730,6 +730,66 @@ export class TopicModelingService {
   }
 
   /**
+   * Vérifie si les packages critiques sont installés dans le venv
+   * Note: On utilise une vérification rapide avec pip show au lieu d'importer les modules
+   * car bertopic peut prendre 30+ secondes à importer la première fois
+   */
+  private async checkCriticalPackages(venvPython: string): Promise<boolean> {
+    return new Promise<boolean>((resolve) => {
+      let resolved = false;
+      let timeoutId: NodeJS.Timeout;
+
+      const doResolve = (value: boolean) => {
+        if (!resolved) {
+          resolved = true;
+          clearTimeout(timeoutId);
+          resolve(value);
+        }
+      };
+
+      // Utiliser python -m pip show pour vérifier les packages sans les importer
+      // On utilise python -m pip au lieu de pip directement pour éviter les problèmes de shebang
+      const checkPackages = spawn(venvPython, ['-m', 'pip', 'show', 'bertopic', 'fastapi', 'uvicorn']);
+
+      let output = '';
+
+      checkPackages.stdout?.on('data', (data) => {
+        output += data.toString();
+      });
+
+      checkPackages.stderr?.on('data', () => {
+        // Ignore stderr - pip peut émettre des warnings
+      });
+
+      checkPackages.on('exit', (code) => {
+        // pip show retourne 0 si tous les packages sont trouvés
+        // et affiche "Name: bertopic", "Name: fastapi", "Name: uvicorn"
+        const hasBertopic = output.includes('Name: bertopic');
+        const hasFastapi = output.includes('Name: fastapi');
+        const hasUvicorn = output.includes('Name: uvicorn');
+
+        const isValid = code === 0 && hasBertopic && hasFastapi && hasUvicorn;
+        console.log(`📦 Package check: bertopic=${hasBertopic}, fastapi=${hasFastapi}, uvicorn=${hasUvicorn}`);
+        doResolve(isValid);
+      });
+
+      checkPackages.on('error', (err) => {
+        console.error('❌ Failed to check packages:', err);
+        doResolve(false);
+      });
+
+      // Timeout après 30 secondes (pip show est rapide, mais au cas où)
+      timeoutId = setTimeout(() => {
+        if (!resolved) {
+          checkPackages.kill();
+          console.warn('⚠️ Package check timed out');
+          doResolve(false);
+        }
+      }, 30000);
+    });
+  }
+
+  /**
    * Vérifie si l'environnement Python est installé et prêt
    */
   async checkEnvironmentStatus(): Promise<{
@@ -786,6 +846,17 @@ export class TopicModelingService {
 
         checkVersion.on('error', reject);
       });
+
+      // Vérifier que les packages critiques sont installés
+      const packagesOk = await this.checkCriticalPackages(venvPython);
+      if (!packagesOk) {
+        console.log('⚠️  Venv exists but critical packages are missing');
+        return {
+          installed: false,
+          venvPath: venvDir,
+          error: 'Virtual environment exists but required packages (bertopic, fastapi, uvicorn) are not installed',
+        };
+      }
 
       return {
         installed: true,

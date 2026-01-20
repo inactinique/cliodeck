@@ -7,7 +7,6 @@ import { EmbeddedLLMSection } from './EmbeddedLLMSection';
 import { EditorConfigSection, type EditorConfig } from './EditorConfigSection';
 import { UIConfigSection } from './UIConfigSection';
 import { LanguageConfigSection } from './LanguageConfigSection';
-import { ActionsSection } from './ActionsSection';
 import { TopicModelingSection } from './TopicModelingSection';
 import { ZoteroConfigSection, type ZoteroConfig } from './ZoteroConfigSection';
 import { useEditorStore } from '../../stores/editorStore';
@@ -43,6 +42,7 @@ export interface LLMConfig {
   ollamaURL: string;
   ollamaEmbeddingModel: string;
   ollamaChatModel: string;
+  embeddingStrategy?: 'nomic-fallback' | 'mxbai-only' | 'custom';
 }
 
 export const ConfigPanel: React.FC = () => {
@@ -68,6 +68,7 @@ export const ConfigPanel: React.FC = () => {
     ollamaURL: 'http://127.0.0.1:11434',
     ollamaEmbeddingModel: 'nomic-embed-text',
     ollamaChatModel: 'gemma2:2b',
+    embeddingStrategy: 'nomic-fallback',
   });
 
   const [editorConfig, setEditorConfig] = useState<EditorConfig>({
@@ -91,7 +92,20 @@ export const ConfigPanel: React.FC = () => {
   // Load configuration on mount
   useEffect(() => {
     loadConfig();
+    handleRefreshModels();
   }, []);
+
+  // Refresh Ollama models list
+  const handleRefreshModels = async () => {
+    try {
+      const response = await window.electron.ollama.listModels();
+      if (response.success && response.models) {
+        setAvailableModels(response.models.map((m: any) => m.name || m.id));
+      }
+    } catch (error) {
+      console.error('Failed to refresh Ollama models:', error);
+    }
+  };
 
   // Sync editorConfig with editorStore on mount
   useEffect(() => {
@@ -127,7 +141,16 @@ export const ConfigPanel: React.FC = () => {
           ...rag, // Override with saved values
         });
       }
-      if (llm) setLLMConfig(llm);
+      if (llm) {
+        setLLMConfig({
+          backend: 'ollama',
+          ollamaURL: 'http://127.0.0.1:11434',
+          ollamaEmbeddingModel: 'nomic-embed-text',
+          ollamaChatModel: 'gemma2:2b',
+          embeddingStrategy: 'nomic-fallback',
+          ...llm, // Override with saved values
+        });
+      }
       if (editor) setEditorConfig(editor);
       if (zotero) setZoteroConfig(zotero);
     } catch (error) {
@@ -189,6 +212,7 @@ export const ConfigPanel: React.FC = () => {
         ollamaURL: 'http://127.0.0.1:11434',
         ollamaEmbeddingModel: 'nomic-embed-text',
         ollamaChatModel: 'gemma2:2b',
+        embeddingStrategy: 'nomic-fallback',
       });
       setEditorConfig({
         fontSize: 14,
@@ -242,7 +266,7 @@ export const ConfigPanel: React.FC = () => {
           config={llmConfig}
           onChange={setLLMConfig}
           availableModels={availableModels}
-          onRefreshModels={() => {/* TODO */}}
+          onRefreshModels={handleRefreshModels}
         />
 
         <EmbeddedLLMSection />
@@ -258,8 +282,6 @@ export const ConfigPanel: React.FC = () => {
         />
 
         <TopicModelingSection />
-
-        <ActionsSection />
       </div>
     </div>
   );

@@ -24,6 +24,9 @@ interface ProjectState {
   chapters: Chapter[];
   currentChapterId: string | null;
 
+  // Loading state
+  isLoading: boolean;
+
   // Recent projects
   recentProjects: Project[];
 
@@ -46,9 +49,11 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
   currentProject: null,
   chapters: [],
   currentChapterId: null,
+  isLoading: false,
   recentProjects: [],
 
   loadProject: async (projectPath: string) => {
+    set({ isLoading: true });
     try {
       // Call IPC to load project
       const result = await window.electron.project.load(projectPath);
@@ -105,8 +110,9 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
         try {
           const { useBibliographyStore } = await import('./bibliographyStore');
           console.log('📚 Loading bibliography from:', bibliographyPath);
-          await useBibliographyStore.getState().loadBibliography(bibliographyPath);
-          console.log('✅ Bibliography loaded for project');
+          // Use loadBibliographyWithMetadata to restore zoteroAttachments from metadata file
+          await useBibliographyStore.getState().loadBibliographyWithMetadata(bibliographyPath, project.path);
+          console.log('✅ Bibliography loaded for project (with metadata)');
           // Refresh indexed PDFs to update the Chat panel state
           await useBibliographyStore.getState().refreshIndexedPDFs();
           console.log('✅ Indexed PDFs refreshed');
@@ -158,6 +164,8 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
     } catch (error) {
       console.error('Failed to load project:', error);
       throw error;
+    } finally {
+      set({ isLoading: false });
     }
   },
 

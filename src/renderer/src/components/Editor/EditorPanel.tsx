@@ -1,7 +1,8 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { FileText, FolderOpen, Save, CheckCircle, BookOpen, Superscript } from 'lucide-react';
+import { FileText, FolderOpen, Save, CheckCircle, BookOpen, Superscript, Eye, Code2 } from 'lucide-react';
 import { MilkdownEditor } from './MilkdownEditor';
+import { MarkdownEditor } from './MarkdownEditor';
 import { DocumentStats } from './DocumentStats';
 import { useEditorStore } from '../../stores/editorStore';
 import { useBibliographyStore } from '../../stores/bibliographyStore';
@@ -11,7 +12,7 @@ import './EditorPanel.css';
 
 export const EditorPanel: React.FC = () => {
   const { t } = useTranslation('common');
-  const { loadFile, saveFile, setContent, content, insertFormatting } = useEditorStore();
+  const { loadFile, saveFile, setContent, content, insertFormatting, editorMode, toggleEditorMode } = useEditorStore();
   const { citations } = useBibliographyStore();
 
   // Enable auto-save functionality
@@ -146,11 +147,29 @@ export const EditorPanel: React.FC = () => {
             <CheckCircle size={18} strokeWidth={1.5} />
           </button>
         </div>
+
+        {/* Editor mode toggle */}
+        <div className="toolbar-section toolbar-section-right">
+          <button
+            className={`toolbar-btn ${editorMode === 'wysiwyg' ? 'active' : ''}`}
+            onClick={() => editorMode !== 'wysiwyg' && toggleEditorMode()}
+            title={t('toolbar.wysiwygMode')}
+          >
+            <Eye size={18} strokeWidth={1.5} />
+          </button>
+          <button
+            className={`toolbar-btn ${editorMode === 'source' ? 'active' : ''}`}
+            onClick={() => editorMode !== 'source' && toggleEditorMode()}
+            title={t('toolbar.sourceMode')}
+          >
+            <Code2 size={18} strokeWidth={1.5} />
+          </button>
+        </div>
       </div>
 
       {/* Editor content */}
       <div className="editor-content">
-        <MilkdownEditor />
+        {editorMode === 'wysiwyg' ? <MilkdownEditor /> : <MarkdownEditor />}
         <DocumentStats />
       </div>
     </div>

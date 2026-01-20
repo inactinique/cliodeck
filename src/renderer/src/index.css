@@ -95,6 +95,56 @@
   --scrollbar-thumb-hover: #4e4e4e;
 }
 
+/* Light theme - Override dark theme colors */
+body.theme-light {
+  /* Accent colors - slightly adjusted for better visibility on light background */
+  --color-accent: #0078d4;
+  --color-accent-hover: #106ebe;
+  --color-accent-active: #005a9e;
+
+  /* Semantic colors */
+  --color-danger: #d13438;
+  --color-danger-hover: #a02d30;
+  --color-success: #107c10;
+  --color-warning: #f7630c;
+
+  /* Backgrounds - inverted from dark theme */
+  --bg-app: #f3f3f3;
+  --bg-panel: #ffffff;
+  --bg-panel-hover: #f5f5f5;
+  --bg-card: #fafafa;
+  --bg-card-hover: #f0f0f0;
+  --bg-input: #ffffff;
+  --bg-input-hover: #f5f5f5;
+
+  /* Borders */
+  --border-color: #e0e0e0;
+  --border-color-hover: #d0d0d0;
+  --border-color-focus: var(--color-accent);
+
+  /* Text colors - inverted from dark theme */
+  --text-primary: #1e1e1e;
+  --text-secondary: #3e3e3e;
+  --text-tertiary: #666666;
+  --text-muted: #999999;
+  --text-disabled: #cccccc;
+
+  /* Code colors */
+  --code-bg: #f5f5f5;
+  --code-text: #a31515;
+  --code-inline-bg: #f5f5f5;
+
+  /* Shadows - more pronounced for light theme */
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.08);
+  --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.12);
+  --shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.16);
+
+  /* Scrollbar */
+  --scrollbar-track: var(--bg-app);
+  --scrollbar-thumb: #c0c0c0;
+  --scrollbar-thumb-hover: #a0a0a0;
+}
+
 /* Compact mode - Ultra compact with intelligent spacing */
 body.density-compact {
   --spacing-xs: 0rem;              /* 0px */

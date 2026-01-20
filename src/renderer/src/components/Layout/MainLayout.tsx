@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { MessageCircle, FileText, Folder, BookOpen, Network, BookMarked, HelpCircle } from 'lucide-react';
+import { MessageCircle, Folder, BookOpen, Network, BookMarked, HelpCircle } from 'lucide-react';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import { BibliographyPanel } from '../Bibliography/BibliographyPanel';
-import { PDFIndexPanel } from '../PDFIndex/PDFIndexPanel';
 import { ChatInterface } from '../Chat/ChatInterface';
 import { SettingsModal } from '../Config/SettingsModal';
 import { ProjectPanel } from '../Project/ProjectPanel';
@@ -16,7 +15,7 @@ import { logger } from '../../utils/logger';
 import './MainLayout.css';
 
 type LeftPanelView = 'projects' | 'bibliography';
-type RightPanelView = 'chat' | 'pdfIndex' | 'corpus' | 'journal';
+type RightPanelView = 'chat' | 'corpus' | 'journal';
 
 export interface MainLayoutProps {
   leftPanel?: React.ReactNode;
@@ -63,9 +62,6 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
           break;
         case 'chat':
           setRightView('chat');
-          break;
-        case 'pdfs':
-          setRightView('pdfIndex');
           break;
         case 'corpus':
           setRightView('corpus');
@@ -178,13 +174,6 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
                   <MessageCircle size={20} strokeWidth={1} />
                 </button>
                 <button
-                  className={`panel-tab ${rightView === 'pdfIndex' ? 'active' : ''}`}
-                  onClick={() => handleRightViewChange('pdfIndex')}
-                  title={t('pdfIndex.title')}
-                >
-                  <FileText size={20} strokeWidth={1} />
-                </button>
-                <button
                   className={`panel-tab ${rightView === 'corpus' ? 'active' : ''}`}
                   onClick={() => handleRightViewChange('corpus')}
                   title={t('corpus.title')}
@@ -203,7 +192,6 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
               {/* Panel content */}
               <div className="panel-content">
                 {rightView === 'chat' && <ChatInterface />}
-                {rightView === 'pdfIndex' && <PDFIndexPanel />}
                 {rightView === 'corpus' && <CorpusExplorerPanel />}
                 {rightView === 'journal' && <JournalPanel />}
               </div>

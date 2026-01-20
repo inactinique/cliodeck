@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Plus, FileStack } from 'lucide-react';
+import { Plus, FileStack, Download, BarChart3, Trash2, FileDown } from 'lucide-react';
 import { useBibliographyStore } from '../../stores/bibliographyStore';
 import { useProjectStore } from '../../stores/projectStore';
 import { CitationList } from './CitationList';
@@ -8,6 +8,10 @@ import { CollapsibleSection } from '../common/CollapsibleSection';
 import { ZoteroImport } from './ZoteroImport';
 import { BibImportModeModal } from './BibImportModeModal';
 import { BibImportSummaryModal } from './BibImportSummaryModal';
+import { BibliographyStats } from './BibliographyStats';
+import { TagFilter } from './TagManager';
+import { OrphanPDFModal } from './OrphanPDFModal';
+import { PDFModificationNotification, usePDFModificationDetection } from './PDFModificationNotification';
 import './BibliographyPanel.css';
 
 export const BibliographyPanel: React.FC = () => {
@@ -25,18 +29,34 @@ export const BibliographyPanel: React.FC = () => {
     batchIndexing,
     indexAllPDFs,
     refreshIndexedPDFs,
+    downloadAllMissingPDFs,
+    getAllTags,
+    selectedTags,
+    setTagsFilter,
+    clearTagsFilter,
   } = useBibliographyStore();
+
+  // PDF Modification Detection
+  const { modifiedPDFs, checkForModifications, dismissNotification } = usePDFModificationDetection(
+    citations,
+    currentProject?.path
+  );
 
   // Refresh indexed PDFs on mount
   useEffect(() => {
     refreshIndexedPDFs();
   }, []);
 
-  // Count citations with PDFs
+  // Count citations with PDFs and citations needing PDFs
   const citationsWithPDFs = citations.filter((c) => c.file).length;
+  const citationsNeedingPDFs = citations.filter(
+    (c) => !c.file && c.zoteroAttachments && c.zoteroAttachments.length > 0
+  ).length;
 
   const [showModeModal, setShowModeModal] = useState(false);
   const [showSummaryModal, setShowSummaryModal] = useState(false);
+  const [showStats, setShowStats] = useState(false);
+  const [showOrphanPDFModal, setShowOrphanPDFModal] = useState(false);
   const [importSummary, setImportSummary] = useState({
     mode: 'replace' as 'replace' | 'merge',
     totalCitations: 0,
@@ -164,6 +184,119 @@ export const BibliographyPanel: React.FC = () => {
     }
   };
 
+  const handleDownloadAllPDFs = async () => {
+    if (batchIndexing.isIndexing) return;
+
+    if (!currentProject) {
+      alert(t('bibliography.noProjectOpen'));
+      return;
+    }
+
+    if (citationsNeedingPDFs === 0) {
+      alert(t('bibliography.noMissingPDFs'));
+      return;
+    }
+
+    const confirm = window.confirm(
+      t('bibliography.confirmDownloadAll', { count: citationsNeedingPDFs })
+    );
+    if (!confirm) return;
+
+    try {
+      const result = await downloadAllMissingPDFs(currentProject.path);
+      alert(
+        t('bibliography.downloadAllComplete', {
+          downloaded: result.downloaded,
+          skipped: result.skipped,
+          errors: result.errors.length,
+        })
+      );
+    } catch (error) {
+      console.error('Failed to download all PDFs:', error);
+      alert(`${t('bibliography.downloadError')} ${error}`);
+    }
+  };
+
+  const handleExportBibTeX = async () => {
+    if (citations.length === 0) {
+      alert(t('bibliography.noCitationsToExport'));
+      return;
+    }
+
+    try {
+      const result = await window.electron.dialog.saveFile({
+        defaultPath: 'bibliography.bib',
+        filters: [{ name: 'BibTeX', extensions: ['bib'] }],
+      });
+
+      if (!result.canceled && result.filePath) {
+        const exportResult = await window.electron.bibliography.export({
+          citations,
+          filePath: result.filePath,
+          format: 'modern',
+        });
+
+        if (exportResult.success) {
+          alert(t('bibliography.exportSuccess', { count: citations.length }));
+        } else {
+          alert(`${t('bibliography.exportError')}: ${exportResult.error}`);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to export BibTeX:', error);
+      alert(`${t('bibliography.exportError')}: ${error}`);
+    }
+  };
+
+  const handleReindexModifiedPDFs = async (citationIds?: string[]) => {
+    if (!currentProject) {
+      alert(t('bibliography.noProjectOpen'));
+      return;
+    }
+
+    const toReindex = citationIds
+      ? citations.filter((c) => citationIds.includes(c.id) && c.file)
+      : modifiedPDFs.map((m) => citations.find((c) => c.id === m.citationId)).filter((c) => c && c.file);
+
+    if (toReindex.length === 0) {
+      alert(t('bibliography.noPDFsToReindex'));
+      return;
+    }
+
+    const confirm = window.confirm(
+      t('bibliography.confirmReindexModified', { count: toReindex.length })
+    );
+    if (!confirm) return;
+
+    try {
+      // Re-index each PDF
+      for (const citation of toReindex) {
+        if (citation.file) {
+          await window.electron.pdf.index(
+            citation.file,
+            citation.key,
+            {
+              title: citation.title,
+              author: citation.author,
+              year: citation.year,
+            }
+          );
+        }
+      }
+
+      // Refresh indexed PDFs
+      await refreshIndexedPDFs();
+
+      // Dismiss notification
+      dismissNotification();
+
+      alert(t('bibliography.reindexComplete', { count: toReindex.length }));
+    } catch (error) {
+      console.error('Failed to re-index modified PDFs:', error);
+      alert(`${t('bibliography.reindexError')}: ${error}`);
+    }
+  };
+
   return (
     <div className="bibliography-panel">
       {/* Header */}
@@ -171,6 +304,15 @@ export const BibliographyPanel: React.FC = () => {
         <button className="toolbar-btn" onClick={handleImportBibTeX} title={t('bibliography.import')}>
           <Plus size={20} strokeWidth={1} />
         </button>
+        {citations.length > 0 && (
+          <button
+            className="toolbar-btn"
+            onClick={handleExportBibTeX}
+            title={t('bibliography.exportBibTeX')}
+          >
+            <FileDown size={20} strokeWidth={1} />
+          </button>
+        )}
         {citationsWithPDFs > 0 && (
           <button
             className="toolbar-btn"
@@ -179,6 +321,34 @@ export const BibliographyPanel: React.FC = () => {
             title={t('bibliography.indexAllPDFs')}
           >
             <FileStack size={20} strokeWidth={1} />
+          </button>
+        )}
+        {citationsNeedingPDFs > 0 && (
+          <button
+            className="toolbar-btn"
+            onClick={handleDownloadAllPDFs}
+            disabled={batchIndexing.isIndexing}
+            title={t('bibliography.downloadAllMissing')}
+          >
+            <Download size={20} strokeWidth={1} />
+          </button>
+        )}
+        {citations.length > 0 && (
+          <button
+            className="toolbar-btn"
+            onClick={() => setShowStats(!showStats)}
+            title={t('bibliography.viewStatistics')}
+          >
+            <BarChart3 size={20} strokeWidth={1} />
+          </button>
+        )}
+        {currentProject && citations.length > 0 && (
+          <button
+            className="toolbar-btn"
+            onClick={() => setShowOrphanPDFModal(true)}
+            title={t('bibliography.cleanupOrphanPDFs')}
+          >
+            <Trash2 size={20} strokeWidth={1} />
           </button>
         )}
       </div>
@@ -213,6 +383,13 @@ export const BibliographyPanel: React.FC = () => {
 
       {/* Zotero Import */}
       <ZoteroImport />
+
+      {/* Statistics Dashboard */}
+      {showStats && citations.length > 0 && (
+        <CollapsibleSection title={t('bibliography.statistics')} defaultExpanded={true}>
+          <BibliographyStats citations={citations} />
+        </CollapsibleSection>
+      )}
 
       {/* Search & Filters */}
       <CollapsibleSection title={t('bibliography.searchAndFilters')} defaultExpanded={true}>
@@ -249,6 +426,16 @@ export const BibliographyPanel: React.FC = () => {
         <div className="citation-count">
           {filteredCitations.length} citation{filteredCitations.length !== 1 ? 's' : ''}
         </div>
+
+        {/* Tag Filter */}
+        {getAllTags().length > 0 && (
+          <TagFilter
+            selectedTags={selectedTags}
+            allTags={getAllTags()}
+            onTagsChange={setTagsFilter}
+            onClear={clearTagsFilter}
+          />
+        )}
       </CollapsibleSection>
 
       {/* Citation List */}
@@ -285,6 +472,24 @@ export const BibliographyPanel: React.FC = () => {
         totalCitations={importSummary.totalCitations}
         newCitations={importSummary.newCitations}
         duplicates={importSummary.duplicates}
+      />
+
+      {/* Orphan PDF Cleanup Modal */}
+      {currentProject && (
+        <OrphanPDFModal
+          isOpen={showOrphanPDFModal}
+          onClose={() => setShowOrphanPDFModal(false)}
+          projectPath={currentProject.path}
+          citations={citations}
+        />
+      )}
+
+      {/* PDF Modification Notification */}
+      <PDFModificationNotification
+        modifiedPDFs={modifiedPDFs}
+        onReindexAll={() => handleReindexModifiedPDFs()}
+        onReindexSingle={(citationId) => handleReindexModifiedPDFs([citationId])}
+        onDismiss={dismissNotification}
       />
     </div>
   );

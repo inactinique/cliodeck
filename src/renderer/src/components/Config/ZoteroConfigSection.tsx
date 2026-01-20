@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { CheckCircle, XCircle, ExternalLink } from 'lucide-react';
 import { CollapsibleSection } from '../common/CollapsibleSection';
 
@@ -17,12 +18,13 @@ export const ZoteroConfigSection: React.FC<ZoteroConfigSectionProps> = ({
   config,
   onChange,
 }) => {
+  const { t } = useTranslation('common');
   const [isTesting, setIsTesting] = useState(false);
   const [testStatus, setTestStatus] = useState<'idle' | 'success' | 'error'>('idle');
 
   const handleTestConnection = async () => {
     if (!config.userId || !config.apiKey) {
-      alert('Veuillez saisir votre User ID et API Key');
+      alert(t('zotero.enterCredentials'));
       return;
     }
 
@@ -48,8 +50,7 @@ export const ZoteroConfigSection: React.FC<ZoteroConfigSectionProps> = ({
       <div className="config-section">
         <div className="config-section-content">
         <p className="config-description">
-          Configurez vos identifiants Zotero pour importer votre bibliographie.
-          L'import se fait depuis le panneau Bibliographie.
+          {t('zotero.configDescription')}
         </p>
 
         <div className="config-field">
@@ -68,9 +69,13 @@ export const ZoteroConfigSection: React.FC<ZoteroConfigSectionProps> = ({
             type="password"
             value={config.apiKey}
             onChange={(e) => onChange({ ...config, apiKey: e.target.value })}
-            placeholder="Votre clé API Zotero"
+            placeholder={t('zotero.apiKeyPlaceholder')}
           />
         </div>
+
+        <p className="config-help" style={{ marginTop: '8px' }}>
+          {t('zotero.projectNote')}
+        </p>
 
         <div className="config-actions">
           <button
@@ -79,19 +84,19 @@ export const ZoteroConfigSection: React.FC<ZoteroConfigSectionProps> = ({
             disabled={isTesting || !config.userId || !config.apiKey}
           >
             {isTesting ? (
-              'Test en cours...'
+              t('zotero.testing')
             ) : testStatus === 'success' ? (
               <>
                 <CheckCircle size={16} style={{ color: '#4caf50' }} />
-                Connexion OK
+                {t('zotero.connectionOk')}
               </>
             ) : testStatus === 'error' ? (
               <>
                 <XCircle size={16} style={{ color: '#f44336' }} />
-                Échec
+                {t('zotero.connectionFailed')}
               </>
             ) : (
-              'Tester la connexion'
+              t('zotero.testConnection')
             )}
           </button>
 
@@ -102,7 +107,7 @@ export const ZoteroConfigSection: React.FC<ZoteroConfigSectionProps> = ({
             className="config-link"
           >
             <ExternalLink size={14} />
-            Obtenir une API Key
+            {t('zotero.getApiKey')}
           </a>
         </div>
         </div>

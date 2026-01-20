@@ -135,5 +135,17 @@ export function setupFilesystemHandlers() {
     }
   });
 
+  ipcMain.handle('shell:open-path', async (_event, path: string) => {
+    console.log('📞 IPC Call: shell:open-path', { path });
+    try {
+      const result = await shell.openPath(path);
+      console.log('📤 IPC Response: shell:open-path - success', { result });
+      return successResponse({ error: result }); // openPath returns error string if failed, empty string if success
+    } catch (error: any) {
+      console.error('❌ shell:open-path error:', error);
+      return errorResponse(error);
+    }
+  });
+
   console.log('✅ Filesystem handlers registered');
 }

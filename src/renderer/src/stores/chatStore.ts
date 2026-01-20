@@ -9,6 +9,7 @@ export interface ChatMessage {
   content: string;
   sources?: ChatSource[];
   timestamp: Date;
+  ragUsed?: boolean; // true if RAG context was used for this response
 }
 
 export interface ChatSource {
@@ -39,7 +40,7 @@ interface ChatState {
 
   // Internal
   addUserMessage: (content: string) => void;
-  addAssistantMessage: (content: string, sources?: ChatSource[]) => void;
+  addAssistantMessage: (content: string, sources?: ChatSource[], ragUsed?: boolean) => void;
 }
 
 // MARK: - Store
@@ -63,13 +64,14 @@ export const useChatStore = create<ChatState>((set, get) => ({
     }));
   },
 
-  addAssistantMessage: (content: string, sources?: ChatSource[]) => {
+  addAssistantMessage: (content: string, sources?: ChatSource[], ragUsed?: boolean) => {
     const assistantMessage: ChatMessage = {
       id: crypto.randomUUID(),
       role: 'assistant',
       content,
       sources,
       timestamp: new Date(),
+      ragUsed,
     };
 
     set((state) => ({
@@ -105,20 +107,27 @@ export const useChatStore = create<ChatState>((set, get) => ({
       });
 
       // Call IPC to send chat message with context enabled and RAG parameters
-      logger.ipc('chat.send', { query, context: true, ragParams });
-      const result = await window.electron.chat.send(query, {
+      // Map selectedCollectionKeys to collectionKeys for IPC
+      const { selectedCollectionKeys, ...otherRagParams } = ragParams;
+      const ipcOptions = {
         context: true,
-        ...ragParams, // Spread RAG parameters (model, topK, timeout, temperature, etc.)
-      });
+        ...otherRagParams,
+        collectionKeys: selectedCollectionKeys?.length > 0 ? selectedCollectionKeys : undefined,
+      };
+      logger.ipc('chat.send', { query, ipcOptions });
+      const result = await window.electron.chat.send(query, ipcOptions);
       logger.ipc('chat.send response', result);
 
       // Add assistant message with the response
       if (result.success && result.response) {
-        logger.store('Chat', 'Adding assistant response', { responseLength: result.response.length });
-        addAssistantMessage(result.response);
+        logger.store('Chat', 'Adding assistant response', {
+          responseLength: result.response.length,
+          ragUsed: result.ragUsed,
+        });
+        addAssistantMessage(result.response, undefined, result.ragUsed);
       } else {
         logger.error('Chat', 'No response or error: ' + (result.error || 'Réponse vide'));
-        addAssistantMessage(`Erreur: ${result.error || 'Réponse vide'}`);
+        addAssistantMessage(`Erreur: ${result.error || 'Réponse vide'}`, undefined, false);
       }
     } catch (error: any) {
       logger.error('Chat', error);

@@ -3,11 +3,13 @@ import Editor, { OnMount } from '@monaco-editor/react';
 import type { editor } from 'monaco-editor';
 import { useEditorStore } from '../../stores/editorStore';
 import { useBibliographyStore } from '../../stores/bibliographyStore';
+import { useTheme } from '../../hooks/useTheme';
 import './MarkdownEditor.css';
 
 export const MarkdownEditor: React.FC = () => {
-  const { content, setContent, settings } = useEditorStore();
+  const { content, setContent, settings, setMonacoEditor } = useEditorStore();
   const { citations } = useBibliographyStore();
+  const { currentTheme } = useTheme();
   const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null);
 
   // Listen for insert text commands from bibliography
@@ -38,8 +40,16 @@ export const MarkdownEditor: React.FC = () => {
     };
   }, []);
 
+  // Store Monaco editor reference in store and cleanup on unmount
+  useEffect(() => {
+    return () => {
+      setMonacoEditor(null);
+    };
+  }, [setMonacoEditor]);
+
   const handleEditorDidMount: OnMount = (editor, monaco) => {
     editorRef.current = editor;
+    setMonacoEditor(editor);
 
     // Configure markdown language
     monaco.languages.setLanguageConfiguration('markdown', {
@@ -179,7 +189,7 @@ export const MarkdownEditor: React.FC = () => {
         value={content}
         onChange={handleEditorChange}
         onMount={handleEditorDidMount}
-        theme={settings.theme === 'dark' ? 'vs-dark' : 'light'}
+        theme={currentTheme === 'dark' ? 'vs-dark' : 'light'}
         options={{
           fontSize: settings.fontSize,
           wordWrap: settings.wordWrap ? 'on' : 'off',

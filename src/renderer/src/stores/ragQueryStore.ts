@@ -14,6 +14,9 @@ export interface RAGQueryParams {
   topK: number;
   timeout: number; // in milliseconds
 
+  // Collection filtering (Zotero collections)
+  selectedCollectionKeys: string[]; // Empty = all collections (no filter)
+
   // Advanced parameters
   temperature: number;
   top_p: number;
@@ -33,6 +36,13 @@ export interface AvailableModel {
   description?: string;
 }
 
+export interface AvailableCollection {
+  key: string;
+  name: string;
+  parentKey?: string;
+  level?: number; // For hierarchical display indentation
+}
+
 interface RAGQueryState {
   // Query parameters (persisted)
   params: RAGQueryParams;
@@ -41,6 +51,10 @@ interface RAGQueryState {
   availableModels: AvailableModel[];
   isLoadingModels: boolean;
 
+  // Available collections (not persisted, loaded from VectorStore)
+  availableCollections: AvailableCollection[];
+  isLoadingCollections: boolean;
+
   // UI state (not persisted)
   isSettingsPanelOpen: boolean;
 
@@ -48,6 +62,8 @@ interface RAGQueryState {
   setParams: (params: Partial<RAGQueryParams>) => void;
   resetToDefaults: () => Promise<void>;
   loadAvailableModels: () => Promise<void>;
+  loadAvailableCollections: () => Promise<void>;
+  setSelectedCollections: (keys: string[]) => void;
   toggleSettingsPanel: () => void;
 }
 
@@ -57,6 +73,9 @@ const DEFAULT_PARAMS: RAGQueryParams = {
   model: 'gemma2:2b',
   topK: 10,
   timeout: 600000, // 10 minutes
+
+  // Collection filtering (empty = no filter, search all)
+  selectedCollectionKeys: [],
 
   // Academic preset (from OllamaClient)
   temperature: 0.1,
@@ -69,6 +88,30 @@ const DEFAULT_PARAMS: RAGQueryParams = {
   useCustomSystemPrompt: false,
 };
 
+/**
+ * Sort collections hierarchically (parents first, then children indented)
+ */
+function sortCollectionsHierarchically(
+  collections: Array<{ key: string; name: string; parentKey?: string }>
+): AvailableCollection[] {
+  const result: AvailableCollection[] = [];
+
+  const addWithChildren = (
+    parent: { key: string; name: string; parentKey?: string },
+    level: number = 0
+  ) => {
+    result.push({ ...parent, level });
+    const children = collections.filter((c) => c.parentKey === parent.key);
+    children.forEach((child) => addWithChildren(child, level + 1));
+  };
+
+  // Start with top-level collections (no parent)
+  const topLevel = collections.filter((c) => !c.parentKey);
+  topLevel.forEach((col) => addWithChildren(col));
+
+  return result;
+}
+
 // MARK: - Store
 
 export const useRAGQueryStore = create<RAGQueryState>()(
@@ -78,6 +121,8 @@ export const useRAGQueryStore = create<RAGQueryState>()(
       params: DEFAULT_PARAMS,
       availableModels: [],
       isLoadingModels: false,
+      availableCollections: [],
+      isLoadingCollections: false,
       isSettingsPanelOpen: false,
 
       // Actions
@@ -100,6 +145,7 @@ export const useRAGQueryStore = create<RAGQueryState>()(
               model: llmConfig.ollamaChatModel || DEFAULT_PARAMS.model,
               topK: ragConfig.topK || DEFAULT_PARAMS.topK,
               timeout: DEFAULT_PARAMS.timeout,
+              selectedCollectionKeys: DEFAULT_PARAMS.selectedCollectionKeys,
               temperature: DEFAULT_PARAMS.temperature,
               top_p: DEFAULT_PARAMS.top_p,
               top_k: DEFAULT_PARAMS.top_k,
@@ -154,6 +200,45 @@ export const useRAGQueryStore = create<RAGQueryState>()(
             isLoadingModels: false,
           });
         }
+      },
+
+      loadAvailableCollections: async () => {
+        set({ isLoadingCollections: true });
+
+        try {
+          console.log('🔄 Loading available Zotero collections...');
+          const result = await window.electron.corpus.getCollections();
+
+          if (result.success && result.collections) {
+            // Sort hierarchically for display
+            const sortedCollections = sortCollectionsHierarchically(result.collections);
+
+            set({
+              availableCollections: sortedCollections,
+              isLoadingCollections: false,
+            });
+
+            console.log(`✅ Loaded ${sortedCollections.length} collections`);
+          } else {
+            console.warn('⚠️  No collections found:', result.error);
+            set({
+              availableCollections: [],
+              isLoadingCollections: false,
+            });
+          }
+        } catch (error) {
+          console.warn('⚠️  Could not load collections:', error);
+          set({
+            availableCollections: [],
+            isLoadingCollections: false,
+          });
+        }
+      },
+
+      setSelectedCollections: (keys: string[]) => {
+        set((state) => ({
+          params: { ...state.params, selectedCollectionKeys: keys },
+        }));
       },
 
       toggleSettingsPanel: () => {

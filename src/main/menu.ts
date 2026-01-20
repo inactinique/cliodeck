@@ -224,15 +224,8 @@ export function createApplicationMenu(mainWindow: BrowserWindow): Menu {
           },
         },
         {
-          label: t('panelPDFs'),
-          accelerator: 'Alt+4',
-          click: () => {
-            mainWindow.webContents.send('menu:switch-panel', 'pdfs');
-          },
-        },
-        {
           label: t('panelCorpus'),
-          accelerator: 'Alt+5',
+          accelerator: 'Alt+4',
           click: () => {
             mainWindow.webContents.send('menu:switch-panel', 'corpus');
           },

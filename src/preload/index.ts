@@ -22,6 +22,8 @@ const api = {
       projectPath: string;
       cslPath?: string;
     }) => ipcRenderer.invoke('project:set-csl-path', data),
+    getConfig: (projectPath: string) => ipcRenderer.invoke('project:get-config', projectPath),
+    updateConfig: (projectPath: string, updates: any) => ipcRenderer.invoke('project:update-config', projectPath, updates),
     onRebuildProgress: (callback: (progress: {
       current: number;
       total: number;
@@ -46,6 +48,10 @@ const api = {
     getStatistics: () => ipcRenderer.invoke('pdf:get-statistics'),
     purge: () => ipcRenderer.invoke('pdf:purge'),
     cleanOrphanedChunks: () => ipcRenderer.invoke('pdf:clean-orphaned-chunks'),
+    checkModifiedPDFs: (options: {
+      citations: any[];
+      projectPath: string;
+    }) => ipcRenderer.invoke('pdf:check-modified-pdfs', options),
     onIndexingProgress: (callback: (progress: { stage: string; progress: number; message: string }) => void) => {
       const listener = (_event: any, progress: any) => callback(progress);
       ipcRenderer.on('pdf:indexing-progress', listener);
@@ -66,8 +72,39 @@ const api = {
   // Bibliography
   bibliography: {
     load: (filePath: string) => ipcRenderer.invoke('bibliography:load', filePath),
+    loadWithMetadata: (options: {
+      filePath: string;
+      projectPath: string;
+    }) => ipcRenderer.invoke('bibliography:load-with-metadata', options),
     parse: (content: string) => ipcRenderer.invoke('bibliography:parse', content),
     search: (query: string) => ipcRenderer.invoke('bibliography:search', query),
+    getStatistics: (citations?: any[]) => ipcRenderer.invoke('bibliography:get-statistics', citations),
+    export: (options: {
+      citations: any[];
+      filePath: string;
+      format?: 'modern' | 'legacy';
+    }) => ipcRenderer.invoke('bibliography:export', options),
+    exportString: (options: {
+      citations: any[];
+      format?: 'modern' | 'legacy';
+    }) => ipcRenderer.invoke('bibliography:export-string', options),
+    detectOrphanPDFs: (options: {
+      projectPath: string;
+      citations: any[];
+      includeSubdirectories?: boolean;
+      pdfSubdirectory?: string;
+    }) => ipcRenderer.invoke('bibliography:detect-orphan-pdfs', options),
+    deleteOrphanPDFs: (filePaths: string[]) => ipcRenderer.invoke('bibliography:delete-orphan-pdfs', filePaths),
+    archiveOrphanPDFs: (options: {
+      filePaths: string[];
+      projectPath: string;
+      archiveSubdir?: string;
+    }) => ipcRenderer.invoke('bibliography:archive-orphan-pdfs', options),
+    saveMetadata: (options: {
+      projectPath: string;
+      citations: any[];
+    }) => ipcRenderer.invoke('bibliography:save-metadata', options),
+    loadMetadata: (projectPath: string) => ipcRenderer.invoke('bibliography:load-metadata', projectPath),
   },
 
   // Editor
@@ -113,17 +150,50 @@ const api = {
 
   // Zotero
   zotero: {
-    testConnection: (userId: string, apiKey: string) =>
-      ipcRenderer.invoke('zotero:test-connection', userId, apiKey),
-    listCollections: (userId: string, apiKey: string) =>
-      ipcRenderer.invoke('zotero:list-collections', userId, apiKey),
+    testConnection: (userId: string, apiKey: string, groupId?: string) =>
+      ipcRenderer.invoke('zotero:test-connection', userId, apiKey, groupId),
+    listCollections: (userId: string, apiKey: string, groupId?: string) =>
+      ipcRenderer.invoke('zotero:list-collections', userId, apiKey, groupId),
     sync: (options: {
       userId: string;
       apiKey: string;
+      groupId?: string;
       collectionKey?: string;
       downloadPDFs: boolean;
       exportBibTeX: boolean;
+      targetDirectory?: string;
     }) => ipcRenderer.invoke('zotero:sync', options),
+    downloadPDF: (options: {
+      userId: string;
+      apiKey: string;
+      groupId?: string;
+      attachmentKey: string;
+      filename: string;
+      targetDirectory: string;
+    }) => ipcRenderer.invoke('zotero:download-pdf', options),
+    checkUpdates: (options: {
+      userId: string;
+      apiKey: string;
+      groupId?: string;
+      localCitations: any[];
+      collectionKey?: string;
+    }) => ipcRenderer.invoke('zotero:check-updates', options),
+    applyUpdates: (options: {
+      userId: string;
+      apiKey: string;
+      groupId?: string;
+      currentCitations: any[];
+      diff: any;
+      strategy: 'local' | 'remote' | 'manual';
+      resolution?: any;
+    }) => ipcRenderer.invoke('zotero:apply-updates', options),
+    enrichCitations: (options: {
+      userId: string;
+      apiKey: string;
+      groupId?: string;
+      citations: any[];
+      collectionKey?: string;
+    }) => ipcRenderer.invoke('zotero:enrich-citations', options),
   },
 
   // PDF Export
@@ -212,6 +282,7 @@ const api = {
     getTextStatistics: (options?: {
       topN?: number;
     }) => ipcRenderer.invoke('corpus:get-text-statistics', options),
+    getCollections: () => ipcRenderer.invoke('corpus:get-collections'),
   },
 
   // Topic Modeling Environment
@@ -313,6 +384,7 @@ const api = {
   // Shell
   shell: {
     openExternal: (url: string) => ipcRenderer.invoke('shell:open-external', url),
+    openPath: (path: string) => ipcRenderer.invoke('shell:open-path', path),
   },
 };
 

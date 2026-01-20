@@ -394,8 +394,30 @@ export class BibTeXParser {
       filePath = this.resolveFilePath(filePath, bibDir);
     }
 
+    // Parse tags from keywords field
+    let tags: string[] | undefined = undefined;
+    if (fields.tags) {
+      tags = fields.tags.split(/[;,]/).map(tag => tag.trim()).filter(tag => tag.length > 0);
+    }
+
+    // Known BibTeX fields to exclude from custom fields
+    const knownFields = new Set([
+      'author', 'year', 'date', 'title', 'shorttitle', 'journal', 'journaltitle',
+      'publisher', 'booktitle', 'file', 'keywords', 'tags', 'note', 'abstract',
+      'zoterokey', 'dateadded', 'datemodified'
+    ]);
+
+    // Collect custom fields (any field not in the known set)
+    const customFields: Record<string, string> = {};
+    Object.keys(fields).forEach(fieldKey => {
+      if (!knownFields.has(fieldKey.toLowerCase())) {
+        customFields[fieldKey] = fields[fieldKey];
+      }
+    });
+
     return createCitation({
       id: key,
+      key: key,
       type,
       author,
       year: this.extractYear(year),
@@ -405,6 +427,12 @@ export class BibTeXParser {
       publisher: fields.publisher,
       booktitle: fields.booktitle,
       file: filePath,
+      tags,
+      keywords: fields.keywords,
+      notes: fields.note || fields.abstract,
+      customFields: Object.keys(customFields).length > 0 ? customFields : undefined,
+      dateAdded: fields.dateadded,
+      dateModified: fields.datemodified,
     });
   }
 

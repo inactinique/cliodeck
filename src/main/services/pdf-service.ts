@@ -90,7 +90,8 @@ class PDFService {
       this.ollamaClient = new OllamaClient(
         config.ollamaURL,
         config.ollamaChatModel,
-        config.ollamaEmbeddingModel
+        config.ollamaEmbeddingModel,
+        config.embeddingStrategy || 'nomic-fallback'
       );
 
       // Initialiser le LLM Provider Manager (gère Ollama + modèle embarqué)
@@ -213,18 +214,58 @@ class PDFService {
     }
   }
 
-  async indexPDF(filePath: string, bibtexKey?: string, onProgress?: any, bibliographyMetadata?: { title?: string; author?: string; year?: string }) {
+  async indexPDF(
+    filePath: string,
+    bibtexKey?: string,
+    onProgress?: any,
+    bibliographyMetadata?: { title?: string; author?: string; year?: string },
+    collectionKeys?: string[]
+  ) {
     this.ensureInitialized();
-    return this.pdfIndexer!.indexPDF(filePath, bibtexKey, onProgress, bibliographyMetadata);
+    const document = await this.pdfIndexer!.indexPDF(filePath, bibtexKey, onProgress, bibliographyMetadata);
+
+    // Link document to collections if provided
+    if (collectionKeys && collectionKeys.length > 0) {
+      this.vectorStore!.setDocumentCollections(document.id, collectionKeys);
+      console.log(`📁 Linked document ${document.id.substring(0, 8)} to ${collectionKeys.length} collection(s)`);
+    }
+
+    return document;
   }
 
-  async search(query: string, options?: any) {
+  async search(query: string, options?: { topK?: number; threshold?: number; documentIds?: string[]; collectionKeys?: string[] }) {
     this.ensureInitialized();
 
     const searchStart = Date.now();
     const ragConfig = configManager.getRAGConfig();
     const topK = options?.topK || ragConfig.topK;
     const threshold = options?.threshold || ragConfig.similarityThreshold;
+
+    // Resolve collection filter to document IDs
+    let documentIdsFilter = options?.documentIds;
+
+    if (options?.collectionKeys && options.collectionKeys.length > 0) {
+      const docsInCollections = this.vectorStore!.getDocumentIdsInCollections(
+        options.collectionKeys,
+        true // recursive: include subcollections
+      );
+
+      console.log(`🔍 [PDF-SERVICE] Collection filter: ${options.collectionKeys.length} collection(s) -> ${docsInCollections.length} document(s)`);
+
+      // Intersect with existing documentIds filter if provided
+      if (documentIdsFilter && documentIdsFilter.length > 0) {
+        documentIdsFilter = documentIdsFilter.filter((id) => docsInCollections.includes(id));
+        console.log(`🔍 [PDF-SERVICE] After intersection with documentIds: ${documentIdsFilter.length} document(s)`);
+      } else {
+        documentIdsFilter = docsInCollections;
+      }
+
+      // If no documents match the collection filter, return empty results
+      if (documentIdsFilter.length === 0) {
+        console.log('🔍 [PDF-SERVICE] No documents match the collection filter, returning empty results');
+        return [];
+      }
+    }
 
     // 🆕 Query expansion multilingue
     const expandedQueries = expandQueryMultilingual(query);
@@ -248,7 +289,7 @@ class PDFService {
 
       console.log('🔍 [PDF-SERVICE DEBUG] Searching vector store:', {
         topK: topK,
-        documentIdsFilter: options?.documentIds?.length || 'none',
+        documentIdsFilter: documentIdsFilter?.length || 'none',
       });
 
       const vectorSearchStart = Date.now();
@@ -261,13 +302,13 @@ class PDFService {
           expandedQuery,
           queryEmbedding,
           topK,
-          options?.documentIds
+          documentIdsFilter
         );
       } else {
         results = this.vectorStore!.search(
           queryEmbedding,
           topK,
-          options?.documentIds
+          documentIdsFilter
         );
       }
 
@@ -473,10 +514,15 @@ class PDFService {
       totalCitationsExtracted: totalCitationsExtracted, // Total des citations extraites
       languageCount: languages.size,
       languages: Array.from(languages),
-      yearRange: years.size > 0 ? {
-        min: Math.min(...Array.from(years).map(y => parseInt(y))),
-        max: Math.max(...Array.from(years).map(y => parseInt(y))),
-      } : null,
+      yearRange: (() => {
+        const validYears = Array.from(years)
+          .map(y => parseInt(y))
+          .filter(y => !isNaN(y) && y > 0);
+        return validYears.length > 0 ? {
+          min: Math.min(...validYears),
+          max: Math.max(...validYears),
+        } : null;
+      })(),
       authorCount: authors.size,
     };
   }

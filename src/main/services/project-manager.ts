@@ -160,14 +160,35 @@ N'oubliez pas de mentionner les perspectives futures.
       // Load project.json file
       const content = await readFile(projectPath, 'utf-8');
       const project: Project = JSON.parse(content);
+      const projectDir = path.dirname(projectPath);
+
+      // Migration: Convert absolute paths to relative paths
+      let needsSave = false;
+
+      // Migrate bibliographySource.filePath
+      if (project.bibliographySource?.filePath && path.isAbsolute(project.bibliographySource.filePath)) {
+        const relativePath = path.relative(projectDir, project.bibliographySource.filePath);
+        console.log('🔄 Migrating bibliography path from absolute to relative:', relativePath);
+        project.bibliographySource.filePath = relativePath;
+        needsSave = true;
+      }
+
+      // Migrate cslPath
+      if (project.cslPath && path.isAbsolute(project.cslPath)) {
+        const relativePath = path.relative(projectDir, project.cslPath);
+        console.log('🔄 Migrating CSL path from absolute to relative:', relativePath);
+        project.cslPath = relativePath;
+        needsSave = true;
+      }
 
       // Update lastOpenedAt
       project.lastOpenedAt = new Date().toISOString();
+      needsSave = true;
 
-      // Load bibliography if configured
+      // Load bibliography if configured (resolve relative path to absolute)
       console.log('🔍 Checking for bibliography source:', project.bibliographySource);
       if (project.bibliographySource?.filePath) {
-        const bibPath = path.join(path.dirname(projectPath), project.bibliographySource.filePath);
+        const bibPath = path.join(projectDir, project.bibliographySource.filePath);
         console.log('🔍 Looking for bibliography at:', bibPath);
         if (existsSync(bibPath)) {
           project.bibliography = bibPath;
@@ -179,14 +200,28 @@ N'oubliez pas de mentionner les perspectives futures.
         console.log('ℹ️ No bibliography source configured');
       }
 
-      // Save update
-      await writeFile(projectPath, JSON.stringify(project, null, 2));
+      // Save update (including migration if needed)
+      // IMPORTANT: Save before resolving paths to absolute
+      if (needsSave) {
+        await writeFile(projectPath, JSON.stringify(project, null, 2));
+      }
+
+      // Resolve cslPath to absolute for runtime use (after saving)
+      if (project.cslPath && !path.isAbsolute(project.cslPath)) {
+        const absoluteCslPath = path.join(projectDir, project.cslPath);
+        if (existsSync(absoluteCslPath)) {
+          project.cslPath = absoluteCslPath;
+          console.log('📄 CSL file resolved to absolute path:', absoluteCslPath);
+        } else {
+          console.log('⚠️ CSL file not found:', absoluteCslPath);
+        }
+      }
 
       configManager.addRecentProject(projectPath);
 
       // Store current project
       this.currentProject = project;
-      this.currentProjectPath = path.dirname(projectPath);
+      this.currentProjectPath = projectDir;
 
       console.log('✅ Project loaded:', projectPath);
       console.log('📤 Returning project with bibliography:', {
@@ -258,10 +293,21 @@ N'oubliez pas de mentionner les perspectives futures.
     try {
       const projectContent = await readFile(data.projectPath, 'utf-8');
       const project: Project = JSON.parse(projectContent);
+      const projectDir = dirname(data.projectPath);
+
+      let relativeFilePath = data.filePath;
+
+      // Convert absolute path to relative if it's a file path
+      if (data.type === 'file' && data.filePath) {
+        if (path.isAbsolute(data.filePath)) {
+          relativeFilePath = path.relative(projectDir, data.filePath);
+          console.log('📝 Converted bibliography path to relative:', relativeFilePath);
+        }
+      }
 
       project.bibliographySource = {
         type: data.type,
-        filePath: data.filePath,
+        filePath: relativeFilePath,
         zoteroCollection: data.zoteroCollection,
       };
 
@@ -273,6 +319,59 @@ N'oubliez pas de mentionner les perspectives futures.
       return { success: true };
     } catch (error) {
       console.error('❌ Failed to set bibliography source:', error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  /**
+   * Get project configuration from project.json
+   */
+  async getConfig(projectPath: string): Promise<Project | null> {
+    try {
+      if (!existsSync(projectPath)) {
+        console.warn('⚠️ Project file not found:', projectPath);
+        return null;
+      }
+
+      const content = await readFile(projectPath, 'utf-8');
+      const project: Project = JSON.parse(content);
+      return project;
+    } catch (error) {
+      console.error('❌ Failed to get project config:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Update project configuration (partial update)
+   */
+  async updateConfig(projectPath: string, updates: Partial<Project>): Promise<{ success: boolean; error?: string }> {
+    try {
+      if (!existsSync(projectPath)) {
+        throw new Error(`Project file not found: ${projectPath}`);
+      }
+
+      const content = await readFile(projectPath, 'utf-8');
+      const project: Project = JSON.parse(content);
+
+      // Merge updates into project
+      const updatedProject = {
+        ...project,
+        ...updates,
+        updatedAt: new Date().toISOString(),
+      };
+
+      await writeFile(projectPath, JSON.stringify(updatedProject, null, 2));
+      console.log('✅ Project config updated:', projectPath);
+
+      // Update current project if it's the same
+      if (this.currentProjectPath && projectPath.startsWith(this.currentProjectPath)) {
+        this.currentProject = updatedProject;
+      }
+
+      return { success: true };
+    } catch (error: any) {
+      console.error('❌ Failed to update project config:', error);
       return { success: false, error: error.message };
     }
   }
@@ -297,7 +396,7 @@ N'oubliez pas de mentionner les perspectives futures.
       const project: Project = JSON.parse(projectContent);
       const projectDir = dirname(data.projectPath);
 
-      let finalCslPath = data.cslPath;
+      let relativeCslPath: string | undefined = undefined;
 
       // If a CSL file is provided, copy it to project if it's external
       if (data.cslPath && existsSync(data.cslPath)) {
@@ -312,23 +411,30 @@ N'oubliez pas de mentionner les perspectives futures.
 
           try {
             await copyFile(data.cslPath, projectCslPath);
-            finalCslPath = projectCslPath;
-            console.log('✅ CSL file copied successfully');
+            // Store as relative path (just the filename)
+            relativeCslPath = cslFileName;
+            console.log('✅ CSL file copied successfully, stored as relative path:', relativeCslPath);
           } catch (copyError: any) {
             console.error('❌ Failed to copy CSL file:', copyError);
-            // Fall back to using the original path
-            finalCslPath = data.cslPath;
+            // Fall back to using absolute path
+            relativeCslPath = data.cslPath;
           }
+        } else {
+          // File is already in project directory, store as relative path
+          relativeCslPath = path.relative(projectDir, data.cslPath);
+          console.log('✅ CSL file in project directory, stored as relative path:', relativeCslPath);
         }
       }
 
-      project.cslPath = finalCslPath;
+      project.cslPath = relativeCslPath;
       project.updatedAt = new Date().toISOString();
 
       await writeFile(data.projectPath, JSON.stringify(project, null, 2));
 
-      console.log('✅ CSL path configured:', finalCslPath);
-      return { success: true, cslPath: finalCslPath };
+      console.log('✅ CSL path configured:', relativeCslPath);
+      // Return the absolute path for the UI
+      const absolutePath = relativeCslPath ? join(projectDir, relativeCslPath) : undefined;
+      return { success: true, cslPath: absolutePath };
     } catch (error: any) {
       console.error('❌ Failed to set CSL path:', error);
       return { success: false, error: error.message || 'Unknown error' };

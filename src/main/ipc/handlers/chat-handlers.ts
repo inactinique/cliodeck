@@ -47,6 +47,8 @@ export function setupChatHandlers() {
         useGraphContext: ragConfig.useGraphContext || false,
         additionalGraphDocs: ragConfig.additionalGraphDocs || 3,
         window,
+        // Collection filtering (from RAG settings panel)
+        collectionKeys: validatedData.options?.collectionKeys,
         // Provider selection (from RAG settings panel)
         provider: validatedData.options?.provider || llmConfig.generationProvider || 'auto',
         // Per-query parameters (from RAG settings panel)
@@ -64,10 +66,18 @@ export function setupChatHandlers() {
 
       console.log('🔍 [RAG DEBUG] Enriched options:', enrichedOptions);
 
-      const response = await chatService.sendMessage(validatedData.message, enrichedOptions);
+      const result = await chatService.sendMessage(validatedData.message, enrichedOptions);
 
-      console.log('📤 IPC Response: chat:send', { responseLength: response.length });
-      return successResponse({ response });
+      console.log('📤 IPC Response: chat:send', {
+        responseLength: result.response.length,
+        ragUsed: result.ragUsed,
+        sourcesCount: result.sourcesCount,
+      });
+      return successResponse({
+        response: result.response,
+        ragUsed: result.ragUsed,
+        sourcesCount: result.sourcesCount,
+      });
     } catch (error: any) {
       console.error('❌ chat:send error:', error);
       return { ...errorResponse(error), response: '' };

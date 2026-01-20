@@ -165,5 +165,29 @@ export function setupProjectHandlers() {
     }
   });
 
+  ipcMain.handle('project:get-config', async (_event, projectPath: string) => {
+    console.log('📞 IPC Call: project:get-config', { projectPath });
+    try {
+      const config = await projectManager.getConfig(projectPath);
+      console.log('📤 IPC Response: project:get-config', config ? 'success' : 'not found');
+      return config;
+    } catch (error: any) {
+      console.error('❌ project:get-config error:', error);
+      return null;
+    }
+  });
+
+  ipcMain.handle('project:update-config', async (_event, projectPath: string, updates: any) => {
+    console.log('📞 IPC Call: project:update-config', { projectPath, updates });
+    try {
+      const result = await projectManager.updateConfig(projectPath, updates);
+      console.log('📤 IPC Response: project:update-config', result);
+      return result;
+    } catch (error: any) {
+      console.error('❌ project:update-config error:', error);
+      return errorResponse(error);
+    }
+  });
+
   console.log('✅ Project handlers registered');
 }

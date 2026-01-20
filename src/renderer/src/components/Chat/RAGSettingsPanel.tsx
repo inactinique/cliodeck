@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { ChevronDown, ChevronUp, RotateCcw } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useRAGQueryStore, type LLMProvider } from '../../stores/ragQueryStore';
+import { CollectionMultiSelect } from './CollectionMultiSelect';
 import './RAGSettingsPanel.css';
 
 export const RAGSettingsPanel: React.FC = () => {
@@ -10,11 +11,15 @@ export const RAGSettingsPanel: React.FC = () => {
     params,
     availableModels,
     isLoadingModels,
+    availableCollections,
+    isLoadingCollections,
     isSettingsPanelOpen,
     setParams,
     resetToDefaults,
     toggleSettingsPanel,
     loadAvailableModels,
+    loadAvailableCollections,
+    setSelectedCollections,
   } = useRAGQueryStore();
 
   const [showAdvanced, setShowAdvanced] = useState(false);
@@ -66,6 +71,17 @@ export const RAGSettingsPanel: React.FC = () => {
     hasTriedLoading.current = false; // Reset flag to allow retry
     loadAvailableModels();
   };
+
+  const handleRefreshCollections = () => {
+    loadAvailableCollections();
+  };
+
+  // Load collections when panel opens (if not already loaded)
+  useEffect(() => {
+    if (isSettingsPanelOpen && availableCollections.length === 0 && !isLoadingCollections) {
+      loadAvailableCollections();
+    }
+  }, [isSettingsPanelOpen]);
 
   return (
     <div className="rag-settings-panel">
@@ -145,6 +161,43 @@ export const RAGSettingsPanel: React.FC = () => {
             </small>
           </div>
           )}
+
+          {/* Collection Filter */}
+          <div className="setting-group">
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <label htmlFor="collection-filter">
+                Filter by Collection
+                {isLoadingCollections && <span className="loading-indicator"> (loading...)</span>}
+              </label>
+              <button
+                onClick={handleRefreshCollections}
+                disabled={isLoadingCollections}
+                style={{
+                  padding: '4px 8px',
+                  fontSize: '11px',
+                  background: 'var(--surface-variant)',
+                  border: '1px solid var(--border-color)',
+                  borderRadius: '3px',
+                  cursor: isLoadingCollections ? 'not-allowed' : 'pointer',
+                  opacity: isLoadingCollections ? 0.5 : 1,
+                }}
+              >
+                🔄 Refresh
+              </button>
+            </div>
+            <CollectionMultiSelect
+              collections={availableCollections}
+              selectedKeys={params.selectedCollectionKeys}
+              onChange={setSelectedCollections}
+              placeholder="All collections (no filter)"
+              disabled={isLoadingCollections}
+            />
+            <small className="setting-hint">
+              {params.selectedCollectionKeys.length === 0
+                ? 'Search will include all documents'
+                : `Search limited to ${params.selectedCollectionKeys.length} collection(s)`}
+            </small>
+          </div>
 
           {/* Top K */}
           <div className="setting-group">

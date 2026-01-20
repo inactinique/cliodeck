@@ -4,8 +4,8 @@ import { Crepe } from '@milkdown/crepe';
 import { editorViewCtx } from '@milkdown/kit/core';
 import { useEditorStore } from '../../stores/editorStore';
 import { useBibliographyStore } from '../../stores/bibliographyStore';
+import { useTheme } from '../../hooks/useTheme';
 import '@milkdown/crepe/theme/common/style.css';
-import '@milkdown/crepe/theme/nord-dark.css';
 import './MilkdownEditor.css';
 
 // Citation autocomplete component
@@ -87,6 +87,7 @@ const CitationAutocomplete: React.FC<{
 export const MilkdownEditor: React.FC = () => {
   const { t } = useTranslation('common');
   const { content, filePath, setContent, settings } = useEditorStore();
+  const { currentTheme } = useTheme(); // Use global theme instead of editor settings
   const editorContainerRef = useRef<HTMLDivElement>(null);
   const crepeRef = useRef<Crepe | null>(null);
   const isInternalUpdate = useRef(false);
@@ -292,7 +293,7 @@ export const MilkdownEditor: React.FC = () => {
   return (
     <div
       ref={editorContainerRef}
-      className={`milkdown-editor-container ${settings.theme === 'dark' ? 'milkdown-dark' : 'milkdown-light'}`}
+      className={`milkdown-editor-container ${currentTheme === 'dark' ? 'milkdown-dark' : 'milkdown-light'}`}
     >
       {showCitationMenu && (
         <CitationAutocomplete

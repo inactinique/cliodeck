@@ -23,6 +23,10 @@
   align-items: center;
 }
 
+.toolbar-section-right {
+  margin-left: auto;
+}
+
 .toolbar-btn {
   background: none;
   border: none;

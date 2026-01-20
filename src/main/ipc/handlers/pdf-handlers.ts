@@ -8,6 +8,7 @@ import { pdfService } from '../../services/pdf-service.js';
 import { historyService } from '../../services/history-service.js';
 import { successResponse, errorResponse, requireProject } from '../utils/error-handler.js';
 import { validate, PDFSearchSchema } from '../utils/validation.js';
+import { PDFModificationDetector } from '../../../../backend/services/PDFModificationDetector.js';
 
 export function setupPDFHandlers() {
   ipcMain.handle('pdf:extractMetadata', async (_event, filePath: string) => {
@@ -136,11 +137,13 @@ export function setupPDFHandlers() {
   });
 
   ipcMain.handle('pdf:get-all', async () => {
+    console.log('📞 IPC Call: pdf:get-all');
     try {
       const projectPath = projectManager.getCurrentProjectPath();
       requireProject(projectPath);
 
       const documents = await pdfService.getAllDocuments();
+      console.log(`📤 IPC Response: pdf:get-all { documentCount: ${documents.length} }`);
       return successResponse({ documents });
     } catch (error: any) {
       console.error('❌ pdf:get-all error:', error);
@@ -179,6 +182,28 @@ export function setupPDFHandlers() {
         ...errorResponse(error),
         statistics: { totalDocuments: 0, totalChunks: 0, totalEmbeddings: 0 },
       };
+    }
+  });
+
+  ipcMain.handle('pdf:check-modified-pdfs', async (_event, options: {
+    citations: any[];
+    projectPath: string;
+  }) => {
+    console.log('📞 IPC Call: pdf:check-modified-pdfs', {
+      citationCount: options.citations.length,
+      projectPath: options.projectPath
+    });
+    try {
+      const detector = new PDFModificationDetector();
+      const result = await detector.detectModifiedPDFs(options.citations);
+      console.log('📤 IPC Response: pdf:check-modified-pdfs', {
+        totalChecked: result.totalChecked,
+        totalModified: result.totalModified
+      });
+      return successResponse(result);
+    } catch (error: any) {
+      console.error('❌ pdf:check-modified-pdfs error:', error);
+      return errorResponse(error);
     }
   });
 

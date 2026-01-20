@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import type { Editor } from '@milkdown/kit/core';
 import { editorViewCtx } from '@milkdown/kit/core';
+import type { editor } from 'monaco-editor';
 import { logger } from '../utils/logger';
 
 // MARK: - Types
@@ -29,8 +30,14 @@ interface EditorState {
   // Preview
   showPreview: boolean;
 
+  // Editor mode
+  editorMode: 'wysiwyg' | 'source';
+
   // Milkdown editor reference
   milkdownEditor: Editor | null;
+
+  // Monaco editor reference
+  monacoEditor: editor.IStandaloneCodeEditor | null;
 
   // Actions
   setContent: (content: string) => void;
@@ -43,6 +50,8 @@ interface EditorState {
   updateSettings: (settings: Partial<EditorSettings>) => void;
   togglePreview: () => void;
   toggleStats: () => void;
+  toggleEditorMode: () => void;
+  setMonacoEditor: (editor: editor.IStandaloneCodeEditor | null) => void;
 
   insertText: (text: string) => void;
   insertCitation: (citationKey: string) => void;
@@ -72,7 +81,9 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   isDirty: false,
   settings: DEFAULT_SETTINGS,
   showPreview: false,
+  editorMode: 'wysiwyg',
   milkdownEditor: null,
+  monacoEditor: null,
 
   setContent: (content: string) => {
     set({
@@ -171,6 +182,18 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   toggleStats: () => {
     // Stats are always visible in the new editor, this is a no-op for compatibility
     logger.store('Editor', 'toggleStats called (no-op)');
+  },
+
+  toggleEditorMode: () => {
+    set((state) => {
+      const newMode = state.editorMode === 'wysiwyg' ? 'source' : 'wysiwyg';
+      logger.store('Editor', 'toggleEditorMode', { from: state.editorMode, to: newMode });
+      return { editorMode: newMode };
+    });
+  },
+
+  setMonacoEditor: (editor: editor.IStandaloneCodeEditor | null) => {
+    set({ monacoEditor: editor });
   },
 
   insertText: (text: string) => {

@@ -271,6 +271,21 @@
     "embeddingModelHelp": "Modell für Vektor-Embeddings",
     "chatModel": "Chat-Modell",
     "chatModelHelp": "Modell für Textgenerierung",
+    "embeddingStrategy": "Embedding-Strategie",
+    "embeddingStrategyHelp": "Modellauswahl und Fallback-Verhalten bei Fehlern",
+    "embeddingStrategyWarning": "⚠️ Warnung: Das Ändern dieses Modells erfordert eine Neuindizierung aller PDFs.",
+    "embeddingStrategyWarningDetails": "Embeddings sind zwischen verschiedenen Modellen nicht kompatibel. Sie müssen alle indizierten PDFs löschen und nach der Änderung neu indizieren.",
+    "embeddingStrategyRecommended": "Empfohlene Modelle:",
+    "embeddingStrategyOptions": {
+      "nomicFallback": "nomic-embed-text mit Fallback auf mxbai-embed-large",
+      "mxbaiOnly": "nur mxbai-embed-large (kein Fallback)",
+      "custom": "Benutzerdefiniertes Modell (kein Fallback)"
+    },
+    "embeddingStrategyDescriptions": {
+      "nomicFallback": "Verwendet nomic-embed-text, wechselt bei Fehlern automatisch zu mxbai-embed-large (empfohlen)",
+      "mxbaiOnly": "Verwendet nur mxbai-embed-large, kein Fallback (für Konsistenz)",
+      "custom": "Verwendet das obige benutzerdefinierte Modell, kein Fallback (für fortgeschrittene Benutzer)"
+    },
     "availableModels": "Verfügbare Modelle",
     "refreshModels": "Modelle aktualisieren",
     "testConnection": "Verbindung testen",
@@ -362,6 +377,7 @@
     "newLineHint": "Shift + Enter für neue Zeile",
     "you": "Sie",
     "assistant": "Assistent",
+    "noContextWarning": "Diese Antwort basiert nicht auf Ihren Dokumenten. Es wurden keine relevanten Passagen in Ihrem Korpus gefunden.",
     "sources": "Quellen",
     "source": "Quelle",
     "excerpt": "Auszug:",
@@ -489,7 +505,9 @@
     "newFileConfirm": "Neue Datei erstellen? Nicht gespeicherte Änderungen gehen verloren.",
     "markdown": "Markdown",
     "openError": "Fehler beim Öffnen der Datei",
-    "saveError": "Fehler beim Speichern der Datei"
+    "saveError": "Fehler beim Speichern der Datei",
+    "wysiwygMode": "Visueller Modus (WYSIWYG)",
+    "sourceMode": "Quellmodus (Markdown)"
   },
   "ragSettings": {
     "provider": "LLM-Anbieter",
@@ -664,5 +682,22 @@
     "filtered": "gefiltert",
     "noResults": "Keine Ergebnisse",
     "tryDifferentSearch": "Versuchen Sie einen anderen Suchbegriff"
+  },
+  "topicModeling": {
+    "title": "Topic Modeling (Optional)",
+    "description": "Topic Modeling verwendet BERTopic (Python), um die Hauptthemen in Ihrem Korpus zu identifizieren. Diese Funktion ist optional und erfordert die Installation einer Python-Umgebung.",
+    "loading": "Laden...",
+    "installed": "Installiert",
+    "notInstalled": "Nicht installiert",
+    "pythonVersion": "Python-Version",
+    "venvPath": "Venv",
+    "installButton": "Python-Umgebung installieren",
+    "installingButton": "Installation läuft...",
+    "reinstallButton": "Neu installieren",
+    "reinstallingButton": "Neuinstallation läuft...",
+    "checkButton": "Prüfen",
+    "clearLog": "Log löschen",
+    "installSuccess": "Installation erfolgreich abgeschlossen",
+    "installError": "Fehler"
   }
 }

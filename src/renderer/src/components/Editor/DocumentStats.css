@@ -17,7 +17,7 @@
   display: flex;
   align-items: center;
   gap: 0.1rem;
-  var(--text-primary)-space: nowrap;
+  white-space: nowrap;
   font-size: 8px;
 
 }

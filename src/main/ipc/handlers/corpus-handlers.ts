@@ -138,5 +138,27 @@ export function setupCorpusHandlers() {
     }
   });
 
+  // Zotero collections handler (for RAG filtering)
+  ipcMain.handle('corpus:get-collections', async () => {
+    console.log('📞 IPC Call: corpus:get-collections');
+    try {
+      const vectorStore = pdfService.getVectorStore();
+      if (!vectorStore) {
+        console.log('📤 IPC Response: corpus:get-collections - no project loaded');
+        return { success: false, error: 'No project loaded', collections: [] };
+      }
+
+      const collections = vectorStore.getAllCollections();
+
+      console.log('📤 IPC Response: corpus:get-collections', {
+        collectionCount: collections.length,
+      });
+      return { success: true, collections };
+    } catch (error: any) {
+      console.error('❌ corpus:get-collections error:', error);
+      return { success: false, error: error.message, collections: [] };
+    }
+  });
+
   console.log('✅ Corpus handlers registered');
 }

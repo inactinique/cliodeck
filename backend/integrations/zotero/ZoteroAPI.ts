@@ -5,6 +5,8 @@ export interface ZoteroConfig {
   userId: string;
   apiKey: string;
   baseURL?: string;
+  /** If set, use group library instead of user library */
+  groupId?: string;
 }
 
 export interface ZoteroItem {
@@ -44,11 +46,28 @@ export interface ZoteroItem {
 
 export interface ZoteroAttachment {
   key: string;
-  itemType: 'attachment';
-  linkMode: string;
-  contentType?: string;
-  filename?: string;
-  path?: string;
+  version: number;
+  library?: {
+    type: string;
+    id: number;
+    name: string;
+  };
+  data: {
+    key: string;
+    version: number;
+    itemType: 'attachment';
+    linkMode: string;
+    contentType?: string;
+    filename?: string;
+    path?: string;
+    title?: string;
+    note?: string;
+    tags?: Array<{ tag: string }>;
+    dateAdded?: string;
+    dateModified?: string;
+    md5?: string;
+    mtime?: number;
+  };
 }
 
 export interface ZoteroCollection {
@@ -71,6 +90,17 @@ export class ZoteroAPI {
     this.baseURL = config.baseURL || 'https://api.zotero.org';
   }
 
+  /**
+   * Returns the library prefix for API calls
+   * Uses /groups/{groupId} if groupId is set, otherwise /users/{userId}
+   */
+  private getLibraryPrefix(): string {
+    if (this.config.groupId) {
+      return `${this.baseURL}/groups/${this.config.groupId}`;
+    }
+    return `${this.baseURL}/users/${this.config.userId}`;
+  }
+
   // MARK: - Collections
 
   /**
@@ -87,7 +117,7 @@ export class ZoteroAPI {
       params.append('limit', pageSize.toString());
       params.append('start', start.toString());
 
-      const url = `${this.baseURL}/users/${this.config.userId}/collections?${params.toString()}`;
+      const url = `${this.getLibraryPrefix()}/collections?${params.toString()}`;
 
       const collections = (await this.makeRequest(url)) as ZoteroCollection[];
       allCollections.push(...collections);
@@ -117,7 +147,7 @@ export class ZoteroAPI {
    * Obtient une collection spécifique
    */
   async getCollection(collectionKey: string): Promise<ZoteroCollection> {
-    const url = `${this.baseURL}/users/${this.config.userId}/collections/${collectionKey}`;
+    const url = `${this.getLibraryPrefix()}/collections/${collectionKey}`;
     const response = await this.makeRequest(url);
     return response as ZoteroCollection;
   }
@@ -140,8 +170,8 @@ export class ZoteroAPI {
 
     while (hasMore) {
       let url = options?.collectionKey
-        ? `${this.baseURL}/users/${this.config.userId}/collections/${options.collectionKey}/items`
-        : `${this.baseURL}/users/${this.config.userId}/items`;
+        ? `${this.getLibraryPrefix()}/collections/${options.collectionKey}/items`
+        : `${this.getLibraryPrefix()}/items`;
 
       const params = new URLSearchParams();
       params.append('limit', pageSize.toString());
@@ -176,7 +206,7 @@ export class ZoteroAPI {
    * Obtient un item spécifique
    */
   async getItem(itemKey: string): Promise<ZoteroItem> {
-    const url = `${this.baseURL}/users/${this.config.userId}/items/${itemKey}`;
+    const url = `${this.getLibraryPrefix()}/items/${itemKey}`;
     const response = await this.makeRequest(url);
     return response as ZoteroItem;
   }
@@ -185,7 +215,7 @@ export class ZoteroAPI {
    * Liste les enfants d'un item (attachements, notes)
    */
   async getItemChildren(itemKey: string): Promise<ZoteroItem[]> {
-    const url = `${this.baseURL}/users/${this.config.userId}/items/${itemKey}/children`;
+    const url = `${this.getLibraryPrefix()}/items/${itemKey}/children`;
     const response = await this.makeRequest(url);
     return response as ZoteroItem[];
   }
@@ -194,19 +224,36 @@ export class ZoteroAPI {
 
   /**
    * Exporte une collection en BibTeX (inclut récursivement les sous-collections)
+   * Déduplique les entrées pour éviter les doublons quand un item est dans plusieurs collections
    */
   async exportCollectionAsBibTeX(collectionKey: string, includeSubcollections: boolean = true): Promise<string> {
-    const allBibTeX: string[] = [];
-    let totalEntries = 0;
+    // Use a Map to store unique entries by their BibTeX key
+    const uniqueEntries = new Map<string, string>();
+
+    // Helper function to extract entries from BibTeX string and add to map
+    const addEntriesToMap = (bibtex: string) => {
+      // Split by @ to get individual entries
+      const entries = bibtex.split(/(?=@\w+\{)/);
+      for (const entry of entries) {
+        const trimmed = entry.trim();
+        if (!trimmed || !trimmed.startsWith('@')) continue;
+
+        // Extract the BibTeX key (e.g., @article{smith2020, -> smith2020)
+        const keyMatch = trimmed.match(/@\w+\{([^,]+),/);
+        if (keyMatch && keyMatch[1]) {
+          const bibKey = keyMatch[1].trim();
+          // Only add if not already present (keep first occurrence)
+          if (!uniqueEntries.has(bibKey)) {
+            uniqueEntries.set(bibKey, trimmed);
+          }
+        }
+      }
+    };
 
     // Export main collection
     const mainBibTeX = await this.exportSingleCollectionAsBibTeX(collectionKey);
-    const mainEntryCount = (mainBibTeX.match(/@\w+\{/g) || []).length;
-    if (mainBibTeX && mainBibTeX.trim().length > 0) {
-      allBibTeX.push(mainBibTeX);
-      totalEntries += mainEntryCount;
-    }
-    console.log(`📚 Collection principale: ${mainEntryCount} entrées`);
+    addEntriesToMap(mainBibTeX);
+    console.log(`📚 Collection principale: ${uniqueEntries.size} entrées uniques`);
 
     // Export subcollections if requested
     if (includeSubcollections) {
@@ -214,18 +261,17 @@ export class ZoteroAPI {
       console.log(`🔍 ${subcollections.length} sous-collections trouvées`);
 
       for (const subcol of subcollections) {
+        const beforeCount = uniqueEntries.size;
         const subBibTeX = await this.exportCollectionAsBibTeX(subcol.key, true); // Recursive
-        const subEntryCount = (subBibTeX.match(/@\w+\{/g) || []).length;
-        if (subBibTeX && subBibTeX.trim().length > 0 && subEntryCount > 0) {
-          allBibTeX.push(subBibTeX);
-          totalEntries += subEntryCount;
-        }
-        console.log(`  📁 Sous-collection "${subcol.data.name}": ${subEntryCount} entrées`);
+        // Parse and add entries (deduplication happens in addEntriesToMap)
+        addEntriesToMap(subBibTeX);
+        const newEntries = uniqueEntries.size - beforeCount;
+        console.log(`  📁 Sous-collection "${subcol.data.name}": ${newEntries} nouvelles entrées`);
       }
     }
 
-    console.log(`📚 Total BibTeX entries fetched: ${totalEntries}`);
-    return allBibTeX.join('\n\n');
+    console.log(`📚 Total BibTeX entries (deduplicated): ${uniqueEntries.size}`);
+    return Array.from(uniqueEntries.values()).join('\n\n');
   }
 
   /**
@@ -243,7 +289,7 @@ export class ZoteroAPI {
       params.append('limit', pageSize.toString());
       params.append('start', start.toString());
 
-      const url = `${this.baseURL}/users/${this.config.userId}/collections/${collectionKey}/items?${params.toString()}`;
+      const url = `${this.getLibraryPrefix()}/collections/${collectionKey}/items?${params.toString()}`;
 
       const response = await this.makeRequest(url, { headers: { Accept: 'text/plain' } });
       const bibtex = response as string;
@@ -284,7 +330,7 @@ export class ZoteroAPI {
       params.append('limit', pageSize.toString());
       params.append('start', start.toString());
 
-      const url = `${this.baseURL}/users/${this.config.userId}/items?${params.toString()}`;
+      const url = `${this.getLibraryPrefix()}/items?${params.toString()}`;
 
       const response = await this.makeRequest(url, { headers: { Accept: 'text/plain' } });
       const bibtex = response as string;
@@ -316,10 +362,36 @@ export class ZoteroAPI {
   // MARK: - Files
 
   /**
-   * Télécharge un fichier attaché (PDF)
+   * Récupère les attachments PDF d'un item
    */
-  async downloadFile(itemKey: string, savePath: string): Promise<void> {
-    const url = `${this.baseURL}/users/${this.config.userId}/items/${itemKey}/file`;
+  async getItemAttachments(itemKey: string): Promise<ZoteroAttachment[]> {
+    const children = await this.getItemChildren(itemKey);
+
+    // Filter only PDF attachments and cast to ZoteroAttachment
+    return children.filter((child) => {
+      return child.data.itemType === 'attachment';
+    }) as ZoteroAttachment[];
+  }
+
+  /**
+   * Vérifie si un item a des PDFs attachés
+   */
+  async hasAttachments(itemKey: string): Promise<boolean> {
+    const attachments = await this.getItemAttachments(itemKey);
+    return attachments.length > 0;
+  }
+
+  /**
+   * Télécharge un fichier attaché (PDF)
+   * @param itemKey - Clé de l'attachment (pas de l'item parent)
+   * @param savePath - Chemin où sauvegarder le fichier
+   * @returns Métadonnées du fichier téléchargé
+   */
+  async downloadFile(
+    itemKey: string,
+    savePath: string
+  ): Promise<{ filename: string; size: number }> {
+    const url = `${this.getLibraryPrefix()}/items/${itemKey}/file`;
 
     const response = await fetch(url, {
       headers: {
@@ -332,8 +404,32 @@ export class ZoteroAPI {
     }
 
     const fs = await import('fs');
+    const path = await import('path');
+
+    // Get filename from Content-Disposition header or use default
+    const contentDisposition = response.headers.get('content-disposition');
+    let filename = 'document.pdf';
+
+    if (contentDisposition) {
+      const match = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+      if (match && match[1]) {
+        filename = match[1].replace(/['"]/g, '');
+      }
+    }
+
+    // Ensure directory exists
+    const dir = path.dirname(savePath);
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+
     const buffer = await response.arrayBuffer();
     fs.writeFileSync(savePath, Buffer.from(buffer));
+
+    return {
+      filename,
+      size: buffer.byteLength,
+    };
   }
 
   // MARK: - Request Helper

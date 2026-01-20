@@ -210,8 +210,17 @@ export class TextometricsService {
    * @returns Liste de mots (lowercase, nettoyés)
    */
   private tokenize(text: string): string[] {
+    // Supprimer les URLs et DOIs avant la tokenisation
+    let cleanedText = text
+      // Supprimer les URLs (http, https, ftp)
+      .replace(/(?:https?|ftp):\/\/[^\s]+/gi, ' ')
+      // Supprimer les DOIs (format doi:10.xxxx ou https://doi.org/10.xxxx)
+      .replace(/\b(?:doi[:\s]*)?10\.\d{4,}(?:\.\d+)*\/[^\s]+/gi, ' ')
+      // Supprimer les emails
+      .replace(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g, ' ');
+
     // Nettoyer et normaliser le texte
-    const normalized = text
+    const normalized = cleanedText
       .toLowerCase()
       // Remplacer les apostrophes typographiques par des apostrophes simples
       .replace(/['']/g, "'")
@@ -224,10 +233,50 @@ export class TextometricsService {
     // Séparer en mots
     const words = normalized.split(/\s+/).filter((word) => {
       // Filtrer les mots vides et trop courts
-      return word.length >= 2 && !this.stopwords.has(word);
+      if (word.length < 2 || this.stopwords.has(word)) {
+        return false;
+      }
+      // Filtrer les fragments d'URLs/DOIs qui pourraient rester
+      if (this.isUrlOrDoiFragment(word)) {
+        return false;
+      }
+      return true;
     });
 
     return words;
+  }
+
+  /**
+   * Vérifie si un mot est un fragment d'URL ou de DOI
+   */
+  private isUrlOrDoiFragment(word: string): boolean {
+    // Mots typiques des URLs et DOIs à filtrer
+    const urlDoiPatterns = [
+      /^https?$/,
+      /^www$/,
+      /^ftp$/,
+      /^doi$/,
+      /^org$/,
+      /^com$/,
+      /^net$/,
+      /^edu$/,
+      /^gov$/,
+      /^io$/,
+      /^fr$/,
+      /^de$/,
+      /^uk$/,
+      /^pdf$/,
+      /^html$/,
+      /^htm$/,
+      /^php$/,
+      /^aspx?$/,
+      /^jsp$/,
+      /^\d{4,}$/, // Séquences de chiffres (typiques des DOIs)
+      /^[a-z]\d+$/, // Lettres suivies de chiffres (ex: s12345)
+      /^\d+[a-z]+$/, // Chiffres suivis de lettres
+    ];
+
+    return urlDoiPatterns.some(pattern => pattern.test(word));
   }
 
   /**

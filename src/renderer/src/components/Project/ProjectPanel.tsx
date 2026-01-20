@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { FilePlus, FolderOpen, X, FileDown, FileType } from 'lucide-react';
+import { FilePlus, FolderOpen, X, FileDown, FileType, ExternalLink } from 'lucide-react';
 import { useProjectStore } from '../../stores/projectStore';
 import { useEditorStore } from '../../stores/editorStore';
 import { CollapsibleSection } from '../common/CollapsibleSection';
@@ -8,6 +8,8 @@ import { PDFExportModal } from '../Export/PDFExportModal';
 import { WordExportModal } from '../Export/WordExportModal';
 import { BeamerConfig } from './BeamerConfig';
 import { CSLSettings } from './CSLSettings';
+import { ActionsSection } from '../Config/ActionsSection';
+import { ZoteroProjectSettings } from './ZoteroProjectSettings';
 import './ProjectPanel.css';
 
 export const ProjectPanel: React.FC = () => {
@@ -15,6 +17,7 @@ export const ProjectPanel: React.FC = () => {
   const {
     currentProject,
     recentProjects,
+    isLoading,
     loadProject,
     createProject,
     closeProject,
@@ -133,8 +136,25 @@ export const ProjectPanel: React.FC = () => {
     }
   };
 
+  const handleOpenProjectInFinder = async () => {
+    if (currentProject?.path) {
+      try {
+        await window.electron.shell.openPath(currentProject.path);
+      } catch (error: any) {
+        console.error('Failed to open project folder:', error);
+        alert(t('project.openFolderError') + ': ' + error.message);
+      }
+    }
+  };
+
   return (
-    <div className="project-panel">
+    <div className="project-panel" style={{ position: 'relative' }}>
+      {isLoading && (
+        <div className="project-loading-overlay">
+          <div className="project-loading-spinner" />
+          <div className="project-loading-text">{t('project.loading')}</div>
+        </div>
+      )}
       <div className="project-content">
         {/* Action Buttons */}
         <div className="project-actions">
@@ -192,6 +212,14 @@ export const ProjectPanel: React.FC = () => {
                   <span>{new Date(currentProject.createdAt).toLocaleDateString('fr-FR')}</span>
                 </div>
               </div>
+              <button
+                className="project-btn"
+                onClick={handleOpenProjectInFinder}
+                style={{ marginTop: '1rem', width: '100%', display: 'flex', alignItems: 'center', gap: '0.5rem', justifyContent: 'center' }}
+              >
+                <ExternalLink size={16} />
+                {t('project.openInFinder')}
+              </button>
             </CollapsibleSection>
 
             {/* File list for Article and Book projects */}
@@ -254,6 +282,12 @@ export const ProjectPanel: React.FC = () => {
                 />
               </CollapsibleSection>
             )}
+
+            {/* Zotero Project Settings */}
+            <ZoteroProjectSettings projectPath={currentProject.path} />
+
+            {/* Database Actions - project-specific */}
+            <ActionsSection />
 
             <button
               className="project-btn"

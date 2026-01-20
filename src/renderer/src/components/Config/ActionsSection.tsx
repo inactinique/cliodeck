@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { CollapsibleSection } from '../common/CollapsibleSection';
+import './ConfigPanel.css';
 
 export const ActionsSection: React.FC = () => {
   const { t } = useTranslation('common');
@@ -94,15 +95,7 @@ export const ActionsSection: React.FC = () => {
               <strong>{t('actions.databaseInfo.chunksStored')}:</strong> {stats.totalChunks}
               <br />
               <strong>{t('actions.databaseInfo.path')}:</strong>
-              <div style={{
-                marginTop: '4px',
-                padding: '8px',
-                background: '#3c3c3c',
-                borderRadius: '4px',
-                fontSize: '12px',
-                fontFamily: 'monospace',
-                wordBreak: 'break-all',
-              }}>
+              <div className="database-path-display">
                 {stats.databasePath || t('actions.databaseInfo.loading')}
               </div>
               <div style={{ marginTop: '8px', display: 'flex', gap: '8px' }}>
