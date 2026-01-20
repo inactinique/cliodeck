@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Citation, useBibliographyStore } from '../../stores/bibliographyStore';
 import { PDFSelectionDialog } from './PDFSelectionDialog';
@@ -17,7 +17,7 @@ export const CitationCard: React.FC<CitationCardProps> = ({ citation }) => {
   const [isIndexing, setIsIndexing] = useState(false);
   const [showPDFSelection, setShowPDFSelection] = useState(false);
   const [showMetadataModal, setShowMetadataModal] = useState(false);
-  const { selectCitation, insertCitation, indexPDFFromCitation, reindexPDFFromCitation, isFileIndexed, refreshIndexedPDFs, downloadAndIndexZoteroPDF, updateCitationMetadata, getAllTags } = useBibliographyStore();
+  const { selectCitation, insertCitation, indexPDFFromCitation, reindexPDFFromCitation, isFileIndexed, downloadAndIndexZoteroPDF, updateCitationMetadata, getAllTags } = useBibliographyStore();
   const { currentProject } = useProjectStore();
 
   const hasPDF = !!citation.file;
@@ -25,10 +25,8 @@ export const CitationCard: React.FC<CitationCardProps> = ({ citation }) => {
   const zoteroCount = citation.zoteroAttachments?.length || 0;
   const isIndexed = hasPDF && isFileIndexed(citation.file!);
 
-  // Refresh indexed status on mount
-  useEffect(() => {
-    refreshIndexedPDFs();
-  }, []);
+  // Note: refreshIndexedPDFs is called once at the BibliographyPanel level,
+  // no need to call it for each card
 
   const handleInsert = () => {
     insertCitation(citation.id);
