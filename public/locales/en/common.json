@@ -771,6 +771,7 @@
   "common": {
     "cancel": "Cancel",
     "close": "Close",
+    "done": "Done",
     "dismiss": "Dismiss",
     "showMore": "Show more",
     "showLess": "Show less"
@@ -791,5 +792,41 @@
     "clearLog": "Clear log",
     "installSuccess": "Installation completed successfully",
     "installError": "Error"
+  },
+  "similarity": {
+    "title": "Find Similarities",
+    "analyze": "Analyze Document",
+    "analyzing": "Analyzing...",
+    "emptyDocument": "The document is empty. Write some content before running the analysis.",
+    "emptyState": "Analyze your document to find relevant bibliographic sources for each section.",
+    "summary": "{{segments}} segments analyzed, {{recommendations}} recommendations",
+    "segments": "segments",
+    "options": "Options",
+    "optionsTitle": "Analysis Options",
+    "clear": "Clear",
+    "clearConfirm": "Clear similarity results?",
+    "refresh": "Re-analyze",
+    "granularity": "Granularity",
+    "granularityDescription": "Choose how to split your text for analysis",
+    "granularity.section": "Section",
+    "granularity.paragraph": "Paragraph",
+    "granularity.sentence": "Sentence",
+    "maxResults": "Results per segment",
+    "maxResultsDescription": "Maximum number of recommended PDFs per segment",
+    "threshold": "Similarity threshold",
+    "thresholdDescription": "Minimum score for a PDF to be recommended (0 = no filter)",
+    "noFilter": "Auto",
+    "type": {
+      "section": "Section",
+      "paragraph": "Paragraph",
+      "sentence": "Sentence"
+    },
+    "lines": "Lines {{start}}-{{end}}",
+    "noRecommendations": "No similar sources found for this segment",
+    "openPDF": "Open",
+    "insertCitation": "Cite",
+    "showPreview": "Show excerpt",
+    "hidePreview": "Hide excerpt",
+    "page": "Page {{page}}"
   }
 }

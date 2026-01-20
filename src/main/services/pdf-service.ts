@@ -369,6 +369,15 @@ class PDFService {
     return this.vectorStore!.getAllDocuments();
   }
 
+  /**
+   * Get a specific document by its ID
+   */
+  async getDocument(documentId: string) {
+    this.ensureInitialized();
+    const documents = this.vectorStore!.getAllDocuments();
+    return documents.find((doc) => doc.id === documentId) || null;
+  }
+
   async deleteDocument(documentId: string) {
     this.ensureInitialized();
     return this.vectorStore!.deleteDocument(documentId);

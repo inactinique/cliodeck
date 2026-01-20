@@ -151,6 +151,24 @@ export function setupPDFHandlers() {
     }
   });
 
+  ipcMain.handle('pdf:get-document', async (_event, documentId: string) => {
+    console.log('📞 IPC Call: pdf:get-document', { documentId });
+    try {
+      const projectPath = projectManager.getCurrentProjectPath();
+      requireProject(projectPath);
+
+      const document = await pdfService.getDocument(documentId);
+      if (!document) {
+        return { success: false, error: 'Document not found', document: null };
+      }
+      console.log(`📤 IPC Response: pdf:get-document { title: ${document.title} }`);
+      return successResponse({ document });
+    } catch (error: any) {
+      console.error('❌ pdf:get-document error:', error);
+      return { ...errorResponse(error), document: null };
+    }
+  });
+
   ipcMain.handle('pdf:get-statistics', async () => {
     console.log('📞 IPC Call: pdf:get-statistics');
     try {

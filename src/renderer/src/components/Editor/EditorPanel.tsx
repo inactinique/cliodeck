@@ -1,11 +1,13 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { FileText, FolderOpen, Save, CheckCircle, BookOpen, Superscript, Eye, Code2 } from 'lucide-react';
+import { FileText, FolderOpen, Save, CheckCircle, BookOpen, Superscript, Eye, Code2, Search } from 'lucide-react';
 import { MilkdownEditor } from './MilkdownEditor';
 import { MarkdownEditor } from './MarkdownEditor';
 import { DocumentStats } from './DocumentStats';
+import { SimilarityPanel } from '../Similarity/SimilarityPanel';
 import { useEditorStore } from '../../stores/editorStore';
 import { useBibliographyStore } from '../../stores/bibliographyStore';
+import { useSimilarityStore } from '../../stores/similarityStore';
 import { useAutoSave } from '../../hooks/useAutoSave';
 import { logger } from '../../utils/logger';
 import './EditorPanel.css';
@@ -14,6 +16,7 @@ export const EditorPanel: React.FC = () => {
   const { t } = useTranslation('common');
   const { loadFile, saveFile, setContent, content, insertFormatting, editorMode, toggleEditorMode } = useEditorStore();
   const { citations } = useBibliographyStore();
+  const { openPanel: openSimilarityPanel, isPanelOpen: isSimilarityPanelOpen } = useSimilarityStore();
 
   // Enable auto-save functionality
   useAutoSave();
@@ -141,10 +144,17 @@ export const EditorPanel: React.FC = () => {
           </button>
         </div>
 
-        {/* Validation */}
+        {/* Validation and Similarity */}
         <div className="toolbar-section">
           <button className="toolbar-btn" onClick={handleCheckCitations} title={t('toolbar.checkCitations')}>
             <CheckCircle size={18} strokeWidth={1.5} />
+          </button>
+          <button
+            className={`toolbar-btn ${isSimilarityPanelOpen ? 'active' : ''}`}
+            onClick={openSimilarityPanel}
+            title={t('similarity.title')}
+          >
+            <Search size={18} strokeWidth={1.5} />
           </button>
         </div>
 
@@ -172,6 +182,9 @@ export const EditorPanel: React.FC = () => {
         {editorMode === 'wysiwyg' ? <MilkdownEditor /> : <MarkdownEditor />}
         <DocumentStats />
       </div>
+
+      {/* Similarity Panel (floating) */}
+      <SimilarityPanel />
     </div>
   );
 };

@@ -771,6 +771,7 @@
   "common": {
     "cancel": "Annuler",
     "close": "Fermer",
+    "done": "Terminé",
     "dismiss": "Ignorer",
     "showMore": "Voir plus",
     "showLess": "Voir moins"
@@ -791,5 +792,41 @@
     "clearLog": "Effacer le log",
     "installSuccess": "Installation terminée avec succès",
     "installError": "Erreur"
+  },
+  "similarity": {
+    "title": "Trouver des similarités",
+    "analyze": "Analyser le document",
+    "analyzing": "Analyse en cours...",
+    "emptyDocument": "Le document est vide. Rédigez du contenu avant de lancer l'analyse.",
+    "emptyState": "Analysez votre document pour trouver des sources bibliographiques pertinentes pour chaque section.",
+    "summary": "{{segments}} segments analysés, {{recommendations}} recommandations",
+    "segments": "segments",
+    "options": "Options",
+    "optionsTitle": "Options d'analyse",
+    "clear": "Effacer",
+    "clearConfirm": "Effacer les résultats de similarité ?",
+    "refresh": "Réanalyser",
+    "granularity": "Granularité",
+    "granularityDescription": "Choisissez comment découper votre texte pour l'analyse",
+    "granularity.section": "Section",
+    "granularity.paragraph": "Paragraphe",
+    "granularity.sentence": "Phrase",
+    "maxResults": "Résultats par segment",
+    "maxResultsDescription": "Nombre maximum de PDFs recommandés par segment",
+    "threshold": "Seuil de similarité",
+    "thresholdDescription": "Score minimum pour qu'un PDF soit recommandé (0 = aucun filtre)",
+    "noFilter": "Auto",
+    "type": {
+      "section": "Section",
+      "paragraph": "Paragraphe",
+      "sentence": "Phrase"
+    },
+    "lines": "Lignes {{start}}-{{end}}",
+    "noRecommendations": "Aucune source similaire trouvée pour ce segment",
+    "openPDF": "Ouvrir",
+    "insertCitation": "Citer",
+    "showPreview": "Voir l'extrait",
+    "hidePreview": "Masquer l'extrait",
+    "page": "Page {{page}}"
   }
 }

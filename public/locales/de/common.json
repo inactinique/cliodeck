@@ -683,6 +683,14 @@
     "noResults": "Keine Ergebnisse",
     "tryDifferentSearch": "Versuchen Sie einen anderen Suchbegriff"
   },
+  "common": {
+    "cancel": "Abbrechen",
+    "close": "Schließen",
+    "done": "Fertig",
+    "dismiss": "Verwerfen",
+    "showMore": "Mehr anzeigen",
+    "showLess": "Weniger anzeigen"
+  },
   "topicModeling": {
     "title": "Topic Modeling (Optional)",
     "description": "Topic Modeling verwendet BERTopic (Python), um die Hauptthemen in Ihrem Korpus zu identifizieren. Diese Funktion ist optional und erfordert die Installation einer Python-Umgebung.",
@@ -699,5 +707,41 @@
     "clearLog": "Log löschen",
     "installSuccess": "Installation erfolgreich abgeschlossen",
     "installError": "Fehler"
+  },
+  "similarity": {
+    "title": "Ähnlichkeiten finden",
+    "analyze": "Dokument analysieren",
+    "analyzing": "Analyse läuft...",
+    "emptyDocument": "Das Dokument ist leer. Schreiben Sie Inhalt, bevor Sie die Analyse starten.",
+    "emptyState": "Analysieren Sie Ihr Dokument, um relevante bibliographische Quellen für jeden Abschnitt zu finden.",
+    "summary": "{{segments}} Segmente analysiert, {{recommendations}} Empfehlungen",
+    "segments": "Segmente",
+    "options": "Optionen",
+    "optionsTitle": "Analyseoptionen",
+    "clear": "Löschen",
+    "clearConfirm": "Ähnlichkeitsergebnisse löschen?",
+    "refresh": "Neu analysieren",
+    "granularity": "Granularität",
+    "granularityDescription": "Wählen Sie, wie Ihr Text für die Analyse aufgeteilt werden soll",
+    "granularity.section": "Abschnitt",
+    "granularity.paragraph": "Absatz",
+    "granularity.sentence": "Satz",
+    "maxResults": "Ergebnisse pro Segment",
+    "maxResultsDescription": "Maximale Anzahl empfohlener PDFs pro Segment",
+    "threshold": "Ähnlichkeitsschwelle",
+    "thresholdDescription": "Mindestpunktzahl, damit ein PDF empfohlen wird (0 = kein Filter)",
+    "noFilter": "Auto",
+    "type": {
+      "section": "Abschnitt",
+      "paragraph": "Absatz",
+      "sentence": "Satz"
+    },
+    "lines": "Zeilen {{start}}-{{end}}",
+    "noRecommendations": "Keine ähnlichen Quellen für dieses Segment gefunden",
+    "openPDF": "Öffnen",
+    "insertCitation": "Zitieren",
+    "showPreview": "Auszug anzeigen",
+    "hidePreview": "Auszug ausblenden",
+    "page": "Seite {{page}}"
   }
 }

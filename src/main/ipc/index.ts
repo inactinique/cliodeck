@@ -18,6 +18,7 @@ import { setupCorpusHandlers } from './handlers/corpus-handlers.js';
 import { setupHistoryHandlers } from './handlers/history-handlers.js';
 import { setupTopicModelingHandlers } from './handlers/topic-modeling-handlers.js';
 import { setupEmbeddedLLMHandlers } from './handlers/embedded-llm-handlers.js';
+import { setupSimilarityHandlers } from './handlers/similarity-handlers.js';
 
 /**
  * Setup all IPC handlers
@@ -35,8 +36,9 @@ import { setupEmbeddedLLMHandlers } from './handlers/embedded-llm-handlers.js';
  * - Corpus analysis and knowledge graph (7 handlers)
  * - History and session tracking (7 handlers)
  * - Embedded LLM management (10 handlers)
+ * - Similarity finder (5 handlers)
  *
- * Total: 63 IPC handlers
+ * Total: 68 IPC handlers
  */
 export function setupIPCHandlers() {
   console.log('🔧 Setting up modular IPC handlers...');
@@ -55,6 +57,7 @@ export function setupIPCHandlers() {
   setupHistoryHandlers();
   setupTopicModelingHandlers();
   setupEmbeddedLLMHandlers();
+  setupSimilarityHandlers();
 
   console.log('✅ All IPC handlers registered successfully');
 }

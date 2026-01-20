@@ -45,6 +45,7 @@ const api = {
     delete: (documentId: string) =>
       ipcRenderer.invoke('pdf:delete', documentId),
     getAll: () => ipcRenderer.invoke('pdf:get-all'),
+    getDocument: (documentId: string) => ipcRenderer.invoke('pdf:get-document', documentId),
     getStatistics: () => ipcRenderer.invoke('pdf:get-statistics'),
     purge: () => ipcRenderer.invoke('pdf:purge'),
     cleanOrphanedChunks: () => ipcRenderer.invoke('pdf:clean-orphaned-chunks'),
@@ -385,6 +386,32 @@ const api = {
   shell: {
     openExternal: (url: string) => ipcRenderer.invoke('shell:open-external', url),
     openPath: (path: string) => ipcRenderer.invoke('shell:open-path', path),
+  },
+
+  // Similarity Finder
+  similarity: {
+    analyze: (text: string, options?: {
+      granularity?: 'section' | 'paragraph' | 'sentence';
+      maxResults?: number;
+      similarityThreshold?: number;
+      collectionFilter?: string[] | null;
+    }) => ipcRenderer.invoke('similarity:analyze', text, options),
+    cancel: () => ipcRenderer.invoke('similarity:cancel'),
+    getSegmentResults: (segmentId: string) =>
+      ipcRenderer.invoke('similarity:get-segment-results', segmentId),
+    getAllResults: () => ipcRenderer.invoke('similarity:get-all-results'),
+    clearCache: () => ipcRenderer.invoke('similarity:clear-cache'),
+    onProgress: (callback: (progress: {
+      current: number;
+      total: number;
+      status: string;
+      percentage: number;
+      currentSegment?: string;
+    }) => void) => {
+      const listener = (_event: any, progress: any) => callback(progress);
+      ipcRenderer.on('similarity:progress', listener);
+      return () => ipcRenderer.removeListener('similarity:progress', listener);
+    },
   },
 };
 
