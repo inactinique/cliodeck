@@ -17,6 +17,7 @@ export const ProjectPanel: React.FC = () => {
   const {
     currentProject,
     recentProjects,
+    isLoading,
     loadProject,
     createProject,
     closeProject,
@@ -147,7 +148,13 @@ export const ProjectPanel: React.FC = () => {
   };
 
   return (
-    <div className="project-panel">
+    <div className="project-panel" style={{ position: 'relative' }}>
+      {isLoading && (
+        <div className="project-loading-overlay">
+          <div className="project-loading-spinner" />
+          <div className="project-loading-text">{t('project.loading')}</div>
+        </div>
+      )}
       <div className="project-content">
         {/* Action Buttons */}
         <div className="project-actions">

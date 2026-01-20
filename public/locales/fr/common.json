@@ -278,7 +278,8 @@
     "zoteroGroupIdHelp": "L'identifiant numérique de votre groupe Zotero (visible dans l'URL du groupe)",
     "zoteroCollectionKey": "Clé de collection",
     "zoteroCollectionKeyPlaceholder": "Entrez la clé de collection (optionnel)",
-    "zoteroCollectionKeyHelp": "La clé d'une collection spécifique dans le groupe (optionnel)"
+    "zoteroCollectionKeyHelp": "La clé d'une collection spécifique dans le groupe (optionnel)",
+    "loading": "Ouverture du projet..."
   },
   "export": {
     "pdf": {
