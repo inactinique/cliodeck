@@ -8,9 +8,13 @@ import { KnowledgeGraphBuilder } from '../../../backend/core/analysis/KnowledgeG
 import { TopicModelingService } from '../../../backend/core/analysis/TopicModelingService.js';
 import { TextometricsService } from '../../../backend/core/analysis/TextometricsService.js';
 import { configManager } from './config-manager.js';
+import { tropyService } from './tropy-service.js';
 import path from 'path';
 import fs from 'fs';
 import { app } from 'electron';
+
+// Source type for multi-source search
+export type SourceType = 'secondary' | 'primary' | 'both';
 
 // Dictionnaire de termes académiques FR→EN pour query expansion
 const ACADEMIC_TERMS_FR_TO_EN: Record<string, string[]> = {
@@ -233,9 +237,85 @@ class PDFService {
     return document;
   }
 
-  async search(query: string, options?: { topK?: number; threshold?: number; documentIds?: string[]; collectionKeys?: string[] }) {
+  async search(query: string, options?: { topK?: number; threshold?: number; documentIds?: string[]; collectionKeys?: string[]; sourceType?: SourceType }) {
     this.ensureInitialized();
 
+    const sourceType = options?.sourceType || 'both';
+    const searchStart = Date.now();
+    const ragConfig = configManager.getRAGConfig();
+    const topK = options?.topK || ragConfig.topK;
+    const threshold = options?.threshold || ragConfig.similarityThreshold;
+
+    console.log(`🔍 [PDF-SERVICE] Multi-source search: sourceType=${sourceType}, topK=${topK}`);
+
+    // Container for all results (both sources)
+    let allSourceResults: any[] = [];
+
+    // Search secondary sources (bibliography/PDFs) if needed
+    if (sourceType === 'secondary' || sourceType === 'both') {
+      const secondaryResults = await this.searchSecondary(query, {
+        topK: sourceType === 'both' ? Math.ceil(topK * 0.6) : topK,
+        threshold,
+        documentIds: options?.documentIds,
+        collectionKeys: options?.collectionKeys,
+      });
+      // Mark results with source type
+      allSourceResults.push(...secondaryResults.map((r: any) => ({
+        ...r,
+        sourceType: 'secondary' as const,
+      })));
+      console.log(`📚 [PDF-SERVICE] Secondary sources: ${secondaryResults.length} results`);
+    }
+
+    // Search primary sources (Tropy archives) if needed
+    if (sourceType === 'primary' || sourceType === 'both') {
+      try {
+        const primaryResults = await tropyService.search(query, {
+          topK: sourceType === 'both' ? Math.ceil(topK * 0.4) : topK,
+          threshold,
+        });
+        // Map primary source results to match the expected format
+        const mappedPrimaryResults = primaryResults.map((r: any) => ({
+          chunk: {
+            id: r.chunk?.id || r.id,
+            content: r.chunk?.content || r.content,
+            documentId: r.sourceId || r.chunk?.sourceId,
+            chunkIndex: r.chunk?.chunkIndex || 0,
+          },
+          document: {
+            id: r.sourceId,
+            title: r.source?.title || r.title,
+            author: r.source?.creator,
+            bibtexKey: null, // Primary sources don't have bibtexKey
+          },
+          source: r.source,
+          similarity: r.similarity,
+          sourceType: 'primary' as const,
+        }));
+        allSourceResults.push(...mappedPrimaryResults);
+        console.log(`📜 [PDF-SERVICE] Primary sources: ${primaryResults.length} results`);
+      } catch (error) {
+        console.warn('⚠️ [PDF-SERVICE] Primary source search failed (Tropy not initialized?):', error);
+        // Continue with secondary sources only
+      }
+    }
+
+    // Sort all results by similarity and take top K
+    const sortedResults = allSourceResults
+      .sort((a, b) => b.similarity - a.similarity)
+      .slice(0, topK);
+
+    console.log(`🔍 [PDF-SERVICE] Final combined results: ${sortedResults.length} (from ${allSourceResults.length} total)`);
+    console.log(`🔍 [PDF-SERVICE] Total search duration: ${Date.now() - searchStart}ms`);
+
+    return sortedResults;
+  }
+
+  /**
+   * Search in secondary sources (bibliography/PDFs)
+   * This is the original search logic, refactored into a separate method
+   */
+  private async searchSecondary(query: string, options?: { topK?: number; threshold?: number; documentIds?: string[]; collectionKeys?: string[] }) {
     const searchStart = Date.now();
     const ragConfig = configManager.getRAGConfig();
     const topK = options?.topK || ragConfig.topK;
@@ -351,13 +431,11 @@ class PDFService {
       filteredResults = mergedResults.slice(0, minFallbackResults);
     }
 
-    console.log('🔍 [PDF-SERVICE DEBUG] Final search results:', {
+    console.log('🔍 [PDF-SERVICE DEBUG] Secondary search results:', {
       totalUniqueChunks: mergedResults.length,
       filteredResults: filteredResults.length,
       threshold: threshold,
       fallbackApplied: filteredResults.length > 0 && filteredResults.length < mergedResults.filter(r => r.similarity >= threshold).length,
-      allSimilarities: mergedResults.map(r => r.similarity.toFixed(4)),
-      filteredSimilarities: filteredResults.map(r => r.similarity.toFixed(4)),
       totalDuration: `${Date.now() - searchStart}ms`,
     });
 

@@ -147,6 +147,15 @@
   background-color: var(--bg-app);
 }
 
+/* Primary Sources Tab - Amber accent */
+.panel-tab.primary-sources-tab.active {
+  border-bottom-color: var(--color-warning);
+}
+
+.panel-tab.primary-sources-tab:hover {
+  color: var(--color-warning);
+}
+
 /* Panel Content */
 .panel-content {
   flex: 1;

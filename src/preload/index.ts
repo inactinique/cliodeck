@@ -388,6 +388,73 @@ const api = {
     openPath: (path: string) => ipcRenderer.invoke('shell:open-path', path),
   },
 
+  // Tropy (Primary Sources)
+  tropy: {
+    // Project Management
+    openProject: (tpyPath: string) => ipcRenderer.invoke('tropy:open-project', tpyPath),
+    getProjectInfo: () => ipcRenderer.invoke('tropy:get-project-info'),
+
+    // Synchronization
+    sync: (options: {
+      performOCR: boolean;
+      ocrLanguage: string;
+      transcriptionDirectory?: string;
+      forceReindex?: boolean;
+    }) => ipcRenderer.invoke('tropy:sync', options),
+    checkSyncNeeded: () => ipcRenderer.invoke('tropy:check-sync-needed'),
+
+    // File Watching
+    startWatching: (tpyPath?: string) => ipcRenderer.invoke('tropy:start-watching', tpyPath),
+    stopWatching: () => ipcRenderer.invoke('tropy:stop-watching'),
+    isWatching: () => ipcRenderer.invoke('tropy:is-watching'),
+
+    // OCR
+    performOCR: (imagePath: string, language: string) =>
+      ipcRenderer.invoke('tropy:perform-ocr', imagePath, language),
+    performBatchOCR: (imagePaths: string[], language: string) =>
+      ipcRenderer.invoke('tropy:perform-batch-ocr', imagePaths, language),
+    getOCRLanguages: () => ipcRenderer.invoke('tropy:get-ocr-languages'),
+
+    // Transcription Import
+    importTranscription: (filePath: string, type?: string) =>
+      ipcRenderer.invoke('tropy:import-transcription', filePath, type),
+
+    // Sources
+    getAllSources: () => ipcRenderer.invoke('tropy:get-all-sources'),
+    getSource: (sourceId: string) => ipcRenderer.invoke('tropy:get-source', sourceId),
+    updateTranscription: (
+      sourceId: string,
+      transcription: string,
+      source: 'tesseract' | 'transkribus' | 'manual'
+    ) => ipcRenderer.invoke('tropy:update-transcription', sourceId, transcription, source),
+
+    // Statistics
+    getStatistics: () => ipcRenderer.invoke('tropy:get-statistics'),
+    getAllTags: () => ipcRenderer.invoke('tropy:get-all-tags'),
+
+    // Events
+    onFileChanged: (callback: (tpyPath: string) => void) => {
+      const listener = (_event: any, tpyPath: string) => callback(tpyPath);
+      ipcRenderer.on('tropy:file-changed', listener);
+      return () => ipcRenderer.removeListener('tropy:file-changed', listener);
+    },
+    onSyncProgress: (callback: (progress: {
+      phase: string;
+      current: number;
+      total: number;
+      currentItem?: string;
+    }) => void) => {
+      const listener = (_event: any, progress: any) => callback(progress);
+      ipcRenderer.on('tropy:sync-progress', listener);
+      return () => ipcRenderer.removeListener('tropy:sync-progress', listener);
+    },
+    onWatcherError: (callback: (error: string) => void) => {
+      const listener = (_event: any, error: string) => callback(error);
+      ipcRenderer.on('tropy:watcher-error', listener);
+      return () => ipcRenderer.removeListener('tropy:watcher-error', listener);
+    },
+  },
+
   // Similarity Finder
   similarity: {
     analyze: (text: string, options?: {

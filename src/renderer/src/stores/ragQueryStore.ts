@@ -4,6 +4,7 @@ import { persist } from 'zustand/middleware';
 // MARK: - Types
 
 export type LLMProvider = 'ollama' | 'embedded' | 'auto';
+export type SourceType = 'secondary' | 'primary' | 'both';
 
 export interface RAGQueryParams {
   // Provider selection
@@ -13,6 +14,9 @@ export interface RAGQueryParams {
   model: string; // Ollama model name (used when provider is 'ollama' or 'auto')
   topK: number;
   timeout: number; // in milliseconds
+
+  // Source type selection (primary = Tropy, secondary = bibliography/PDFs)
+  sourceType: SourceType;
 
   // Collection filtering (Zotero collections)
   selectedCollectionKeys: string[]; // Empty = all collections (no filter)
@@ -73,6 +77,9 @@ const DEFAULT_PARAMS: RAGQueryParams = {
   model: 'gemma2:2b',
   topK: 10,
   timeout: 600000, // 10 minutes
+
+  // Source type (default: search both primary and secondary sources)
+  sourceType: 'both',
 
   // Collection filtering (empty = no filter, search all)
   selectedCollectionKeys: [],
@@ -145,6 +152,7 @@ export const useRAGQueryStore = create<RAGQueryState>()(
               model: llmConfig.ollamaChatModel || DEFAULT_PARAMS.model,
               topK: ragConfig.topK || DEFAULT_PARAMS.topK,
               timeout: DEFAULT_PARAMS.timeout,
+              sourceType: DEFAULT_PARAMS.sourceType,
               selectedCollectionKeys: DEFAULT_PARAMS.selectedCollectionKeys,
               temperature: DEFAULT_PARAMS.temperature,
               top_p: DEFAULT_PARAMS.top_p,

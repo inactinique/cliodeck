@@ -129,6 +129,61 @@
   font-style: italic;
 }
 
+/* Source Type Selector */
+.source-type-selector {
+  display: flex;
+  gap: 6px;
+}
+
+.source-type-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 6px;
+  background: var(--bg-panel);
+  border: 2px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all var(--transition-normal);
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.source-type-btn:hover {
+  border-color: var(--text-tertiary);
+  background: var(--bg-card-hover);
+}
+
+.source-type-btn.active {
+  border-color: var(--color-accent);
+  background: var(--color-accent-light);
+  color: var(--text-primary);
+}
+
+.source-type-btn.secondary.active {
+  border-color: var(--color-accent);
+}
+
+.source-type-btn.primary.active {
+  border-color: var(--color-warning);
+  background: var(--color-warning-light);
+}
+
+.source-type-btn.both.active {
+  border-color: var(--color-success);
+  background: var(--color-success-light);
+}
+
+.source-type-btn .source-icon {
+  font-size: 16px;
+}
+
+.source-type-btn span:last-child {
+  font-weight: 500;
+}
+
 .advanced-toggle {
   padding: var(--spacing-sm) 0;
   background: transparent;

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { ChevronDown, ChevronUp, RotateCcw } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { useRAGQueryStore, type LLMProvider } from '../../stores/ragQueryStore';
+import { useRAGQueryStore, type LLMProvider, type SourceType } from '../../stores/ragQueryStore';
 import { CollectionMultiSelect } from './CollectionMultiSelect';
 import './RAGSettingsPanel.css';
 
@@ -162,7 +162,44 @@ export const RAGSettingsPanel: React.FC = () => {
           </div>
           )}
 
-          {/* Collection Filter */}
+          {/* Source Type Selection */}
+          <div className="setting-group">
+            <label htmlFor="source-type-select">{t('ragSettings.sourceType', 'Source Type')}</label>
+            <div className="source-type-selector">
+              <button
+                className={`source-type-btn secondary ${params.sourceType === 'secondary' ? 'active' : ''}`}
+                onClick={() => setParams({ sourceType: 'secondary' })}
+                title={t('ragSettings.secondaryDesc', 'Bibliography (PDFs from Zotero)')}
+              >
+                <span className="source-icon">📚</span>
+                <span>{t('ragSettings.secondary', 'Bibliography')}</span>
+              </button>
+              <button
+                className={`source-type-btn primary ${params.sourceType === 'primary' ? 'active' : ''}`}
+                onClick={() => setParams({ sourceType: 'primary' })}
+                title={t('ragSettings.primaryDesc', 'Primary Sources (Tropy archives)')}
+              >
+                <span className="source-icon">📜</span>
+                <span>{t('ragSettings.primary', 'Archives')}</span>
+              </button>
+              <button
+                className={`source-type-btn both ${params.sourceType === 'both' ? 'active' : ''}`}
+                onClick={() => setParams({ sourceType: 'both' })}
+                title={t('ragSettings.bothDesc', 'Search in both sources')}
+              >
+                <span className="source-icon">📚📜</span>
+                <span>{t('ragSettings.both', 'Both')}</span>
+              </button>
+            </div>
+            <small className="setting-hint">
+              {params.sourceType === 'secondary' && t('ragSettings.secondaryHint', 'Search only in bibliography (PDFs)')}
+              {params.sourceType === 'primary' && t('ragSettings.primaryHint', 'Search only in primary sources (Tropy)')}
+              {params.sourceType === 'both' && t('ragSettings.bothHint', 'Search in all sources')}
+            </small>
+          </div>
+
+          {/* Collection Filter (only for secondary sources) */}
+          {(params.sourceType === 'secondary' || params.sourceType === 'both') && (
           <div className="setting-group">
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <label htmlFor="collection-filter">
@@ -198,6 +235,7 @@ export const RAGSettingsPanel: React.FC = () => {
                 : `Search limited to ${params.selectedCollectionKeys.length} collection(s)`}
             </small>
           </div>
+          )}
 
           {/* Top K */}
           <div className="setting-group">

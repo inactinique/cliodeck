@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { MessageCircle, Folder, BookOpen, Network, BookMarked, HelpCircle } from 'lucide-react';
+import { MessageCircle, Folder, BookOpen, Network, BookMarked, HelpCircle, Archive } from 'lucide-react';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import { BibliographyPanel } from '../Bibliography/BibliographyPanel';
 import { ChatInterface } from '../Chat/ChatInterface';
@@ -9,12 +9,13 @@ import { ProjectPanel } from '../Project/ProjectPanel';
 import { PDFExportModal } from '../Export/PDFExportModal';
 import { CorpusExplorerPanel } from '../Corpus/CorpusExplorerPanel';
 import { JournalPanel } from '../Journal/JournalPanel';
+import { PrimarySourcesPanel } from '../PrimarySources/PrimarySourcesPanel';
 import { MethodologyModal } from '../Methodology/MethodologyModal';
 import { AboutModal } from '../About/AboutModal';
 import { logger } from '../../utils/logger';
 import './MainLayout.css';
 
-type LeftPanelView = 'projects' | 'bibliography';
+type LeftPanelView = 'projects' | 'bibliography' | 'primary-sources';
 type RightPanelView = 'chat' | 'corpus' | 'journal';
 
 export interface MainLayoutProps {
@@ -59,6 +60,9 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
           break;
         case 'bibliography':
           setLeftView('bibliography');
+          break;
+        case 'primary-sources':
+          setLeftView('primary-sources');
           break;
         case 'chat':
           setRightView('chat');
@@ -138,12 +142,20 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
                 >
                   <BookOpen size={20} strokeWidth={1} />
                 </button>
+                <button
+                  className={`panel-tab primary-sources-tab ${leftView === 'primary-sources' ? 'active' : ''}`}
+                  onClick={() => handleLeftViewChange('primary-sources')}
+                  title={t('primarySources.title', 'Primary Sources')}
+                >
+                  <Archive size={20} strokeWidth={1} />
+                </button>
               </div>
 
               {/* Panel content */}
               <div className="panel-content">
                 {leftView === 'projects' && (leftPanel || <ProjectPanel />)}
                 {leftView === 'bibliography' && <BibliographyPanel />}
+                {leftView === 'primary-sources' && <PrimarySourcesPanel />}
               </div>
             </div>
           </Panel>
