@@ -1,35 +1,20 @@
 /**
- * PDFConverter - Convert PDF pages to images using pdf.js
+ * PDFConverter - Convert PDF pages to images using Poppler
  *
- * Uses Mozilla's pdf.js library to render PDF pages to canvas,
- * then converts them to image buffers for OCR processing.
- * No external dependencies required (pure JavaScript).
+ * Directly uses system-installed Poppler utilities (pdftoppm/pdftocairo).
+ * Requires Poppler to be installed on the system:
+ * - macOS: brew install poppler
+ * - Ubuntu: apt-get install poppler-utils
+ * - Windows: Download from https://github.com/oschwartz10612/poppler-windows
  */
 
 import * as fs from 'fs';
 import * as path from 'path';
-import { fileURLToPath } from 'url';
-import { createRequire } from 'module';
 import * as os from 'os';
-import { createCanvas, Canvas } from 'canvas';
+import { execFile, execSync } from 'child_process';
+import { promisify } from 'util';
 
-// Custom canvas factory for pdf.js that bypasses process.getBuiltinModule
-class NodeCanvasFactory {
-  create(width: number, height: number): { canvas: Canvas; context: any } {
-    const canvas = createCanvas(width, height);
-    const context = canvas.getContext('2d');
-    return { canvas, context };
-  }
-
-  reset(canvasAndContext: { canvas: Canvas; context: any }, width: number, height: number): void {
-    canvasAndContext.canvas.width = width;
-    canvasAndContext.canvas.height = height;
-  }
-
-  destroy(canvasAndContext: { canvas: Canvas; context: any }): void {
-    // Nothing to do - canvas will be garbage collected
-  }
-}
+const execFileAsync = promisify(execFile);
 
 // MARK: - Types
 
@@ -47,6 +32,8 @@ export interface PDFConversionOptions {
   pages?: number[];
   /** Output format (default: 'png') */
   format?: 'png';
+  /** DPI for rendering (default: 300 for good OCR quality) */
+  dpi?: number;
 }
 
 export interface PDFConversionResult {
@@ -58,46 +45,65 @@ export interface PDFConversionResult {
 // MARK: - PDFConverter
 
 export class PDFConverter {
-  private pdfjs: any = null;
+  private pdftoppmPath: string | null = null;
+  private pdftocairoPath: string | null = null;
+  private pdfinfoPath: string | null = null;
   private isInitialized: boolean = false;
-  private canvasFactory: NodeCanvasFactory;
-  private standardFontDataUrl: string = '';
 
-  constructor() {
-    this.canvasFactory = new NodeCanvasFactory();
+  /**
+   * Find Poppler binary in common locations
+   */
+  private findBinary(name: string): string | null {
+    const searchPaths = [
+      '/usr/local/bin',       // Intel Mac Homebrew
+      '/opt/homebrew/bin',    // Apple Silicon Homebrew
+      '/usr/bin',             // Linux system
+      '/usr/local/bin',       // Linux local
+    ];
+
+    for (const searchPath of searchPaths) {
+      const fullPath = path.join(searchPath, name);
+      if (fs.existsSync(fullPath)) {
+        return fullPath;
+      }
+    }
+
+    // Try to find via which command (fallback)
+    try {
+      const result = execSync(`which ${name}`, { encoding: 'utf8' }).trim();
+      if (result && fs.existsSync(result)) {
+        return result;
+      }
+    } catch {
+      // which command failed, binary not in PATH
+    }
+
+    return null;
   }
 
   /**
-   * Initialize pdf.js library
+   * Initialize - find Poppler binaries
    */
   async initialize(): Promise<void> {
     if (this.isInitialized) return;
 
-    try {
-      // Dynamic import of pdfjs-dist
-      // Use the legacy build for Node.js compatibility
-      const pdfjsLib = await import('pdfjs-dist/legacy/build/pdf.mjs');
+    // Find pdftoppm (preferred for PNG output)
+    this.pdftoppmPath = this.findBinary('pdftoppm');
+    this.pdftocairoPath = this.findBinary('pdftocairo');
+    this.pdfinfoPath = this.findBinary('pdfinfo');
 
-      // Create require function for ESM compatibility
-      const require = createRequire(import.meta.url);
-
-      // Disable the worker to avoid process.getBuiltinModule issues in Electron
-      // This runs PDF parsing in the main thread but is more compatible
-      pdfjsLib.GlobalWorkerOptions.workerSrc = '';
-
-      // Set up standard font data URL for proper font rendering
-      const pdfjsPath = path.dirname(require.resolve('pdfjs-dist/package.json'));
-      this.standardFontDataUrl = `file://${path.join(pdfjsPath, 'standard_fonts')}/`;
-
-      this.pdfjs = pdfjsLib;
-      this.isInitialized = true;
-      console.log(`📄 PDF converter initialized (pdf.js, no worker mode for Electron compatibility)`);
-    } catch (error) {
-      console.error('Failed to initialize pdf.js:', error);
+    if (!this.pdftoppmPath && !this.pdftocairoPath) {
       throw new Error(
-        'pdf.js not available. Please install with: npm install pdfjs-dist'
+        'Poppler utilities not found. Please install Poppler:\n' +
+        '  macOS: brew install poppler\n' +
+        '  Ubuntu: apt-get install poppler-utils\n' +
+        '  Windows: Download from https://github.com/oschwartz10612/poppler-windows'
       );
     }
+
+    const tool = this.pdftoppmPath ? 'pdftoppm' : 'pdftocairo';
+    console.log(`📄 PDF converter initialized (using system ${tool})`);
+    this.isInitialized = true;
   }
 
   /**
@@ -114,17 +120,23 @@ export class PDFConverter {
   async getPageCount(pdfPath: string): Promise<number> {
     await this.initialize();
 
-    const data = new Uint8Array(fs.readFileSync(pdfPath));
-    const pdf = await this.pdfjs.getDocument({
-      data,
-      standardFontDataUrl: this.standardFontDataUrl,
-      disableFontFace: true,
-      useSystemFonts: false,
-    }).promise;
-    const pageCount = pdf.numPages;
-    pdf.destroy();
+    if (this.pdfinfoPath) {
+      try {
+        const { stdout } = await execFileAsync(this.pdfinfoPath, [pdfPath]);
+        const match = stdout.match(/Pages:\s+(\d+)/);
+        if (match) {
+          return parseInt(match[1], 10);
+        }
+      } catch (error) {
+        console.error('Failed to get PDF page count with pdfinfo:', error);
+      }
+    }
 
-    return pageCount;
+    // Fallback: convert to temp and count files
+    const result = await this.convertToTempFiles(pdfPath);
+    const count = result.files.length;
+    this.cleanupTempFiles(result.tempDir);
+    return count;
   }
 
   /**
@@ -135,64 +147,47 @@ export class PDFConverter {
     pdfPath: string,
     options: PDFConversionOptions = {}
   ): Promise<PDFConversionResult> {
-    await this.initialize();
-
-    const scale = options.scale || 2.0; // Higher scale = better OCR quality
-    const format = options.format || 'png';
-
-    if (!fs.existsSync(pdfPath)) {
-      throw new Error(`PDF not found: ${pdfPath}`);
-    }
-
-    console.log(`📄 Converting PDF: ${path.basename(pdfPath)} (scale: ${scale})`);
-
-    // Load the PDF document with custom options for Electron compatibility
-    const data = new Uint8Array(fs.readFileSync(pdfPath));
-    const pdf = await this.pdfjs.getDocument({
-      data,
-      standardFontDataUrl: this.standardFontDataUrl,
-      disableFontFace: true,
-      useSystemFonts: false,
-    }).promise;
-    const totalPages = pdf.numPages;
-
-    // Determine which pages to convert
-    const pagesToConvert = options.pages || Array.from({ length: totalPages }, (_, i) => i + 1);
+    // Convert to temp files first, then read into buffers
+    const tempResult = await this.convertToTempFiles(pdfPath, options);
 
     const pages: PDFPageImage[] = [];
+    for (let i = 0; i < tempResult.files.length; i++) {
+      const filePath = tempResult.files[i];
+      const data = fs.readFileSync(filePath);
 
-    for (const pageNum of pagesToConvert) {
-      if (pageNum < 1 || pageNum > totalPages) {
-        console.warn(`⚠️ Skipping invalid page number: ${pageNum}`);
-        continue;
-      }
-
-      try {
-        const pageImage = await this.renderPage(pdf, pageNum, scale);
-        pages.push(pageImage);
-        console.log(`  📃 Page ${pageNum}/${totalPages} rendered (${pageImage.width}x${pageImage.height})`);
-      } catch (error) {
-        console.error(`❌ Failed to render page ${pageNum}:`, error);
-      }
+      // Basic dimension extraction (we don't need exact dimensions for OCR)
+      pages.push({
+        pageNumber: i + 1,
+        width: 0, // Could be extracted with image-size package if needed
+        height: 0,
+        data,
+      });
     }
 
-    pdf.destroy();
-
+    // Keep temp files for cleanup by caller if needed
     return {
-      pageCount: totalPages,
+      pageCount: tempResult.pageCount,
       pages,
+      tempDir: tempResult.tempDir,
     };
   }
 
   /**
-   * Convert PDF to temporary image files
-   * Useful when OCR library needs file paths instead of buffers
+   * Convert PDF to temporary image files using system Poppler
    */
   async convertToTempFiles(
     pdfPath: string,
     options: PDFConversionOptions = {}
   ): Promise<{ tempDir: string; files: string[]; pageCount: number }> {
-    const result = await this.convertToImages(pdfPath, options);
+    await this.initialize();
+
+    const dpi = options.dpi || 300; // Good quality for OCR
+
+    if (!fs.existsSync(pdfPath)) {
+      throw new Error(`PDF not found: ${pdfPath}`);
+    }
+
+    console.log(`📄 Converting PDF: ${path.basename(pdfPath)} (dpi: ${dpi})`);
 
     // Create temp directory
     const tempDir = path.join(
@@ -201,22 +196,63 @@ export class PDFConverter {
     );
     fs.mkdirSync(tempDir, { recursive: true });
 
-    const files: string[] = [];
+    // Output file prefix
+    const outputPrefix = path.join(tempDir, 'page');
 
-    for (const page of result.pages) {
-      const fileName = `page-${page.pageNumber.toString().padStart(4, '0')}.png`;
-      const filePath = path.join(tempDir, fileName);
-      fs.writeFileSync(filePath, page.data);
-      files.push(filePath);
+    try {
+      // Use pdftoppm (preferred) or pdftocairo
+      if (this.pdftoppmPath) {
+        // pdftoppm args: -png -r <dpi> input.pdf output_prefix
+        const args = ['-png', '-r', String(dpi), pdfPath, outputPrefix];
+        await execFileAsync(this.pdftoppmPath, args, { maxBuffer: 50 * 1024 * 1024 });
+      } else if (this.pdftocairoPath) {
+        // pdftocairo args: -png -r <dpi> input.pdf output_prefix
+        const args = ['-png', '-r', String(dpi), pdfPath, outputPrefix];
+        await execFileAsync(this.pdftocairoPath, args, { maxBuffer: 50 * 1024 * 1024 });
+      }
+
+      // Find all generated files
+      const files = fs.readdirSync(tempDir)
+        .filter(f => f.endsWith('.png'))
+        .sort((a, b) => {
+          // Sort by page number (page-1.png, page-2.png, etc.)
+          const numA = parseInt(a.match(/\d+/)?.[0] || '0');
+          const numB = parseInt(b.match(/\d+/)?.[0] || '0');
+          return numA - numB;
+        })
+        .map(f => path.join(tempDir, f));
+
+      // Filter to specific pages if requested
+      let filteredFiles = files;
+      if (options.pages && options.pages.length > 0) {
+        filteredFiles = options.pages
+          .filter(p => p >= 1 && p <= files.length)
+          .map(p => files[p - 1]);
+      }
+
+      console.log(`📁 Saved ${filteredFiles.length} page images to: ${tempDir}`);
+
+      return {
+        tempDir,
+        files: filteredFiles,
+        pageCount: files.length,
+      };
+    } catch (error: any) {
+      // Clean up on error
+      this.cleanupTempFiles(tempDir);
+
+      // Check if it's a Poppler not found error
+      if (error.code === 'ENOENT') {
+        throw new Error(
+          'Poppler utilities not found. Please install Poppler:\n' +
+          '  macOS: brew install poppler\n' +
+          '  Ubuntu: apt-get install poppler-utils\n' +
+          '  Windows: Download from https://github.com/oschwartz10612/poppler-windows'
+        );
+      }
+
+      throw new Error(`PDF conversion failed: ${error.message || error}`);
     }
-
-    console.log(`📁 Saved ${files.length} page images to: ${tempDir}`);
-
-    return {
-      tempDir,
-      files,
-      pageCount: result.pageCount,
-    };
   }
 
   /**
@@ -231,43 +267,6 @@ export class PDFConverter {
       fs.rmdirSync(tempDir);
       console.log(`🧹 Cleaned up temp directory: ${tempDir}`);
     }
-  }
-
-  /**
-   * Render a single PDF page to an image buffer
-   */
-  private async renderPage(
-    pdf: any,
-    pageNumber: number,
-    scale: number
-  ): Promise<PDFPageImage> {
-    const page = await pdf.getPage(pageNumber);
-    const viewport = page.getViewport({ scale });
-
-    // Use our custom canvas factory to avoid process.getBuiltinModule issues
-    const canvasAndContext = this.canvasFactory.create(
-      Math.floor(viewport.width),
-      Math.floor(viewport.height)
-    );
-
-    // Render PDF page to canvas using custom canvas factory
-    await page.render({
-      canvasContext: canvasAndContext.context,
-      viewport: viewport,
-      canvasFactory: this.canvasFactory,
-    }).promise;
-
-    // Convert canvas to PNG buffer
-    const pngBuffer = canvasAndContext.canvas.toBuffer('image/png');
-
-    page.cleanup();
-
-    return {
-      pageNumber,
-      width: Math.floor(viewport.width),
-      height: Math.floor(viewport.height),
-      data: pngBuffer,
-    };
   }
 }
 

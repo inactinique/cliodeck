@@ -1,26 +1,21 @@
-import * as pdfjsLib from 'pdfjs-dist';
 import * as fs from 'fs';
 import * as path from 'path';
-import { fileURLToPath } from 'url';
 import type { DocumentPage, PDFMetadata } from '../../types/pdf-document';
 
-// Configuration de pdfjs pour Node.js
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+// pdfjs-dist 3.x loaded dynamically for better Node.js/Electron compatibility
+let pdfjsLib: any = null;
 
-// Determine the correct path to pdf.worker.mjs
-// When in dist/backend/core/pdf, we need to go to the project root and then to node_modules
-let workerPath: string;
-if (__dirname.includes('/dist/')) {
-  // Running from compiled code in dist/
-  const projectRoot = __dirname.split('/dist/')[0];
-  workerPath = path.join(projectRoot, 'node_modules/pdfjs-dist/build/pdf.worker.mjs');
-} else {
-  // Running from source (development)
-  workerPath = path.join(__dirname, '../../../node_modules/pdfjs-dist/build/pdf.worker.mjs');
+async function initPdfjs(): Promise<any> {
+  if (pdfjsLib) return pdfjsLib;
+
+  // Use the legacy build which works better in Node.js
+  pdfjsLib = await import('pdfjs-dist/legacy/build/pdf.js');
+
+  // Disable worker for Node.js usage
+  pdfjsLib.GlobalWorkerOptions.workerSrc = '';
+
+  return pdfjsLib;
 }
-
-pdfjsLib.GlobalWorkerOptions.workerSrc = workerPath;
 
 export interface PDFStatistics {
   pageCount: number;
@@ -36,6 +31,8 @@ export class PDFExtractor {
   async extractDocument(
     filePath: string
   ): Promise<{ pages: DocumentPage[]; metadata: PDFMetadata; title: string }> {
+    const pdfjs = await initPdfjs();
+
     // Vérifier que le fichier existe
     if (!fs.existsSync(filePath)) {
       throw new Error('Fichier PDF introuvable');
@@ -43,7 +40,7 @@ export class PDFExtractor {
 
     // Charger le PDF
     const data = new Uint8Array(fs.readFileSync(filePath));
-    const loadingTask = pdfjsLib.getDocument({ data });
+    const loadingTask = pdfjs.getDocument({ data });
     const pdfDocument = await loadingTask.promise;
 
     console.log(`📄 Extraction de ${pdfDocument.numPages} pages depuis ${path.basename(filePath)}`);
@@ -201,8 +198,9 @@ export class PDFExtractor {
 
   async extractAuthor(filePath: string): Promise<string | undefined> {
     try {
+      const pdfjs = await initPdfjs();
       const data = new Uint8Array(fs.readFileSync(filePath));
-      const loadingTask = pdfjsLib.getDocument({ data });
+      const loadingTask = pdfjs.getDocument({ data });
       const pdfDocument = await loadingTask.promise;
 
       const metadata = await pdfDocument.getMetadata();
@@ -218,8 +216,9 @@ export class PDFExtractor {
 
   async extractYear(filePath: string): Promise<string | undefined> {
     try {
+      const pdfjs = await initPdfjs();
       const data = new Uint8Array(fs.readFileSync(filePath));
-      const loadingTask = pdfjsLib.getDocument({ data });
+      const loadingTask = pdfjs.getDocument({ data });
       const pdfDocument = await loadingTask.promise;
 
       const metadata = await pdfDocument.getMetadata();
@@ -240,8 +239,9 @@ export class PDFExtractor {
 
   async getPageCount(filePath: string): Promise<number | null> {
     try {
+      const pdfjs = await initPdfjs();
       const data = new Uint8Array(fs.readFileSync(filePath));
-      const loadingTask = pdfjsLib.getDocument({ data });
+      const loadingTask = pdfjs.getDocument({ data });
       const pdfDocument = await loadingTask.promise;
       return pdfDocument.numPages;
     } catch {
@@ -250,8 +250,9 @@ export class PDFExtractor {
   }
 
   async extractText(filePath: string, pageNumber: number): Promise<string> {
+    const pdfjs = await initPdfjs();
     const data = new Uint8Array(fs.readFileSync(filePath));
-    const loadingTask = pdfjsLib.getDocument({ data });
+    const loadingTask = pdfjs.getDocument({ data });
     const pdfDocument = await loadingTask.promise;
 
     if (pageNumber < 1 || pageNumber > pdfDocument.numPages) {

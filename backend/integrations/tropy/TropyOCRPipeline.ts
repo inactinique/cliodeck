@@ -158,7 +158,7 @@ export class TropyOCRPipeline {
     let tempResult: { tempDir: string; files: string[]; pageCount: number };
     try {
       tempResult = await pdfConverter.convertToTempFiles(pdfPath, {
-        scale: 2.0, // Bonne qualité pour OCR
+        dpi: 300, // Bonne qualité pour OCR
       });
     } catch (error) {
       console.error('PDF conversion failed:', error);
