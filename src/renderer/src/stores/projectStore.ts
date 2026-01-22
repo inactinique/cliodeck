@@ -246,7 +246,7 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
       const pathsToRemove: string[] = [];
 
       const recentProjects = await Promise.all(
-        recentPaths.map(async (path) => {
+        recentPaths.map(async (path: string) => {
           try {
             // Use getMetadata instead of load to avoid initializing services for each project
             const result = await window.electron.project.getMetadata(path);
