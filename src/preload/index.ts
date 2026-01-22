@@ -442,7 +442,7 @@ const api = {
       return () => ipcRenderer.removeListener('tropy:file-changed', listener);
     },
     onSyncProgress: (callback: (progress: {
-      phase: string;
+      phase: 'reading' | 'processing' | 'extracting-entities' | 'indexing' | 'done';
       current: number;
       total: number;
       currentItem?: string;

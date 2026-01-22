@@ -38,7 +38,7 @@ export interface TropyProjectInfo {
 }
 
 export interface SyncProgress {
-  phase: 'reading' | 'processing' | 'indexing' | 'done';
+  phase: 'reading' | 'processing' | 'extracting-entities' | 'indexing' | 'done';
   current: number;
   total: number;
   currentItem?: string;
@@ -198,6 +198,12 @@ export const usePrimarySourcesStore = create<PrimarySourcesState>((set, get) => 
   // MARK: - Sync Actions
 
   syncTPY: async (options) => {
+    // Prevent concurrent syncs
+    if (get().isSyncing) {
+      console.warn('⚠️ Sync already in progress, skipping');
+      return { success: false, errors: ['Sync already in progress'] };
+    }
+
     set({ isSyncing: true, syncProgress: null });
 
     // Setup progress listener

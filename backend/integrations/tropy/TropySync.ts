@@ -80,6 +80,8 @@ export class TropySync {
     options: TropySyncOptions,
     onProgress?: TropySyncProgressCallback
   ): Promise<TropySyncResult> {
+    console.log(`📚 [TROPY-SYNC] Starting sync - performOCR: ${options.performOCR}, forceReindex: ${options.forceReindex}`);
+
     const result: TropySyncResult = {
       success: false,
       projectName: '',
@@ -262,6 +264,7 @@ export class TropySync {
 
     // 3. Si pas de transcription et OCR activé, faire l'OCR
     if (!transcription && options.performOCR) {
+      console.log(`🔍 [TROPY-SYNC] OCR needed for item ${item.id} "${item.title}" - photos: ${item.photos.map(p => p.filename).join(', ')}`);
       const ocrResult = await this.performOCROnItem(item, options.ocrLanguage);
       if (ocrResult) {
         transcription = ocrResult.text;
@@ -345,18 +348,22 @@ export class TropySync {
 
   /**
    * Effectue l'OCR sur toutes les photos d'un item
+   * Note: Tropy creates one "photo" entry per page for PDFs, so we deduplicate
+   * to avoid OCR'ing the same file multiple times
    */
   private async performOCROnItem(
     item: TropyItem,
     language: string
   ): Promise<{ text: string; photoCount: number } | null> {
-    const photoPaths = item.photos
-      .map((p) => p.path)
-      .filter((p) => fs.existsSync(p));
+    // Deduplicate paths - Tropy creates multiple photo entries for multi-page PDFs
+    const uniquePaths = [...new Set(item.photos.map((p) => p.path))];
+    const photoPaths = uniquePaths.filter((p) => fs.existsSync(p));
 
     if (photoPaths.length === 0) {
       return null;
     }
+
+    console.log(`📸 [TROPY-SYNC] Item ${item.id}: ${item.photos.length} photo entries -> ${photoPaths.length} unique files`);
 
     try {
       const result = await this.ocrPipeline.performBatchOCR(photoPaths, { language });

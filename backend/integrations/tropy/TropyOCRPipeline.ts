@@ -223,9 +223,11 @@ export class TropyOCRPipeline {
     filePaths: string[],
     options?: OCROptions
   ): Promise<OCRResult> {
+    // Deduplicate file paths to avoid processing the same file multiple times
+    const uniquePaths = [...new Set(filePaths)];
     const results: OCRResult[] = [];
 
-    for (const filePath of filePaths) {
+    for (const filePath of uniquePaths) {
       try {
         // performOCR gère automatiquement les PDF et les images
         const result = await this.performOCR(filePath, options);
