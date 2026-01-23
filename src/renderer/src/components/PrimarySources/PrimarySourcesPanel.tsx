@@ -203,87 +203,90 @@ export const PrimarySourcesPanel: React.FC = () => {
         )}
       </div>
 
-      {/* Sync Progress */}
-      {isSyncing && syncProgress && (
-        <div className="sync-progress">
-          <div className="sync-progress-bar">
-            <div
-              className="sync-progress-fill"
-              style={{ width: `${(syncProgress.current / syncProgress.total) * 100}%` }}
+      {/* Scrollable Content Area */}
+      <div className="primary-sources-content">
+        {/* Sync Progress */}
+        {isSyncing && syncProgress && (
+          <div className="sync-progress">
+            <div className="sync-progress-bar">
+              <div
+                className="sync-progress-fill"
+                style={{ width: `${(syncProgress.current / syncProgress.total) * 100}%` }}
+              />
+            </div>
+            <span className="sync-progress-text">
+              {syncProgress.phase === 'reading' && t('primarySources.reading', 'Reading project...')}
+              {syncProgress.phase === 'processing' &&
+                `${t('primarySources.processing', 'Processing')} ${syncProgress.current}/${syncProgress.total}`}
+              {syncProgress.phase === 'indexing' && t('primarySources.indexing', 'Indexing...')}
+              {syncProgress.currentItem && ` - ${syncProgress.currentItem}`}
+            </span>
+          </div>
+        )}
+
+        {/* Project Info */}
+        {projectInfo && (
+          <div className="tropy-project-info">
+            <Archive size={16} strokeWidth={1} />
+            <span className="project-name">{projectInfo.name}</span>
+            <span className="source-count">{sources.length} sources</span>
+            {projectInfo.isWatching && (
+              <span className="watching-badge">{t('primarySources.autoSync', 'Auto-sync')}</span>
+            )}
+          </div>
+        )}
+
+        {/* Statistics Panel */}
+        {showStats && statistics && <PrimarySourceStats statistics={statistics} />}
+
+        {/* Search & Filters */}
+        <CollapsibleSection
+          title={t('primarySources.searchAndFilters', 'Search & Filters')}
+          defaultExpanded={true}
+        >
+          <div className="search-box">
+            <Search size={16} strokeWidth={1} className="search-icon" />
+            <input
+              type="text"
+              placeholder={t('primarySources.searchPlaceholder', 'Search sources...')}
+              value={searchQuery}
+              onChange={(e) => searchSources(e.target.value)}
             />
           </div>
-          <span className="sync-progress-text">
-            {syncProgress.phase === 'reading' && t('primarySources.reading', 'Reading project...')}
-            {syncProgress.phase === 'processing' &&
-              `${t('primarySources.processing', 'Processing')} ${syncProgress.current}/${syncProgress.total}`}
-            {syncProgress.phase === 'indexing' && t('primarySources.indexing', 'Indexing...')}
-            {syncProgress.currentItem && ` - ${syncProgress.currentItem}`}
-          </span>
-        </div>
-      )}
 
-      {/* Project Info */}
-      {projectInfo && (
-        <div className="tropy-project-info">
-          <Archive size={16} strokeWidth={1} />
-          <span className="project-name">{projectInfo.name}</span>
-          <span className="source-count">{sources.length} sources</span>
-          {projectInfo.isWatching && (
-            <span className="watching-badge">{t('primarySources.autoSync', 'Auto-sync')}</span>
+          {/* Transcription Status */}
+          <div className="transcription-status">
+            <span className="status-item with-transcription">
+              {withTranscription} {t('primarySources.withTranscription', 'with transcription')}
+            </span>
+            <span className="status-item without-transcription">
+              {withoutTranscription} {t('primarySources.withoutTranscription', 'without transcription')}
+            </span>
+          </div>
+        </CollapsibleSection>
+
+        {/* Source List */}
+        <CollapsibleSection
+          title={t('primarySources.sources', 'Primary Sources')}
+          defaultExpanded={true}
+        >
+          {!projectInfo ? (
+            <div className="primary-sources-empty">
+              <Archive size={48} strokeWidth={1} />
+              <h4>{t('primarySources.noProject', 'No Tropy Project')}</h4>
+              <p>{t('primarySources.openPrompt', 'Click the folder icon to open a Tropy project (.tropy or .tpy)')}</p>
+            </div>
+          ) : sources.length === 0 ? (
+            <div className="primary-sources-empty">
+              <FileText size={48} strokeWidth={1} />
+              <h4>{t('primarySources.noSources', 'No Sources')}</h4>
+              <p>{t('primarySources.syncPrompt', 'Click sync to import sources from Tropy')}</p>
+            </div>
+          ) : (
+            <PrimarySourceList sources={filteredSources} />
           )}
-        </div>
-      )}
-
-      {/* Statistics Panel */}
-      {showStats && statistics && <PrimarySourceStats statistics={statistics} />}
-
-      {/* Search & Filters */}
-      <CollapsibleSection
-        title={t('primarySources.searchAndFilters', 'Search & Filters')}
-        defaultExpanded={true}
-      >
-        <div className="search-box">
-          <Search size={16} strokeWidth={1} className="search-icon" />
-          <input
-            type="text"
-            placeholder={t('primarySources.searchPlaceholder', 'Search sources...')}
-            value={searchQuery}
-            onChange={(e) => searchSources(e.target.value)}
-          />
-        </div>
-
-        {/* Transcription Status */}
-        <div className="transcription-status">
-          <span className="status-item with-transcription">
-            {withTranscription} {t('primarySources.withTranscription', 'with transcription')}
-          </span>
-          <span className="status-item without-transcription">
-            {withoutTranscription} {t('primarySources.withoutTranscription', 'without transcription')}
-          </span>
-        </div>
-      </CollapsibleSection>
-
-      {/* Source List */}
-      <CollapsibleSection
-        title={t('primarySources.sources', 'Primary Sources')}
-        defaultExpanded={true}
-      >
-        {!projectInfo ? (
-          <div className="primary-sources-empty">
-            <Archive size={48} strokeWidth={1} />
-            <h4>{t('primarySources.noProject', 'No Tropy Project')}</h4>
-            <p>{t('primarySources.openPrompt', 'Click the folder icon to open a Tropy project (.tropy or .tpy)')}</p>
-          </div>
-        ) : sources.length === 0 ? (
-          <div className="primary-sources-empty">
-            <FileText size={48} strokeWidth={1} />
-            <h4>{t('primarySources.noSources', 'No Sources')}</h4>
-            <p>{t('primarySources.syncPrompt', 'Click sync to import sources from Tropy')}</p>
-          </div>
-        ) : (
-          <PrimarySourceList sources={filteredSources} />
-        )}
-      </CollapsibleSection>
+        </CollapsibleSection>
+      </div>
 
       {/* Modals */}
       <OCRSettingsModal isOpen={showOCRModal} onClose={() => setShowOCRModal(false)} />

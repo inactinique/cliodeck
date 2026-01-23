@@ -559,7 +559,13 @@ class TropyService {
     console.log(`📜 [TROPY-SERVICE] Index stats: HNSW=${indexStats.hnswSize}, BM25=${indexStats.bm25Size}, dimension=${indexStats.hnswDimension}`);
 
     const topK = options?.topK || 10;
-    const threshold = options?.threshold || 0.2; // Reduced threshold for hybrid search
+    // RRF (Reciprocal Rank Fusion) scores are much smaller than cosine similarity
+    // Typical RRF scores range from 0.001 to 0.02 due to the formula: weight / (k + rank)
+    // We use a very low threshold (0.005) to allow RRF results through
+    // If the passed threshold is high (>0.05), it's likely meant for cosine similarity
+    // so we convert it to an appropriate RRF threshold
+    const passedThreshold = options?.threshold || 0.2;
+    const threshold = passedThreshold > 0.05 ? 0.005 : passedThreshold;
 
     try {
       // Import OllamaClient dynamically to avoid circular dependencies
@@ -583,19 +589,24 @@ class TropyService {
       const results = this.vectorStore.search(queryEmbedding, topK * 2, expandedQuery);
 
       // Filter by threshold - results already include source data
-      const enrichedResults = results.filter((r) => r.similarity >= threshold);
+      let enrichedResults = results.filter((r) => r.similarity >= threshold);
 
-      console.log(`📜 [TROPY-SERVICE] Hybrid search found ${enrichedResults.length} results (threshold: ${threshold})`);
+      console.log(`📜 [TROPY-SERVICE] Hybrid search found ${enrichedResults.length} results (RRF threshold: ${threshold})`);
+
+      // Fallback: if all results are filtered out but we have results, keep top ones
+      if (enrichedResults.length === 0 && results.length > 0) {
+        const minFallbackResults = Math.min(topK, results.length);
+        console.warn(`⚠️ [TROPY-SERVICE] All results below threshold, applying fallback: keeping top ${minFallbackResults}`);
+        console.warn(`⚠️ [TROPY-SERVICE] Best RRF score: ${results[0].similarity.toFixed(4)}`);
+        enrichedResults = results.slice(0, minFallbackResults);
+      }
 
       // Debug: Show top result if any
       if (enrichedResults.length > 0) {
         const topResult = enrichedResults[0];
-        console.log(`📜 [TROPY-SERVICE] Top result: "${topResult.source?.title}" (similarity: ${topResult.similarity.toFixed(4)})`);
+        console.log(`📜 [TROPY-SERVICE] Top result: "${topResult.source?.title}" (RRF score: ${topResult.similarity.toFixed(4)})`);
       } else {
         console.log(`📜 [TROPY-SERVICE] No results found. Total results before threshold: ${results.length}`);
-        if (results.length > 0) {
-          console.log(`📜 [TROPY-SERVICE] Best result similarity: ${results[0].similarity.toFixed(4)} (below threshold ${threshold})`);
-        }
       }
 
       return enrichedResults.slice(0, topK);
@@ -635,7 +646,9 @@ class TropyService {
     }
 
     const topK = options?.topK || 10;
-    const threshold = options?.threshold || 0.2;
+    // Convert high thresholds (meant for cosine similarity) to RRF-appropriate values
+    const passedThreshold = options?.threshold || 0.2;
+    const threshold = passedThreshold > 0.05 ? 0.005 : passedThreshold;
     const useEntities = options?.useEntities ?? true;
 
     try {
@@ -661,7 +674,12 @@ class TropyService {
       // If not using entities, fallback to hybrid search
       if (!useEntities || !this.nerService) {
         const results = this.vectorStore.search(queryEmbedding, topK * 2, expandedQuery);
-        return results.filter(r => r.similarity >= threshold).slice(0, topK);
+        let filtered = results.filter(r => r.similarity >= threshold);
+        // Fallback if all filtered out
+        if (filtered.length === 0 && results.length > 0) {
+          filtered = results.slice(0, Math.min(topK, results.length));
+        }
+        return filtered.slice(0, topK);
       }
 
       // Extract entities from query
@@ -677,7 +695,11 @@ class TropyService {
         expandedQuery
       );
 
-      const filteredResults = results.filter(r => r.similarity >= threshold);
+      let filteredResults = results.filter(r => r.similarity >= threshold);
+      // Fallback if all filtered out
+      if (filteredResults.length === 0 && results.length > 0) {
+        filteredResults = results.slice(0, Math.min(topK, results.length));
+      }
 
       console.log(`🏷️ [TROPY-SERVICE] Entity-boosted search found ${filteredResults.length} results`);
 

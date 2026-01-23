@@ -6,6 +6,18 @@
   overflow: hidden;
 }
 
+/* Scrollable content area */
+.primary-sources-content {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+/* Add horizontal padding to sections inside scrollable area */
+.primary-sources-content > .collapsible-section {
+  padding: 0 12px;
+}
+
 /* Header Toolbar */
 .primary-sources-header {
   display: flex;
