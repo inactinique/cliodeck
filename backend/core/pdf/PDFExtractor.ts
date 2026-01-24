@@ -1,18 +1,108 @@
 import * as fs from 'fs';
 import * as path from 'path';
+import { createRequire } from 'module';
 import type { DocumentPage, PDFMetadata } from '../../types/pdf-document';
 
 // pdfjs-dist 3.x loaded dynamically for better Node.js/Electron compatibility
 let pdfjsLib: any = null;
+let canvasStubbed = false;
+
+// Mock canvas implementation for pdfjs (we only need text extraction, not rendering)
+const mockCanvas = {
+  createCanvas: (w: number, h: number) => ({
+    getContext: () => ({
+      fillRect: () => {},
+      drawImage: () => {},
+      getImageData: () => ({ data: new Uint8ClampedArray(w * h * 4), width: w, height: h }),
+      putImageData: () => {},
+      createImageData: (w2: number, h2: number) => ({ data: new Uint8ClampedArray(w2 * h2 * 4), width: w2, height: h2 }),
+      save: () => {},
+      restore: () => {},
+      transform: () => {},
+      setTransform: () => {},
+      resetTransform: () => {},
+      scale: () => {},
+      translate: () => {},
+      rotate: () => {},
+      beginPath: () => {},
+      closePath: () => {},
+      moveTo: () => {},
+      lineTo: () => {},
+      bezierCurveTo: () => {},
+      quadraticCurveTo: () => {},
+      stroke: () => {},
+      fill: () => {},
+      clip: () => {},
+      rect: () => {},
+      arc: () => {},
+      ellipse: () => {},
+      measureText: () => ({ width: 0 }),
+      fillText: () => {},
+      strokeText: () => {},
+      createLinearGradient: () => ({ addColorStop: () => {} }),
+      createRadialGradient: () => ({ addColorStop: () => {} }),
+      createPattern: () => null,
+      clearRect: () => {},
+      canvas: { width: w, height: h },
+    }),
+    width: w,
+    height: h,
+    toBuffer: () => Buffer.alloc(0),
+    toDataURL: () => '',
+  }),
+  Image: class MockImage {
+    width = 0;
+    height = 0;
+    src = '';
+    onload: (() => void) | null = null;
+    onerror: (() => void) | null = null;
+  },
+  loadImage: async () => ({ width: 0, height: 0 }),
+};
+
+// Stub out canvas module to prevent native module crashes
+function stubCanvas(): void {
+  if (canvasStubbed) return;
+
+  try {
+    // Use createRequire to get access to the require.cache
+    const require = createRequire(import.meta.url);
+
+    // Pre-populate the require cache with our mock canvas
+    // This prevents the native canvas from being loaded
+    const canvasPath = require.resolve('canvas');
+    require.cache[canvasPath] = {
+      id: canvasPath,
+      filename: canvasPath,
+      loaded: true,
+      exports: mockCanvas,
+      parent: null,
+      children: [],
+      path: path.dirname(canvasPath),
+      paths: [],
+    } as any;
+
+    canvasStubbed = true;
+    console.log('📄 [EXTRACTOR] Canvas module stubbed (not needed for text extraction)');
+  } catch (e) {
+    console.warn('📄 [EXTRACTOR] Could not stub canvas module:', e);
+  }
+}
 
 async function initPdfjs(): Promise<any> {
   if (pdfjsLib) return pdfjsLib;
 
-  // Use the legacy build which works better in Node.js
-  pdfjsLib = await import('pdfjs-dist/legacy/build/pdf.js');
+  // Stub canvas before importing pdfjs to prevent native crashes
+  stubCanvas();
+
+  // Use CommonJS require to load pdfjs-dist (works correctly with exports)
+  const require = createRequire(import.meta.url);
+  pdfjsLib = require('pdfjs-dist/legacy/build/pdf.js');
 
   // Disable worker for Node.js usage
   pdfjsLib.GlobalWorkerOptions.workerSrc = '';
+
+  console.log('📄 [EXTRACTOR] pdfjs loaded, getDocument available:', typeof pdfjsLib.getDocument);
 
   return pdfjsLib;
 }
@@ -31,17 +121,33 @@ export class PDFExtractor {
   async extractDocument(
     filePath: string
   ): Promise<{ pages: DocumentPage[]; metadata: PDFMetadata; title: string }> {
+    console.log('📄 [EXTRACTOR] extractDocument called:', filePath);
+
+    console.log('📄 [EXTRACTOR] Initializing pdfjs...');
     const pdfjs = await initPdfjs();
+    console.log('📄 [EXTRACTOR] pdfjs initialized');
 
     // Vérifier que le fichier existe
+    console.log('📄 [EXTRACTOR] Checking file exists...');
     if (!fs.existsSync(filePath)) {
       throw new Error('Fichier PDF introuvable');
     }
+    console.log('📄 [EXTRACTOR] File exists');
 
     // Charger le PDF
-    const data = new Uint8Array(fs.readFileSync(filePath));
+    console.log('📄 [EXTRACTOR] Reading file...');
+    const fileBuffer = fs.readFileSync(filePath);
+    console.log(`📄 [EXTRACTOR] File read: ${fileBuffer.length} bytes`);
+
+    console.log('📄 [EXTRACTOR] Creating Uint8Array...');
+    const data = new Uint8Array(fileBuffer);
+    console.log('📄 [EXTRACTOR] Uint8Array created');
+
+    console.log('📄 [EXTRACTOR] Calling getDocument...');
     const loadingTask = pdfjs.getDocument({ data });
+    console.log('📄 [EXTRACTOR] getDocument called, awaiting promise...');
     const pdfDocument = await loadingTask.promise;
+    console.log('📄 [EXTRACTOR] PDF loaded successfully');
 
     console.log(`📄 Extraction de ${pdfDocument.numPages} pages depuis ${path.basename(filePath)}`);
 
