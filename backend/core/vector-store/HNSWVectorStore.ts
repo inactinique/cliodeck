@@ -1,11 +1,21 @@
 import hnswlib from 'hnswlib-node';
-import { VectorStore } from './VectorStore';
 import type { SearchResult, DocumentChunk } from '../../types/pdf-document';
 import * as path from 'path';
 import * as fs from 'fs';
 
 const { HierarchicalNSW } = hnswlib;
 type HierarchicalNSW = InstanceType<typeof HierarchicalNSW>;
+
+// Minimum valid index file size (empty index is at least a few KB)
+const MIN_INDEX_FILE_SIZE = 1024;
+
+// Result of HNSW initialization
+export interface HNSWInitResult {
+  success: boolean;
+  loaded: boolean; // true if existing index was loaded, false if new index created
+  corrupted: boolean; // true if existing index was corrupted and needs rebuild
+  error?: string;
+}
 
 /**
  * HNSW-based vector store for fast approximate nearest neighbor search
@@ -29,6 +39,7 @@ export class HNSWVectorStore {
   private chunkDataMap: Map<string, DocumentChunk>; // chunk ID -> chunk data
   private isInitialized: boolean = false;
   private currentSize: number = 0;
+  private wasCorrupted: boolean = false; // Track if corruption was detected
 
   // HNSW parameters
   private readonly M = 16; // Number of connections per layer (default: 16)
@@ -48,32 +59,114 @@ export class HNSWVectorStore {
   }
 
   /**
-   * Initialize or load existing HNSW index
+   * Check if an index file appears to be valid (basic integrity check)
+   * This helps prevent SIGSEGV crashes from corrupted files
    */
-  async initialize(): Promise<void> {
+  private validateIndexFile(filePath: string): { valid: boolean; reason?: string } {
+    try {
+      if (!fs.existsSync(filePath)) {
+        return { valid: false, reason: 'File does not exist' };
+      }
+
+      const stats = fs.statSync(filePath);
+
+      // Check minimum file size
+      if (stats.size < MIN_INDEX_FILE_SIZE) {
+        return { valid: false, reason: `File too small (${stats.size} bytes, minimum ${MIN_INDEX_FILE_SIZE})` };
+      }
+
+      // Check if file is readable
+      const fd = fs.openSync(filePath, 'r');
+      const buffer = Buffer.alloc(16);
+      fs.readSync(fd, buffer, 0, 16, 0);
+      fs.closeSync(fd);
+
+      return { valid: true };
+    } catch (error) {
+      return { valid: false, reason: `File access error: ${error.message}` };
+    }
+  }
+
+  /**
+   * Check if the index was detected as corrupted during initialization
+   */
+  wasIndexCorrupted(): boolean {
+    return this.wasCorrupted;
+  }
+
+  /**
+   * Initialize or load existing HNSW index
+   * Returns detailed result for caller to handle recovery if needed
+   */
+  async initialize(): Promise<HNSWInitResult> {
     if (this.isInitialized) {
-      return;
+      return { success: true, loaded: true, corrupted: false };
     }
 
     this.index = new HierarchicalNSW('cosine', this.dimension);
 
     // Try to load existing index
     if (fs.existsSync(this.indexPath)) {
+      // Validate file before attempting to load (prevents SIGSEGV)
+      const validation = this.validateIndexFile(this.indexPath);
+
+      if (!validation.valid) {
+        console.warn(`⚠️  HNSW index file invalid: ${validation.reason}`);
+        console.warn('🔄 Deleting corrupted index and creating new one...');
+        this.wasCorrupted = true;
+
+        // Safely delete corrupted file
+        try {
+          fs.unlinkSync(this.indexPath);
+          const metadataPath = this.indexPath + '.meta.json';
+          if (fs.existsSync(metadataPath)) {
+            fs.unlinkSync(metadataPath);
+          }
+        } catch (deleteError) {
+          console.error('❌ Failed to delete corrupted index:', deleteError);
+        }
+
+        // Create new index
+        this.index.initIndex(this.maxElements, this.M, this.efConstruction);
+        this.isInitialized = true;
+        return { success: true, loaded: false, corrupted: true, error: validation.reason };
+      }
+
       try {
         console.log('📂 Loading existing HNSW index from', this.indexPath);
         this.index.readIndexSync(this.indexPath);
         this.currentSize = this.index.getCurrentCount();
         console.log(`✅ HNSW index loaded: ${this.currentSize} vectors`);
+        this.isInitialized = true;
+        return { success: true, loaded: true, corrupted: false };
       } catch (error) {
-        console.warn('⚠️  Failed to load HNSW index, creating new one:', error);
+        // Native code threw an error (but didn't crash with SIGSEGV)
+        console.warn('⚠️  Failed to load HNSW index:', error.message);
+        console.warn('🔄 Deleting corrupted index and creating new one...');
+        this.wasCorrupted = true;
+
+        // Safely delete corrupted file
+        try {
+          fs.unlinkSync(this.indexPath);
+          const metadataPath = this.indexPath + '.meta.json';
+          if (fs.existsSync(metadataPath)) {
+            fs.unlinkSync(metadataPath);
+          }
+        } catch (deleteError) {
+          console.error('❌ Failed to delete corrupted index:', deleteError);
+        }
+
+        // Create new index
         this.index.initIndex(this.maxElements, this.M, this.efConstruction);
+        this.isInitialized = true;
+        return { success: true, loaded: false, corrupted: true, error: error.message };
       }
     } else {
       console.log('🆕 Creating new HNSW index');
       this.index.initIndex(this.maxElements, this.M, this.efConstruction);
+      this.isInitialized = true;
+      return { success: true, loaded: false, corrupted: false };
     }
-
-    this.isInitialized = true;
   }
 
   /**
@@ -97,10 +190,26 @@ export class HNSWVectorStore {
       );
     }
 
+    // Validate embedding values (check for NaN/Infinity which can crash native code)
+    for (let i = 0; i < embedding.length; i++) {
+      if (!Number.isFinite(embedding[i])) {
+        throw new Error(
+          `Invalid embedding value at index ${i}: ${embedding[i]}. ` +
+          `Embeddings must contain finite numbers only.`
+        );
+      }
+    }
+
     const label = this.currentSize;
     // Convert Float32Array to number[]
     const embeddingArray = Array.from(embedding);
-    this.index!.addPoint(embeddingArray, label);
+
+    try {
+      this.index!.addPoint(embeddingArray, label);
+    } catch (error) {
+      throw new Error(`Failed to add point to HNSW index: ${error.message}`);
+    }
+
     this.chunkIdMap.set(label, chunk.id);
     this.chunkDataMap.set(chunk.id, chunk);
     this.currentSize++;
@@ -116,6 +225,8 @@ export class HNSWVectorStore {
 
     console.log(`📥 Adding ${chunks.length} chunks to HNSW index...`);
     const startTime = Date.now();
+    let addedCount = 0;
+    let skippedCount = 0;
 
     for (const { chunk, embedding } of chunks) {
       if (this.currentSize >= this.maxElements) {
@@ -125,24 +236,47 @@ export class HNSWVectorStore {
 
       // Validate embedding dimension
       if (embedding.length !== this.dimension) {
-        throw new Error(
-          `Embedding dimension mismatch: expected ${this.dimension}, but got ${embedding.length}. ` +
-          `This usually happens when the embedding model has changed. ` +
-          `Please regenerate embeddings with the current model.`
+        console.warn(
+          `⚠️  Skipping chunk ${chunk.id}: dimension mismatch (expected ${this.dimension}, got ${embedding.length})`
         );
+        skippedCount++;
+        continue;
       }
+
+      // Validate embedding values (check for NaN/Infinity which can crash native code)
+      let hasInvalidValue = false;
+      for (let i = 0; i < embedding.length; i++) {
+        if (!Number.isFinite(embedding[i])) {
+          console.warn(`⚠️  Skipping chunk ${chunk.id}: invalid embedding value at index ${i}`);
+          hasInvalidValue = true;
+          skippedCount++;
+          break;
+        }
+      }
+      if (hasInvalidValue) continue;
 
       const label = this.currentSize;
       // Convert Float32Array to number[]
       const embeddingArray = Array.from(embedding);
-      this.index!.addPoint(embeddingArray, label);
-      this.chunkIdMap.set(label, chunk.id);
-      this.chunkDataMap.set(chunk.id, chunk);
-      this.currentSize++;
+
+      try {
+        this.index!.addPoint(embeddingArray, label);
+        this.chunkIdMap.set(label, chunk.id);
+        this.chunkDataMap.set(chunk.id, chunk);
+        this.currentSize++;
+        addedCount++;
+      } catch (error) {
+        console.warn(`⚠️  Failed to add chunk ${chunk.id}: ${error.message}`);
+        skippedCount++;
+      }
     }
 
     const duration = Date.now() - startTime;
-    console.log(`✅ Added ${chunks.length} chunks in ${duration}ms (${Math.round(chunks.length / (duration / 1000))} chunks/s)`);
+    const rate = duration > 0 ? Math.round(addedCount / (duration / 1000)) : 0;
+    console.log(`✅ Added ${addedCount} chunks in ${duration}ms (${rate} chunks/s)`);
+    if (skippedCount > 0) {
+      console.warn(`⚠️  Skipped ${skippedCount} chunks due to validation errors`);
+    }
   }
 
   /**
@@ -161,13 +295,32 @@ export class HNSWVectorStore {
       return [];
     }
 
+    // Validate query embedding dimension
+    if (queryEmbedding.length !== this.dimension) {
+      throw new Error(
+        `Query embedding dimension mismatch: expected ${this.dimension}, got ${queryEmbedding.length}`
+      );
+    }
+
+    // Validate query embedding values
+    for (let i = 0; i < queryEmbedding.length; i++) {
+      if (!Number.isFinite(queryEmbedding[i])) {
+        throw new Error(`Invalid query embedding value at index ${i}`);
+      }
+    }
+
     // Set search accuracy
     this.index.setEf(this.efSearch);
 
-    // Perform search
-    // Convert Float32Array to number[]
-    const queryArray = Array.from(queryEmbedding);
-    const result = this.index.searchKnn(queryArray, Math.min(k * 2, this.currentSize));
+    // Perform search with error handling
+    let result: { neighbors: number[]; distances: number[] };
+    try {
+      // Convert Float32Array to number[]
+      const queryArray = Array.from(queryEmbedding);
+      result = this.index.searchKnn(queryArray, Math.min(k * 2, this.currentSize));
+    } catch (error) {
+      throw new Error(`HNSW search failed: ${error.message}`);
+    }
 
     // Convert labels to chunks
     const searchResults: SearchResult[] = [];
@@ -202,7 +355,7 @@ export class HNSWVectorStore {
   }
 
   /**
-   * Save index to disk
+   * Save index to disk with atomic write (write to temp, then rename)
    */
   async save(): Promise<void> {
     if (!this.isInitialized || !this.index) {
@@ -218,42 +371,104 @@ export class HNSWVectorStore {
       fs.mkdirSync(dir, { recursive: true });
     }
 
-    // Save HNSW index
-    this.index.writeIndexSync(this.indexPath);
-
-    // Save metadata (chunk mappings)
+    const tempIndexPath = this.indexPath + '.tmp';
     const metadataPath = this.indexPath + '.meta.json';
-    const metadata = {
-      dimension: this.dimension,
-      currentSize: this.currentSize,
-      chunkIdMap: Array.from(this.chunkIdMap.entries()),
-      chunkDataMap: Array.from(this.chunkDataMap.entries()),
-    };
-    fs.writeFileSync(metadataPath, JSON.stringify(metadata));
+    const tempMetadataPath = metadataPath + '.tmp';
 
-    const duration = Date.now() - startTime;
-    console.log(`✅ HNSW index saved in ${duration}ms`);
+    try {
+      // Save HNSW index to temp file first
+      this.index.writeIndexSync(tempIndexPath);
+
+      // Save metadata to temp file
+      const metadata = {
+        version: 1, // Schema version for future compatibility
+        dimension: this.dimension,
+        currentSize: this.currentSize,
+        savedAt: new Date().toISOString(),
+        chunkIdMap: Array.from(this.chunkIdMap.entries()),
+        chunkDataMap: Array.from(this.chunkDataMap.entries()),
+      };
+      fs.writeFileSync(tempMetadataPath, JSON.stringify(metadata));
+
+      // Atomic rename: temp -> final (prevents corruption if interrupted)
+      fs.renameSync(tempIndexPath, this.indexPath);
+      fs.renameSync(tempMetadataPath, metadataPath);
+
+      const duration = Date.now() - startTime;
+      console.log(`✅ HNSW index saved in ${duration}ms`);
+    } catch (error) {
+      // Clean up temp files on failure
+      try {
+        if (fs.existsSync(tempIndexPath)) fs.unlinkSync(tempIndexPath);
+        if (fs.existsSync(tempMetadataPath)) fs.unlinkSync(tempMetadataPath);
+      } catch (cleanupError) {
+        // Ignore cleanup errors
+      }
+      throw new Error(`Failed to save HNSW index: ${error.message}`);
+    }
   }
 
   /**
-   * Load metadata from disk
+   * Load metadata from disk with validation
+   * Returns true if metadata was loaded successfully, false otherwise
    */
-  async loadMetadata(): Promise<void> {
+  async loadMetadata(): Promise<boolean> {
     const metadataPath = this.indexPath + '.meta.json';
 
     if (!fs.existsSync(metadataPath)) {
       console.warn('⚠️  No metadata file found');
-      return;
+      return false;
     }
 
     try {
-      const metadata = JSON.parse(fs.readFileSync(metadataPath, 'utf-8'));
+      const content = fs.readFileSync(metadataPath, 'utf-8');
+
+      // Validate JSON is not empty or truncated
+      if (!content || content.trim().length < 10) {
+        console.warn('⚠️  Metadata file is empty or truncated');
+        this.wasCorrupted = true;
+        fs.unlinkSync(metadataPath);
+        return false;
+      }
+
+      const metadata = JSON.parse(content);
+
+      // Validate metadata structure
+      if (typeof metadata.currentSize !== 'number' ||
+          !Array.isArray(metadata.chunkIdMap) ||
+          !Array.isArray(metadata.chunkDataMap)) {
+        console.warn('⚠️  Metadata file has invalid structure');
+        this.wasCorrupted = true;
+        fs.unlinkSync(metadataPath);
+        return false;
+      }
+
+      // Validate dimension matches (if specified in metadata)
+      if (metadata.dimension && metadata.dimension !== this.dimension) {
+        console.warn(
+          `⚠️  Metadata dimension mismatch: file has ${metadata.dimension}, expected ${this.dimension}`
+        );
+        this.wasCorrupted = true;
+        fs.unlinkSync(metadataPath);
+        return false;
+      }
+
       this.currentSize = metadata.currentSize;
       this.chunkIdMap = new Map(metadata.chunkIdMap);
       this.chunkDataMap = new Map(metadata.chunkDataMap);
       console.log(`✅ Loaded metadata: ${this.currentSize} chunks`);
+      return true;
     } catch (error) {
-      console.error('❌ Failed to load metadata:', error);
+      console.error('❌ Failed to load metadata:', error.message);
+      this.wasCorrupted = true;
+
+      // Delete corrupted metadata file
+      try {
+        fs.unlinkSync(metadataPath);
+      } catch (deleteError) {
+        // Ignore
+      }
+      return false;
     }
   }
 

@@ -116,8 +116,27 @@ export function setupEmbeddedLLMHandlers() {
       // Charger immédiatement le modèle dans le LLMProviderManager si un projet est ouvert
       // Cela permet d'utiliser le modèle sans avoir à recharger le projet
       const modelLoadSuccess = await pdfService.updateEmbeddedModel(modelPath, targetModelId);
-      console.log(`📤 IPC Response: embedded-llm:download - success (loaded: ${modelLoadSuccess})`, { modelPath });
-      return successResponse({ modelPath, modelId: targetModelId, loaded: modelLoadSuccess });
+
+      if (!modelLoadSuccess) {
+        // Model failed to load - it's likely corrupted despite passing basic checks
+        console.error('❌ [EMBEDDED] Model downloaded but failed to load - deleting corrupted file');
+        dl.deleteCorruptedModel(targetModelId);
+
+        // Clear the config since the model is invalid
+        configManager.set('llm', {
+          ...llmConfig,
+          embeddedModelPath: undefined,
+          embeddedModelId: undefined,
+        });
+
+        return errorResponse(new Error(
+          'Le modèle a été téléchargé mais n\'a pas pu être chargé (fichier corrompu). ' +
+          'Le fichier a été supprimé. Veuillez réessayer le téléchargement.'
+        ));
+      }
+
+      console.log(`📤 IPC Response: embedded-llm:download - success`, { modelPath });
+      return successResponse({ modelPath, modelId: targetModelId, loaded: true });
     } catch (error: any) {
       console.error('❌ embedded-llm:download error:', error);
       return errorResponse(error);

@@ -73,26 +73,52 @@ export class EnhancedVectorStore {
   }
 
   /**
-   * Initialize all indexes (does NOT rebuild automatically)
+   * Initialize all indexes with automatic corruption recovery
    * NOTE: HNSW index loading is synchronous and may block for large indexes
    */
   async initialize(): Promise<void> {
     console.log('📥 Loading indexes (this may take a moment for large corpora)...');
     const startTime = Date.now();
 
-    // Initialize HNSW (synchronous file read - may block!)
-    await this.hnswStore.initialize();
+    // Initialize HNSW (with corruption detection)
+    const hnswResult = await this.hnswStore.initialize();
 
-    // Load metadata if exists (synchronous JSON parse - may block!)
-    await this.hnswStore.loadMetadata();
+    if (hnswResult.corrupted) {
+      console.warn('⚠️  HNSW index was corrupted, will rebuild from SQLite...');
+    }
 
-    // Rebuild BM25 from HNSW metadata if available
-    if (this.hnswStore.getSize() > 0) {
-      await this.rebuildBM25FromHNSW();
+    // Load metadata if exists (with validation)
+    const metadataLoaded = await this.hnswStore.loadMetadata();
+
+    // Check if we need to rebuild
+    const needsRebuild = hnswResult.corrupted ||
+                         this.hnswStore.wasIndexCorrupted() ||
+                         (!metadataLoaded && this.hnswStore.getSize() === 0);
+
+    if (needsRebuild) {
+      // Check if there's data in SQLite to rebuild from
+      const chunks = this.vectorStore.getAllChunksWithEmbeddings();
+      if (chunks.length > 0) {
+        console.log(`🔄 Auto-rebuilding HNSW index from ${chunks.length} chunks in SQLite...`);
+        try {
+          await this.rebuildIndexes();
+          console.log('✅ HNSW index rebuilt successfully from SQLite');
+        } catch (rebuildError) {
+          console.error('❌ Failed to rebuild indexes:', rebuildError.message);
+          // Continue without HNSW - search will fall back to linear
+        }
+      }
+    } else {
+      // Rebuild BM25 from HNSW metadata if available
+      if (this.hnswStore.getSize() > 0) {
+        await this.rebuildBM25FromHNSW();
+      }
     }
 
     const duration = Date.now() - startTime;
     console.log(`✅ Indexes loaded in ${duration}ms`);
+    console.log(`HNSW indexing: ${this.useHNSW ? 'enabled' : 'disabled'}`);
+    console.log(`Hybrid search: ${this.useHybrid ? 'enabled' : 'disabled'}`);
   }
 
   /**

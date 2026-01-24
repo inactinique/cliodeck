@@ -30,6 +30,9 @@ export interface ModelStatus {
   path?: string;
 }
 
+// GGUF file magic number (first 4 bytes)
+const GGUF_MAGIC = Buffer.from([0x47, 0x47, 0x55, 0x46]); // "GGUF"
+
 export class ModelDownloader {
   private modelsDir: string;
   private abortController: AbortController | null = null;
@@ -40,6 +43,33 @@ export class ModelDownloader {
     // Créer le répertoire si nécessaire
     if (!fs.existsSync(this.modelsDir)) {
       fs.mkdirSync(this.modelsDir, { recursive: true });
+    }
+  }
+
+  /**
+   * Validates that a file is a valid GGUF format by checking magic bytes
+   */
+  private isValidGGUF(filePath: string): { valid: boolean; reason?: string } {
+    try {
+      const fd = fs.openSync(filePath, 'r');
+      const buffer = Buffer.alloc(4);
+      const bytesRead = fs.readSync(fd, buffer, 0, 4, 0);
+      fs.closeSync(fd);
+
+      if (bytesRead < 4) {
+        return { valid: false, reason: 'File too small to be valid GGUF' };
+      }
+
+      if (!buffer.equals(GGUF_MAGIC)) {
+        return {
+          valid: false,
+          reason: `Invalid magic bytes: expected GGUF, got ${buffer.toString('hex')}`,
+        };
+      }
+
+      return { valid: true };
+    } catch (error: any) {
+      return { valid: false, reason: `Error reading file: ${error.message}` };
     }
   }
 
@@ -69,17 +99,43 @@ export class ModelDownloader {
       const sizeMB = stats.size / (1024 * 1024);
 
       // Tolérance de 5% sur la taille pour gérer les variations de compression
-      const isValid = sizeMB > modelInfo.sizeMB * 0.95;
+      const sizeValid = sizeMB > modelInfo.sizeMB * 0.95;
 
-      if (!isValid) {
+      if (!sizeValid) {
         console.warn(
           `⚠️ [DOWNLOAD] Model ${modelId} exists but size mismatch: ${sizeMB.toFixed(1)} MB vs expected ${modelInfo.sizeMB} MB`
         );
+        return false;
       }
 
-      return isValid;
+      // Validate GGUF magic bytes to ensure file is not corrupted
+      const ggufCheck = this.isValidGGUF(modelPath);
+      if (!ggufCheck.valid) {
+        console.warn(`⚠️ [DOWNLOAD] Model ${modelId} is corrupted: ${ggufCheck.reason}`);
+        return false;
+      }
+
+      return true;
     } catch (error) {
       console.error(`❌ [DOWNLOAD] Error checking model ${modelId}:`, error);
+      return false;
+    }
+  }
+
+  /**
+   * Deletes a corrupted model file
+   */
+  deleteCorruptedModel(modelId: string = DEFAULT_EMBEDDED_MODEL): boolean {
+    try {
+      const modelPath = this.getModelPath(modelId);
+      if (fs.existsSync(modelPath)) {
+        fs.unlinkSync(modelPath);
+        console.log(`🗑️ [DOWNLOAD] Deleted corrupted model: ${modelPath}`);
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error(`❌ [DOWNLOAD] Error deleting corrupted model ${modelId}:`, error);
       return false;
     }
   }
@@ -276,6 +332,13 @@ export class ModelDownloader {
         throw new Error(
           `Fichier incomplet: ${(stats.size / (1024 * 1024)).toFixed(1)} MB au lieu de ${(totalSize / (1024 * 1024)).toFixed(1)} MB`
         );
+      }
+
+      // Validate GGUF format (magic bytes)
+      const ggufCheck = this.isValidGGUF(destPath);
+      if (!ggufCheck.valid) {
+        fs.unlinkSync(destPath);
+        throw new Error(`Fichier invalide (GGUF corrompu): ${ggufCheck.reason}`);
       }
 
       onProgress({
