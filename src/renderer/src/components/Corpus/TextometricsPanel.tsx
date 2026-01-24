@@ -28,12 +28,13 @@ interface TextStatistics {
   wordFrequencyDistribution?: Record<number, number>;
 }
 
+const TOP_N = 20; // Number of top items to display
+
 export const TextometricsPanel: React.FC = () => {
   const { t } = useTranslation();
   const [statistics, setStatistics] = useState<TextStatistics | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [topN, setTopN] = useState<number>(20);
   const [activeTab, setActiveTab] = useState<'words' | 'bigrams' | 'trigrams'>('words');
 
   const loadTextStatistics = async () => {
@@ -43,7 +44,7 @@ export const TextometricsPanel: React.FC = () => {
     try {
       console.log('📊 Fetching text statistics...');
       const result = await window.electron.corpus.getTextStatistics({
-        topN,
+        topN: TOP_N,
       });
 
       if (result.success) {
@@ -63,10 +64,6 @@ export const TextometricsPanel: React.FC = () => {
   useEffect(() => {
     loadTextStatistics();
   }, []);
-
-  const handleTopNChange = (newTopN: number) => {
-    setTopN(newTopN);
-  };
 
   const handleRefresh = () => {
     loadTextStatistics();

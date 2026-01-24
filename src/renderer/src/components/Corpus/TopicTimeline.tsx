@@ -127,7 +127,7 @@ export const TopicTimeline: React.FC<TopicTimelineProps> = ({ timelineData, topi
             }}
             formatter={(value) => topicLabels[value as string] || value}
           />
-          {sortedTopicKeys.map((topicKey, index) => {
+          {sortedTopicKeys.map((topicKey) => {
             const topicId = parseInt(topicKey.replace('topic_', ''));
             return (
               <Area

@@ -496,7 +496,7 @@ export const CorpusExplorerPanel: React.FC = () => {
     // Filter by language
     if (filters.language !== null) {
       filteredNodes = filteredNodes.filter(
-        (node) => {
+        (_node) => {
           // Language is stored in the full document data, we'll need to check if it matches
           // For now, we'll skip this filter as it requires additional metadata
           return true;

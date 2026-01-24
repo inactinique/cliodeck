@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { X, Search, Book, AlertCircle, Info } from 'lucide-react';
+import { X, Search, Book, AlertCircle } from 'lucide-react';
 import methodologyGuide from '../../../../../backend/data/methodology-guide.json';
 import './MethodologyModal.css';
 

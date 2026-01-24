@@ -8,7 +8,7 @@ import './MarkdownEditor.css';
 
 export const MarkdownEditor: React.FC = () => {
   const { content, setContent, settings, setMonacoEditor } = useEditorStore();
-  const { citations } = useBibliographyStore();
+  useBibliographyStore(); // Keep store subscription active
   const { currentTheme } = useTheme();
   const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null);
 

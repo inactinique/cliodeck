@@ -106,7 +106,6 @@ export const usePDFModificationDetection = (
   dismissNotification: () => void;
 } => {
   const [modifiedPDFs, setModifiedPDFs] = useState<ModifiedPDF[]>([]);
-  const [lastCheck, setLastCheck] = useState<number>(Date.now());
 
   const checkForModifications = async () => {
     if (!projectPath || citations.length === 0) return;
@@ -121,7 +120,6 @@ export const usePDFModificationDetection = (
       if (result.success && result.data?.modifiedPDFs && result.data.modifiedPDFs.length > 0) {
         setModifiedPDFs(result.data.modifiedPDFs);
       }
-      setLastCheck(Date.now());
     } catch (error) {
       console.error('Failed to check for modified PDFs:', error);
     }
@@ -129,7 +127,6 @@ export const usePDFModificationDetection = (
 
   const dismissNotification = () => {
     setModifiedPDFs([]);
-    setLastCheck(Date.now());
   };
 
   // Check on mount and periodically

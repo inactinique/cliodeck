@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { ChevronDown, ChevronUp, RotateCcw } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { useRAGQueryStore, type LLMProvider, type SourceType } from '../../stores/ragQueryStore';
+import { useRAGQueryStore, type LLMProvider } from '../../stores/ragQueryStore';
 import { CollectionMultiSelect } from './CollectionMultiSelect';
 import './RAGSettingsPanel.css';
 

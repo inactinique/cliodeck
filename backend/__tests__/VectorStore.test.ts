@@ -143,7 +143,7 @@ describe('VectorStore', () => {
       const chunks = vectorStore.getChunksForDocument('doc-1');
 
       expect(chunks).toHaveLength(1);
-      expect(chunks[0].content).toBe('This is test content');
+      expect(chunks[0].chunk.content).toBe('This is test content');
       expect(chunks[0].embedding).toBeDefined();
     });
 
@@ -302,8 +302,8 @@ describe('VectorStore', () => {
 
       const stats = vectorStore.getStatistics();
 
-      expect(stats.totalDocuments).toBe(1);
-      expect(stats.totalChunks).toBe(1);
+      expect(stats.documentCount).toBe(1);
+      expect(stats.chunkCount).toBe(1);
     });
 
     it('should verify integrity', () => {

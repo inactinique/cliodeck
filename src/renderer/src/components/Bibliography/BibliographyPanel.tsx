@@ -37,7 +37,7 @@ export const BibliographyPanel: React.FC = () => {
   } = useBibliographyStore();
 
   // PDF Modification Detection
-  const { modifiedPDFs, checkForModifications, dismissNotification } = usePDFModificationDetection(
+  const { modifiedPDFs, dismissNotification } = usePDFModificationDetection(
     citations,
     currentProject?.path
   );

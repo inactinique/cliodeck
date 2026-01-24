@@ -27,7 +27,6 @@ export interface MainLayoutProps {
 export const MainLayout: React.FC<MainLayoutProps> = ({
   leftPanel,
   centerPanel,
-  rightPanel,
 }) => {
   const { t } = useTranslation('common');
   const [leftView, setLeftView] = useState<LeftPanelView>('projects');

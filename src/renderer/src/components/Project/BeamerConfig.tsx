@@ -191,7 +191,7 @@ export const BeamerConfig: React.FC<BeamerConfigProps> = ({
     setConfig({ ...config, [key]: value });
   };
 
-  const handleTextBlur = (key: keyof BeamerConfigOptions) => {
+  const handleTextBlur = (_key: keyof BeamerConfigOptions) => {
     // Save when user leaves the text field
     saveConfig(config);
   };

@@ -123,7 +123,7 @@ function sortCollectionsHierarchically(
 
 export const useRAGQueryStore = create<RAGQueryState>()(
   persist(
-    (set, get) => ({
+    (set, _get) => ({
       // Initial state
       params: DEFAULT_PARAMS,
       availableModels: [],

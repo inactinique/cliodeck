@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import { X, Plus, Tag } from 'lucide-react';
 import './TagManager.css';
 

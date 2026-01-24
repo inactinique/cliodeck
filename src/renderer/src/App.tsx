@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 import { MainLayout } from './components/Layout/MainLayout';
 import { EditorPanel } from './components/Editor/EditorPanel';
