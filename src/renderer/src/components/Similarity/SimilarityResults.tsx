@@ -4,6 +4,7 @@
  * Displays the list of analyzed segments with their recommendations.
  */
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { ChevronDown, ChevronRight, FileText } from 'lucide-react';
 import { useSimilarityStore, useAllSegments, type SimilarityResult } from '../../stores/similarityStore';
 import { SimilarityCard } from './SimilarityCard';
