@@ -1,13 +1,55 @@
 import { randomUUID } from 'crypto';
-import { PDFExtractor } from './PDFExtractor';
-import { DocumentChunker, CHUNKING_CONFIGS } from '../chunking/DocumentChunker';
-import { AdaptiveChunker } from '../chunking/AdaptiveChunker';
-import { VectorStore } from '../vector-store/VectorStore';
-import { EnhancedVectorStore } from '../vector-store/EnhancedVectorStore';
-import { OllamaClient } from '../llm/OllamaClient';
-import { CitationExtractor } from '../analysis/CitationExtractor';
-import { DocumentSummarizer, type SummarizerConfig } from '../analysis/DocumentSummarizer';
-import type { PDFDocument, Citation } from '../../types/pdf-document';
+import { PDFExtractor } from './PDFExtractor.js';
+import { TextPreprocessor } from './TextPreprocessor.js';
+import { DocumentChunker, CHUNKING_CONFIGS, type ChunkingConfig } from '../chunking/DocumentChunker.js';
+import { AdaptiveChunker } from '../chunking/AdaptiveChunker.js';
+import { SemanticChunker } from '../chunking/SemanticChunker.js';
+import { ChunkQualityScorer } from '../chunking/ChunkQualityScorer.js';
+import { ChunkDeduplicator } from '../chunking/ChunkDeduplicator.js';
+import { EmbeddingCache } from '../chunking/EmbeddingCache.js';
+import { VectorStore } from '../vector-store/VectorStore.js';
+import { EnhancedVectorStore } from '../vector-store/EnhancedVectorStore.js';
+import { OllamaClient } from '../llm/OllamaClient.js';
+import { CitationExtractor } from '../analysis/CitationExtractor.js';
+import { DocumentSummarizer, type SummarizerConfig } from '../analysis/DocumentSummarizer.js';
+import type { PDFDocument, DocumentChunk } from '../../types/pdf-document.js';
+import type { RAGConfig } from '../../types/config.js';
+
+/**
+ * Extended indexing options including all RAG optimization features
+ */
+export interface IndexingOptions {
+  // Chunking
+  chunkingPreset?: 'cpuOptimized' | 'standard' | 'large';
+  customChunkingEnabled?: boolean;
+  customMaxChunkSize?: number;
+  customMinChunkSize?: number;
+  customOverlapSize?: number;
+  useAdaptiveChunking?: boolean;
+
+  // Quality filtering
+  enableQualityFiltering?: boolean;
+  minChunkEntropy?: number;
+  minUniqueWordRatio?: number;
+
+  // Preprocessing
+  enablePreprocessing?: boolean;
+  enableOCRCleanup?: boolean;
+  enableHeaderFooterRemoval?: boolean;
+
+  // Deduplication
+  enableDeduplication?: boolean;
+  enableSimilarityDedup?: boolean;
+  dedupSimilarityThreshold?: number;
+
+  // Semantic chunking
+  useSemanticChunking?: boolean;
+  semanticSimilarityThreshold?: number;
+  semanticWindowSize?: number;
+
+  // Summarizer
+  summarizerConfig?: SummarizerConfig;
+}
 
 export interface IndexingProgress {
   stage:
@@ -30,36 +72,102 @@ export interface IndexingProgress {
 
 export class PDFIndexer {
   private pdfExtractor: PDFExtractor;
+  private textPreprocessor: TextPreprocessor;
   private chunker: DocumentChunker | AdaptiveChunker;
+  private semanticChunker: SemanticChunker | null = null;
+  private qualityScorer: ChunkQualityScorer;
+  private deduplicator: ChunkDeduplicator;
+  private embeddingCache: EmbeddingCache;
   private vectorStore: VectorStore | EnhancedVectorStore;
   private ollamaClient: OllamaClient;
   private citationExtractor: CitationExtractor;
   private documentSummarizer: DocumentSummarizer | null = null;
   private summarizerConfig: SummarizerConfig;
-  private useAdaptiveChunking: boolean;
+  private options: IndexingOptions;
 
   constructor(
     vectorStore: VectorStore | EnhancedVectorStore,
     ollamaClient: OllamaClient,
     chunkingConfig: 'cpuOptimized' | 'standard' | 'large' = 'cpuOptimized',
     summarizerConfig?: SummarizerConfig,
-    useAdaptiveChunking: boolean = false
+    useAdaptiveChunking: boolean = false,
+    ragConfig?: Partial<RAGConfig>
   ) {
     this.pdfExtractor = new PDFExtractor();
-    this.useAdaptiveChunking = useAdaptiveChunking;
-
-    // Choose chunker based on configuration
-    if (useAdaptiveChunking) {
-      console.log('📐 Using AdaptiveChunker (structure-aware)');
-      this.chunker = new AdaptiveChunker(CHUNKING_CONFIGS[chunkingConfig]);
-    } else {
-      console.log('📐 Using DocumentChunker (fixed-size)');
-      this.chunker = new DocumentChunker(CHUNKING_CONFIGS[chunkingConfig]);
-    }
-
+    this.textPreprocessor = new TextPreprocessor();
+    this.qualityScorer = new ChunkQualityScorer();
+    this.deduplicator = new ChunkDeduplicator();
+    this.embeddingCache = new EmbeddingCache(500);
     this.vectorStore = vectorStore;
     this.ollamaClient = ollamaClient;
     this.citationExtractor = new CitationExtractor();
+
+    // Build options from ragConfig or use defaults
+    this.options = {
+      chunkingPreset: chunkingConfig,
+      useAdaptiveChunking: ragConfig?.useAdaptiveChunking ?? useAdaptiveChunking,
+      customChunkingEnabled: ragConfig?.customChunkingEnabled ?? false,
+      customMaxChunkSize: ragConfig?.customMaxChunkSize ?? 500,
+      customMinChunkSize: ragConfig?.customMinChunkSize ?? 100,
+      customOverlapSize: ragConfig?.customOverlapSize ?? 75,
+      enableQualityFiltering: ragConfig?.enableQualityFiltering ?? true,
+      minChunkEntropy: ragConfig?.minChunkEntropy ?? 0.3,
+      minUniqueWordRatio: ragConfig?.minUniqueWordRatio ?? 0.4,
+      enablePreprocessing: ragConfig?.enablePreprocessing ?? true,
+      enableOCRCleanup: ragConfig?.enableOCRCleanup ?? true,
+      enableHeaderFooterRemoval: ragConfig?.enableHeaderFooterRemoval ?? true,
+      enableDeduplication: ragConfig?.enableDeduplication ?? true,
+      enableSimilarityDedup: ragConfig?.enableSimilarityDedup ?? false,
+      dedupSimilarityThreshold: ragConfig?.dedupSimilarityThreshold ?? 0.85,
+      useSemanticChunking: ragConfig?.useSemanticChunking ?? false,
+      semanticSimilarityThreshold: ragConfig?.semanticSimilarityThreshold ?? 0.7,
+      semanticWindowSize: ragConfig?.semanticWindowSize ?? 3,
+      summarizerConfig,
+    };
+
+    // Build chunking config
+    let chunkingCfg: ChunkingConfig;
+    if (this.options.customChunkingEnabled) {
+      chunkingCfg = {
+        maxChunkSize: this.options.customMaxChunkSize!,
+        minChunkSize: this.options.customMinChunkSize!,
+        overlapSize: this.options.customOverlapSize!,
+      };
+      console.log('📐 Using custom chunking config:', chunkingCfg);
+    } else {
+      chunkingCfg = CHUNKING_CONFIGS[chunkingConfig];
+    }
+
+    // Choose chunker based on configuration
+    if (this.options.useAdaptiveChunking) {
+      console.log('📐 Using AdaptiveChunker (structure-aware)');
+      this.chunker = new AdaptiveChunker(chunkingCfg);
+    } else {
+      console.log('📐 Using DocumentChunker (fixed-size)');
+      this.chunker = new DocumentChunker(chunkingCfg);
+    }
+
+    // Initialize semantic chunker if enabled
+    if (this.options.useSemanticChunking) {
+      console.log('🧠 Semantic chunking enabled');
+      this.semanticChunker = new SemanticChunker(
+        (text) => this.ollamaClient.generateEmbedding(text),
+        {
+          similarityThreshold: this.options.semanticSimilarityThreshold!,
+          windowSize: this.options.semanticWindowSize!,
+          minChunkSize: chunkingCfg.minChunkSize,
+          maxChunkSize: chunkingCfg.maxChunkSize,
+        },
+        this.embeddingCache
+      );
+    }
+
+    // Log enabled features
+    console.log('🔧 [INDEXER] RAG optimization features:');
+    console.log(`   - Preprocessing: ${this.options.enablePreprocessing}`);
+    console.log(`   - Quality filtering: ${this.options.enableQualityFiltering}`);
+    console.log(`   - Deduplication: ${this.options.enableDeduplication}`);
+    console.log(`   - Semantic chunking: ${this.options.useSemanticChunking}`);
 
     // Initialiser DocumentSummarizer si activé
     this.summarizerConfig = summarizerConfig || {
@@ -240,27 +348,85 @@ export class PDFIndexer {
         console.log(`   Citations matchées: ${citationMatches.size}/${citations.length}`);
       }
 
-      // 10. Créer les chunks
+      // 10. Preprocess pages (if enabled)
+      let processedPages = pages;
+      if (this.options.enablePreprocessing) {
+        onProgress?.({
+          stage: 'chunking',
+          progress: 38,
+          message: 'Prétraitement du texte...',
+        });
+
+        const preprocessResult = this.textPreprocessor.preprocess(pages, {
+          enableOCRCleanup: this.options.enableOCRCleanup,
+          enableHeaderFooterRemoval: this.options.enableHeaderFooterRemoval,
+          enablePageNumberRemoval: true,
+        });
+        processedPages = preprocessResult.pages;
+
+        console.log(`🧹 [PREPROCESS] Stats:`, {
+          headersRemoved: preprocessResult.stats.headersRemoved,
+          footersRemoved: preprocessResult.stats.footersRemoved,
+          pageNumbersRemoved: preprocessResult.stats.pageNumbersRemoved,
+          charactersRemoved: preprocessResult.stats.charactersRemoved,
+        });
+      }
+
+      // 11. Créer les chunks
       onProgress?.({
         stage: 'chunking',
         progress: 40,
         message: 'Découpage du texte en chunks...',
       });
 
-      // Pass document metadata to adaptive chunker for context enhancement
+      // Pass document metadata to chunker for context enhancement
       const documentMeta = {
         title: document.title,
         abstract: summary,
       };
 
-      const chunks =
-        this.chunker instanceof AdaptiveChunker
-          ? this.chunker.createChunks(pages, documentId, documentMeta)
-          : this.chunker.createChunks(pages, documentId);
+      let chunks: DocumentChunk[];
+
+      // Use semantic chunker if enabled, otherwise use regular chunker
+      if (this.semanticChunker && this.options.useSemanticChunking) {
+        console.log('🧠 [SEMANTIC] Using semantic chunking...');
+        chunks = await this.semanticChunker.createChunks(processedPages, documentId, documentMeta);
+      } else if (this.chunker instanceof AdaptiveChunker) {
+        chunks = this.chunker.createChunks(processedPages, documentId, documentMeta);
+      } else {
+        chunks = this.chunker.createChunks(processedPages, documentId);
+      }
+
+      console.log(`📊 Initial chunking: ${chunks.length} chunks created`);
+
+      // 12. Quality filtering (if enabled)
+      if (this.options.enableQualityFiltering) {
+        const qualityResult = this.qualityScorer.filterByQuality(chunks, {
+          minEntropy: this.options.minChunkEntropy,
+          minUniqueWordRatio: this.options.minUniqueWordRatio,
+        }, false); // Don't log each filtered chunk
+
+        console.log(`🎯 [QUALITY] Filtering: ${qualityResult.stats.passedChunks}/${qualityResult.stats.totalChunks} passed (${(qualityResult.stats.filterRate * 100).toFixed(1)}% filtered)`);
+        chunks = qualityResult.passed;
+      }
+
+      // 13. Deduplication (if enabled)
+      if (this.options.enableDeduplication) {
+        const dedupResult = this.deduplicator.deduplicate(chunks, {
+          useContentHash: true,
+          useSimilarity: this.options.enableSimilarityDedup,
+          similarityThreshold: this.options.dedupSimilarityThreshold!,
+        });
+
+        if (dedupResult.duplicateCount > 0) {
+          console.log(`🔄 [DEDUP] Removed ${dedupResult.duplicateCount} duplicate chunks`);
+        }
+        chunks = dedupResult.uniqueChunks;
+      }
 
       const stats = this.chunker.getChunkingStats(chunks);
       console.log(
-        `📊 Chunking: ${stats.totalChunks} chunks, ${stats.averageWordCount} mots/chunk en moyenne`
+        `📊 Final: ${stats.totalChunks} chunks, ${stats.averageWordCount} mots/chunk en moyenne`
       );
 
       onProgress?.({

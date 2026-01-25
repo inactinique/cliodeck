@@ -164,13 +164,23 @@ class PDFService {
         maxLength: summarizerConfig.maxLength
       });
 
-      // Initialiser PDFIndexer avec configuration du summarizer et adaptive chunking
+      // Log RAG optimization features
+      console.log('📝 [PDF-SERVICE] RAG optimization config:', {
+        enableQualityFiltering: ragConfig.enableQualityFiltering ?? true,
+        enablePreprocessing: ragConfig.enablePreprocessing ?? true,
+        enableDeduplication: ragConfig.enableDeduplication ?? true,
+        useSemanticChunking: ragConfig.useSemanticChunking ?? false,
+        customChunkingEnabled: ragConfig.customChunkingEnabled ?? false,
+      });
+
+      // Initialiser PDFIndexer avec configuration complète du RAG
       this.pdfIndexer = new PDFIndexer(
         this.vectorStore,
         this.ollamaClient,
         ragConfig.chunkingConfig,
         summarizerConfig,
-        ragConfig.useAdaptiveChunking !== false // Enable by default
+        ragConfig.useAdaptiveChunking !== false, // Enable by default
+        ragConfig // Pass full RAG config for optimization features
       );
 
       this.currentProjectPath = projectPath;

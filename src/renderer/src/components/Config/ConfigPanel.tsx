@@ -35,6 +35,32 @@ export interface RAGConfig {
 
   // Topic modeling
   enableTopicModeling: boolean;
+
+  // === Custom Chunking Configuration (Phase 1) ===
+  customChunkingEnabled?: boolean; // Use custom parameters instead of preset
+  customMaxChunkSize?: number; // 100-1500 words
+  customMinChunkSize?: number; // 20-200 words
+  customOverlapSize?: number; // 0-200 words
+
+  // === Chunk Quality Filtering (Phase 1) ===
+  enableQualityFiltering?: boolean; // Filter low-quality chunks
+  minChunkEntropy?: number; // 0.0-1.0, minimum Shannon entropy
+  minUniqueWordRatio?: number; // 0.0-1.0, minimum unique words ratio
+
+  // === Text Preprocessing (Phase 2) ===
+  enablePreprocessing?: boolean; // Enable text preprocessing pipeline
+  enableOCRCleanup?: boolean; // Clean OCR artifacts
+  enableHeaderFooterRemoval?: boolean; // Remove repeated headers/footers
+
+  // === Deduplication (Phase 2) ===
+  enableDeduplication?: boolean; // Enable chunk deduplication
+  enableSimilarityDedup?: boolean; // Use similarity-based dedup (slower)
+  dedupSimilarityThreshold?: number; // 0.7-0.95, similarity threshold
+
+  // === Semantic Chunking (Phase 3) ===
+  useSemanticChunking?: boolean; // Use embedding-based boundary detection
+  semanticSimilarityThreshold?: number; // 0.5-0.9, boundary detection threshold
+  semanticWindowSize?: number; // 2-5 sentences per window
 }
 
 export interface LLMConfig {
@@ -61,6 +87,27 @@ export const ConfigPanel: React.FC = () => {
     explorationSimilarityThreshold: 0.7,
     includeSummaries: true,
     enableTopicModeling: false,
+    // Phase 1: Custom chunking
+    customChunkingEnabled: false,
+    customMaxChunkSize: 500,
+    customMinChunkSize: 100,
+    customOverlapSize: 75,
+    // Phase 1: Quality filtering
+    enableQualityFiltering: true,
+    minChunkEntropy: 0.3,
+    minUniqueWordRatio: 0.4,
+    // Phase 2: Preprocessing
+    enablePreprocessing: true,
+    enableOCRCleanup: true,
+    enableHeaderFooterRemoval: true,
+    // Phase 2: Deduplication
+    enableDeduplication: true,
+    enableSimilarityDedup: false,
+    dedupSimilarityThreshold: 0.85,
+    // Phase 3: Semantic chunking
+    useSemanticChunking: false,
+    semanticSimilarityThreshold: 0.7,
+    semanticWindowSize: 3,
   });
 
   const [llmConfig, setLLMConfig] = useState<LLMConfig>({

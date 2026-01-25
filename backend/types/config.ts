@@ -61,6 +61,35 @@ export interface RAGConfig {
   systemPromptLanguage?: 'fr' | 'en'; // Language of the default system prompt
   customSystemPrompt?: string; // Custom system prompt (optional)
   useCustomSystemPrompt?: boolean; // Use custom prompt instead of default
+
+  // Context window size (for LLM generation)
+  numCtx?: number; // Context window in tokens for Ollama
+
+  // === Custom Chunking Configuration (Phase 1) ===
+  customChunkingEnabled?: boolean; // Use custom parameters instead of preset
+  customMaxChunkSize?: number; // 100-1500 words
+  customMinChunkSize?: number; // 20-200 words
+  customOverlapSize?: number; // 0-200 words
+
+  // === Chunk Quality Filtering (Phase 1) ===
+  enableQualityFiltering?: boolean; // Filter low-quality chunks
+  minChunkEntropy?: number; // 0.0-1.0, minimum Shannon entropy
+  minUniqueWordRatio?: number; // 0.0-1.0, minimum unique words ratio
+
+  // === Text Preprocessing (Phase 2) ===
+  enablePreprocessing?: boolean; // Enable text preprocessing pipeline
+  enableOCRCleanup?: boolean; // Clean OCR artifacts
+  enableHeaderFooterRemoval?: boolean; // Remove repeated headers/footers
+
+  // === Deduplication (Phase 2) ===
+  enableDeduplication?: boolean; // Enable chunk deduplication
+  enableSimilarityDedup?: boolean; // Use similarity-based dedup (slower)
+  dedupSimilarityThreshold?: number; // 0.7-0.95, similarity threshold
+
+  // === Semantic Chunking (Phase 3) ===
+  useSemanticChunking?: boolean; // Use embedding-based boundary detection
+  semanticSimilarityThreshold?: number; // 0.5-0.9, boundary detection threshold
+  semanticWindowSize?: number; // 2-5 sentences per window
 }
 
 export interface ZoteroConfig {
@@ -115,6 +144,32 @@ export const DEFAULT_CONFIG: AppConfig = {
     // System prompt configuration (default: French)
     systemPromptLanguage: 'fr',
     useCustomSystemPrompt: false,
+
+    // Custom chunking (Phase 1) - disabled by default, use preset
+    customChunkingEnabled: false,
+    customMaxChunkSize: 500,
+    customMinChunkSize: 100,
+    customOverlapSize: 75,
+
+    // Quality filtering (Phase 1) - enabled by default
+    enableQualityFiltering: true,
+    minChunkEntropy: 0.3,
+    minUniqueWordRatio: 0.4,
+
+    // Preprocessing (Phase 2) - enabled by default
+    enablePreprocessing: true,
+    enableOCRCleanup: true,
+    enableHeaderFooterRemoval: true,
+
+    // Deduplication (Phase 2) - enabled by default
+    enableDeduplication: true,
+    enableSimilarityDedup: false, // Disabled by default (slower)
+    dedupSimilarityThreshold: 0.85,
+
+    // Semantic chunking (Phase 3) - disabled by default (CPU intensive)
+    useSemanticChunking: false,
+    semanticSimilarityThreshold: 0.7,
+    semanticWindowSize: 3,
   },
   editor: {
     fontSize: 14,

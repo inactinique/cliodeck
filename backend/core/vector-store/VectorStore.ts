@@ -225,7 +225,7 @@ export class VectorStore {
   }
 
   private migrateDatabase(): void {
-    // Vérifier si les nouvelles colonnes existent déjà
+    // Vérifier si les nouvelles colonnes existent déjà dans documents
     const tableInfo = this.db.pragma('table_info(documents)') as Array<{ name: string }>;
     const columnNames = tableInfo.map((col) => col.name);
 
@@ -238,11 +238,22 @@ export class VectorStore {
 
     for (const column of newColumns) {
       if (!columnNames.includes(column.name)) {
-        console.log(`📝 Migration: Ajout de la colonne ${column.name}`);
+        console.log(`📝 Migration: Ajout de la colonne ${column.name} à documents`);
         this.db.exec(
           `ALTER TABLE documents ADD COLUMN ${column.name} ${column.type} DEFAULT ${column.default}`
         );
       }
+    }
+
+    // Migration chunks table for content_hash (Phase 2 - deduplication)
+    const chunksTableInfo = this.db.pragma('table_info(chunks)') as Array<{ name: string }>;
+    const chunksColumnNames = chunksTableInfo.map((col) => col.name);
+
+    if (!chunksColumnNames.includes('content_hash')) {
+      console.log('📝 Migration: Ajout de la colonne content_hash à chunks');
+      this.db.exec('ALTER TABLE chunks ADD COLUMN content_hash TEXT DEFAULT NULL');
+      // Create index for faster deduplication lookups
+      this.db.exec('CREATE INDEX IF NOT EXISTS idx_chunks_content_hash ON chunks(content_hash)');
     }
 
     console.log('✅ Migration de la base de données terminée');
@@ -323,12 +334,12 @@ export class VectorStore {
 
   // MARK: - Chunk Operations
 
-  saveChunk(chunk: DocumentChunk, embedding: Float32Array): void {
+  saveChunk(chunk: DocumentChunk, embedding: Float32Array, contentHash?: string): void {
     const stmt = this.db.prepare(`
       INSERT OR REPLACE INTO chunks
       (id, document_id, content, page_number, chunk_index,
-       start_position, end_position, embedding)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+       start_position, end_position, embedding, content_hash)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
 
     // Convertir Float32Array en Buffer
@@ -342,8 +353,24 @@ export class VectorStore {
       chunk.chunkIndex,
       chunk.startPosition,
       chunk.endPosition,
-      embeddingBuffer
+      embeddingBuffer,
+      contentHash || null
     );
+  }
+
+  /**
+   * Find chunks with the same content hash (for deduplication)
+   */
+  findChunksByHash(contentHash: string, excludeDocId?: string): string[] {
+    const stmt = excludeDocId
+      ? this.db.prepare('SELECT id FROM chunks WHERE content_hash = ? AND document_id != ?')
+      : this.db.prepare('SELECT id FROM chunks WHERE content_hash = ?');
+
+    const rows = excludeDocId
+      ? stmt.all(contentHash, excludeDocId)
+      : stmt.all(contentHash);
+
+    return (rows as any[]).map((r) => r.id);
   }
 
   getChunksForDocument(documentId: string): ChunkWithEmbedding[] {
