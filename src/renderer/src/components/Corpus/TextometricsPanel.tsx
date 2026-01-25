@@ -187,7 +187,7 @@ export const TextometricsPanel: React.FC = () => {
       <div className="textometrics-content">
         {activeTab === 'words' && (
           <div className="word-frequency-table">
-            <h4>{t('textometrics.topWords', { count: topN })}</h4>
+            <h4>{t('textometrics.topWords', { count: TOP_N })}</h4>
             <table>
               <thead>
                 <tr>
@@ -199,7 +199,7 @@ export const TextometricsPanel: React.FC = () => {
                 </tr>
               </thead>
               <tbody>
-                {statistics.topWords.slice(0, topN).map((item, index) => (
+                {statistics.topWords.slice(0, TOP_N).map((item, index) => (
                   <tr key={index}>
                     <td className="rank">{index + 1}</td>
                     <td className="word">{item.word}</td>
@@ -222,7 +222,7 @@ export const TextometricsPanel: React.FC = () => {
 
         {activeTab === 'bigrams' && (
           <div className="ngram-frequency-table">
-            <h4>{t('textometrics.topBigrams', { count: topN })}</h4>
+            <h4>{t('textometrics.topBigrams', { count: TOP_N })}</h4>
             <table>
               <thead>
                 <tr>
@@ -233,7 +233,7 @@ export const TextometricsPanel: React.FC = () => {
                 </tr>
               </thead>
               <tbody>
-                {statistics.topBigrams.slice(0, topN).map((item, index) => (
+                {statistics.topBigrams.slice(0, TOP_N).map((item, index) => (
                   <tr key={index}>
                     <td className="rank">{index + 1}</td>
                     <td className="ngram">{item.ngram}</td>
@@ -255,7 +255,7 @@ export const TextometricsPanel: React.FC = () => {
 
         {activeTab === 'trigrams' && (
           <div className="ngram-frequency-table">
-            <h4>{t('textometrics.topTrigrams', { count: topN })}</h4>
+            <h4>{t('textometrics.topTrigrams', { count: TOP_N })}</h4>
             <table>
               <thead>
                 <tr>
@@ -266,7 +266,7 @@ export const TextometricsPanel: React.FC = () => {
                 </tr>
               </thead>
               <tbody>
-                {statistics.topTrigrams.slice(0, topN).map((item, index) => (
+                {statistics.topTrigrams.slice(0, TOP_N).map((item, index) => (
                   <tr key={index}>
                     <td className="rank">{index + 1}</td>
                     <td className="ngram">{item.ngram}</td>

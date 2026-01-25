@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { ChevronDown, ChevronUp, RotateCcw } from 'lucide-react';
+import { ChevronDown, ChevronUp, ChevronRight, RotateCcw, Settings, RefreshCw, AlertTriangle, BookOpen, Scroll, Lightbulb } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useRAGQueryStore, type LLMProvider } from '../../stores/ragQueryStore';
 import { CollectionMultiSelect } from './CollectionMultiSelect';
@@ -142,7 +142,8 @@ export const RAGSettingsPanel: React.FC = () => {
   return (
     <div className="rag-settings-panel">
       <button className="settings-toggle" onClick={handleTogglePanel}>
-        <span>⚙️ RAG Settings</span>
+        <Settings size={14} />
+        <span>RAG Settings</span>
         {isSettingsPanelOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
       </button>
 
@@ -191,7 +192,7 @@ export const RAGSettingsPanel: React.FC = () => {
                   opacity: isLoadingModels ? 0.5 : 1,
                 }}
               >
-                🔄 Refresh
+                <RefreshCw size={12} /> Refresh
               </button>
             </div>
             <select
@@ -212,7 +213,8 @@ export const RAGSettingsPanel: React.FC = () => {
             </select>
             <small className="setting-hint">
               {availableModels.length === 0 && !isLoadingModels
-                ? '⚠️ No models loaded. Load a project first, then click Refresh.'
+                ? <><AlertTriangle size={12} /> No models loaded. Load a project first, then click Refresh.</>
+
                 : `${availableModels.length} models available. Larger models are slower but better.`}
             </small>
           </div>
@@ -227,7 +229,7 @@ export const RAGSettingsPanel: React.FC = () => {
                 onClick={() => setParams({ sourceType: 'secondary' })}
                 title={t('ragSettings.secondaryDesc', 'Bibliography (PDFs from Zotero)')}
               >
-                <span className="source-icon">📚</span>
+                <span className="source-icon"><BookOpen size={16} /></span>
                 <span>{t('ragSettings.secondary', 'Bibliography')}</span>
               </button>
               <button
@@ -235,7 +237,7 @@ export const RAGSettingsPanel: React.FC = () => {
                 onClick={() => setParams({ sourceType: 'primary' })}
                 title={t('ragSettings.primaryDesc', 'Primary Sources (Tropy archives)')}
               >
-                <span className="source-icon">📜</span>
+                <span className="source-icon"><Scroll size={16} /></span>
                 <span>{t('ragSettings.primary', 'Archives')}</span>
               </button>
               <button
@@ -243,7 +245,7 @@ export const RAGSettingsPanel: React.FC = () => {
                 onClick={() => setParams({ sourceType: 'both' })}
                 title={t('ragSettings.bothDesc', 'Search in both sources')}
               >
-                <span className="source-icon">📚📜</span>
+                <span className="source-icon"><BookOpen size={14} /><Scroll size={14} /></span>
                 <span>{t('ragSettings.both', 'Both')}</span>
               </button>
             </div>
@@ -275,7 +277,7 @@ export const RAGSettingsPanel: React.FC = () => {
                   opacity: isLoadingCollections ? 0.5 : 1,
                 }}
               >
-                🔄 Refresh
+                <RefreshCw size={12} /> Refresh
               </button>
             </div>
             <CollectionMultiSelect
@@ -332,7 +334,8 @@ export const RAGSettingsPanel: React.FC = () => {
             className="advanced-toggle"
             onClick={() => setShowAdvanced(!showAdvanced)}
           >
-            <span>{showAdvanced ? '▼' : '▶'} Advanced Parameters</span>
+            {showAdvanced ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+            <span>Advanced Parameters</span>
           </button>
 
           {showAdvanced && (
@@ -356,7 +359,7 @@ export const RAGSettingsPanel: React.FC = () => {
                   <span>Max: {formatContextSize(modelContextInfo.maxContext)}</span>
                 </div>
                 <small className="setting-hint">
-                  💡 Recommended for {params.model}: <strong>{formatContextSize(modelContextInfo.recommended)}</strong>
+                  <Lightbulb size={12} /> Recommended for {params.model}: <strong>{formatContextSize(modelContextInfo.recommended)}</strong>
                   <button
                     onClick={() => setParams({ numCtx: modelContextInfo.recommended })}
                     style={{
