@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { FilePlus, FolderOpen, X, FileDown, FileType, ExternalLink } from 'lucide-react';
+import { FilePlus, FolderOpen, X, FileDown, FileType, ExternalLink, FileText, FileSignature, Target, Presentation } from 'lucide-react';
 import { useProjectStore } from '../../stores/projectStore';
 import { useEditorStore } from '../../stores/editorStore';
 import { CollapsibleSection } from '../common/CollapsibleSection';
@@ -230,19 +230,19 @@ export const ProjectPanel: React.FC = () => {
                     className="project-file-item"
                     onClick={() => handleFileSelect(`${currentProject.path}/document.md`)}
                   >
-                    📄 document.md
+                    <FileText size={16} strokeWidth={1.5} /> document.md
                   </div>
                   <div
                     className="project-file-item"
                     onClick={() => handleFileSelect(`${currentProject.path}/abstract.md`)}
                   >
-                    📝 abstract.md
+                    <FileSignature size={16} strokeWidth={1.5} /> abstract.md
                   </div>
                   <div
                     className="project-file-item"
                     onClick={() => handleFileSelect(`${currentProject.path}/context.md`)}
                   >
-                    🎯 context.md
+                    <Target size={16} strokeWidth={1.5} /> context.md
                   </div>
                 </div>
               </CollapsibleSection>
@@ -257,7 +257,7 @@ export const ProjectPanel: React.FC = () => {
                       className="project-file-item"
                       onClick={() => handleFileSelect(`${currentProject.path}/slides.md`)}
                     >
-                      🎬 slides.md
+                      <Presentation size={16} strokeWidth={1.5} /> slides.md
                     </div>
                   </div>
                 </CollapsibleSection>

@@ -74,7 +74,8 @@
   margin-bottom: var(--spacing-md);
 }
 
-.stat-card {
+/* Scoped to .corpus-stats to avoid conflicts with editor stats */
+.corpus-stats .stat-card {
   background: var(--bg-card);
   border: 1px solid var(--border-color);
   border-left: 3px solid var(--color-accent);
@@ -84,29 +85,31 @@
   transition: all var(--transition-normal);
 }
 
-.stat-card:hover {
+.corpus-stats .stat-card:hover {
   border-color: var(--border-color-hover);
   background: var(--bg-card-hover);
   transform: translateY(-2px);
   box-shadow: var(--shadow-md);
 }
 
-.stat-value {
+.corpus-stats .stat-value {
   font-size: 2rem;
-  font-weight: bold;
+  font-weight: 700;
   margin-bottom: 5px;
   color: var(--color-accent);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
 }
 
-.stat-label {
-  font-size: var(--font-size-base);
+.corpus-stats .stat-label {
+  font-size: var(--font-size-sm);
   color: var(--text-secondary);
   opacity: 0.9;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
 
-.stat-detail {
+.corpus-stats .stat-detail {
   font-size: var(--font-size-xs);
   margin-top: var(--spacing-sm);
   color: var(--text-tertiary);

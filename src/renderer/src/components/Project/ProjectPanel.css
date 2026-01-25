@@ -325,19 +325,34 @@
   color: #fff;
 }
 
-.project-btn.export-btn {
+/* Base project button style */
+.project-btn {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  background-color: var(--color-accent);
-  color: var(--text-primary);
-  border: 1px solid var(--color-accent);
-  padding: 0.75rem;
+  background-color: var(--bg-panel);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
+  padding: 0.5rem 0.75rem;
   border-radius: var(--radius-sm);
   cursor: pointer;
-  font-weight: 600;
+  font-size: var(--font-size-sm);
   transition: all var(--transition-normal);
+}
+
+.project-btn:hover {
+  background-color: var(--bg-card-hover);
+  border-color: var(--color-accent);
+  color: var(--text-primary);
+}
+
+.project-btn.export-btn {
+  background-color: var(--color-accent);
+  color: var(--text-primary);
+  border-color: var(--color-accent);
+  padding: 0.75rem;
+  font-weight: 600;
 }
 
 .project-btn.export-btn:hover {

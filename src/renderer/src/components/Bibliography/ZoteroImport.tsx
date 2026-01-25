@@ -363,10 +363,10 @@ export const ZoteroImport: React.FC = () => {
           className="zotero-update-btn"
           onClick={handleCheckUpdates}
           disabled={!userId || !apiKey || isCheckingUpdates}
-          title="Check for updates from Zotero"
+          title={t('zotero.import.checkUpdatesButton')}
         >
           <GitCompare size={16} />
-          {isCheckingUpdates ? 'Checking...' : 'Update from Zotero'}
+          {isCheckingUpdates ? t('zotero.import.checking') : t('zotero.import.updateButton')}
         </button>
       </div>
 

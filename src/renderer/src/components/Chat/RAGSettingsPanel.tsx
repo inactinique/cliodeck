@@ -182,17 +182,21 @@ export const RAGSettingsPanel: React.FC = () => {
               <button
                 onClick={handleRefreshModels}
                 disabled={isLoadingModels}
+                title="Refresh models"
                 style={{
-                  padding: '4px 8px',
+                  padding: '4px 6px',
                   fontSize: '11px',
                   background: 'var(--surface-variant)',
                   border: '1px solid var(--border-color)',
                   borderRadius: '3px',
                   cursor: isLoadingModels ? 'not-allowed' : 'pointer',
                   opacity: isLoadingModels ? 0.5 : 1,
+                  display: 'flex',
+                  alignItems: 'center',
+                  color: 'var(--text-secondary)',
                 }}
               >
-                <RefreshCw size={12} /> Refresh
+                <RefreshCw size={12} />
               </button>
             </div>
             <select
@@ -213,8 +217,7 @@ export const RAGSettingsPanel: React.FC = () => {
             </select>
             <small className="setting-hint">
               {availableModels.length === 0 && !isLoadingModels
-                ? <><AlertTriangle size={12} /> No models loaded. Load a project first, then click Refresh.</>
-
+                ? <><AlertTriangle size={12} /> No models loaded. Load a project first, then click <RefreshCw size={10} style={{ verticalAlign: 'middle' }} />.</>
                 : `${availableModels.length} models available. Larger models are slower but better.`}
             </small>
           </div>
@@ -267,17 +270,21 @@ export const RAGSettingsPanel: React.FC = () => {
               <button
                 onClick={handleRefreshCollections}
                 disabled={isLoadingCollections}
+                title="Refresh collections"
                 style={{
-                  padding: '4px 8px',
+                  padding: '4px 6px',
                   fontSize: '11px',
                   background: 'var(--surface-variant)',
                   border: '1px solid var(--border-color)',
                   borderRadius: '3px',
                   cursor: isLoadingCollections ? 'not-allowed' : 'pointer',
                   opacity: isLoadingCollections ? 0.5 : 1,
+                  display: 'flex',
+                  alignItems: 'center',
+                  color: 'var(--text-secondary)',
                 }}
               >
-                <RefreshCw size={12} /> Refresh
+                <RefreshCw size={12} />
               </button>
             </div>
             <CollectionMultiSelect
@@ -370,6 +377,7 @@ export const RAGSettingsPanel: React.FC = () => {
                       border: '1px solid var(--border-color)',
                       borderRadius: '3px',
                       cursor: 'pointer',
+                      color: 'var(--text-secondary)',
                     }}
                   >
                     Use recommended

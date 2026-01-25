@@ -94,6 +94,7 @@
   },
   "settings": {
     "title": "Einstellungen",
+    "save": "Speichern",
     "saved": "Konfiguration gespeichert",
     "saveError": "Fehler beim Speichern",
     "resetConfirm": "Konfiguration auf Standardwerte zurücksetzen?",
@@ -220,7 +221,18 @@
     "cslHelp": "Die CSL-Datei definiert das Zitat- und Literaturverzeichnisformat in PDF- und Word-Exporten",
     "cslSelectError": "Fehler beim Auswählen der CSL-Datei",
     "cslSaveError": "Fehler beim Speichern des CSL-Pfads",
-    "cslRemoveError": "Fehler beim Entfernen des CSL-Pfads"
+    "cslRemoveError": "Fehler beim Entfernen des CSL-Pfads",
+    "openInFinder": "Im Dateimanager öffnen",
+    "openFolderError": "Fehler beim Öffnen des Projektordners",
+    "zoteroSettings": "Zotero-Einstellungen",
+    "zoteroSettingsHelp": "Konfigurieren Sie die projektspezifischen Zotero-Gruppe und Sammlung. Diese Einstellungen überschreiben die globale Zotero-Konfiguration.",
+    "zoteroGroupId": "Gruppen-ID",
+    "zoteroGroupIdPlaceholder": "Zotero Gruppen-ID eingeben",
+    "zoteroGroupIdHelp": "Die numerische ID Ihrer Zotero-Gruppe (in der Gruppen-URL zu finden)",
+    "zoteroCollectionKey": "Sammlungsschlüssel",
+    "zoteroCollectionKeyPlaceholder": "Sammlungsschlüssel eingeben (optional)",
+    "zoteroCollectionKeyHelp": "Der Schlüssel einer bestimmten Sammlung innerhalb der Gruppe (optional)",
+    "loading": "Projekt wird geöffnet..."
   },
   "export": {
     "pdf": {
@@ -357,6 +369,9 @@
       "startImport": "Import starten",
       "importing": "Import läuft...",
       "importButton": "Importieren",
+      "updateButton": "Von Zotero aktualisieren",
+      "checkUpdatesButton": "Auf Zotero-Updates prüfen",
+      "checking": "Prüfung läuft...",
       "configWarning": "Bitte konfigurieren Sie zuerst Ihre Zotero-Verbindung",
       "projectInfo": "Kein Projekt geöffnet. Referenzen werden temporär importiert.",
       "fetchingMetadata": "Metadaten werden abgerufen ({{current}}/{{total}})",
