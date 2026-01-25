@@ -15,6 +15,9 @@ export interface RAGQueryParams {
   topK: number;
   timeout: number; // in milliseconds
 
+  // Context window size (num_ctx for Ollama)
+  numCtx: number; // Context window in tokens (0 = use model default)
+
   // Source type selection (primary = Tropy, secondary = bibliography/PDFs)
   sourceType: SourceType;
 
@@ -77,6 +80,9 @@ const DEFAULT_PARAMS: RAGQueryParams = {
   model: 'gemma2:2b',
   topK: 10,
   timeout: 600000, // 10 minutes
+
+  // Context window (0 = use model's default, which is often 2048 in Ollama)
+  numCtx: 4096,
 
   // Source type (default: search both primary and secondary sources)
   sourceType: 'both',
@@ -152,6 +158,7 @@ export const useRAGQueryStore = create<RAGQueryState>()(
               model: llmConfig.ollamaChatModel || DEFAULT_PARAMS.model,
               topK: ragConfig.topK || DEFAULT_PARAMS.topK,
               timeout: DEFAULT_PARAMS.timeout,
+              numCtx: ragConfig.numCtx || DEFAULT_PARAMS.numCtx,
               sourceType: DEFAULT_PARAMS.sourceType,
               selectedCollectionKeys: DEFAULT_PARAMS.selectedCollectionKeys,
               temperature: DEFAULT_PARAMS.temperature,

@@ -41,12 +41,95 @@ interface OllamaGenerateRequest {
     repeat_penalty?: number;
     seed?: number;
     num_predict?: number;
+    num_ctx?: number; // Context window size in tokens
   };
 }
 
 interface OllamaGenerateResponse {
   response: string;
   done: boolean;
+}
+
+// MARK: - Model Context Sizes
+
+/**
+ * Known context window sizes for popular Ollama models.
+ * Values are in tokens. Default Ollama is usually 2048 or 4096.
+ * These are the maximum supported contexts - actual usage depends on available RAM.
+ */
+export const MODEL_CONTEXT_SIZES: Record<string, { maxContext: number; recommended: number; description: string }> = {
+  // Gemma family
+  'gemma2:2b': { maxContext: 8192, recommended: 4096, description: 'Google Gemma 2 2B' },
+  'gemma2:9b': { maxContext: 8192, recommended: 8192, description: 'Google Gemma 2 9B' },
+  'gemma:2b': { maxContext: 8192, recommended: 4096, description: 'Google Gemma 2B' },
+  'gemma:7b': { maxContext: 8192, recommended: 8192, description: 'Google Gemma 7B' },
+
+  // Llama 3.2 family (128K context)
+  'llama3.2:1b': { maxContext: 131072, recommended: 32768, description: 'Meta Llama 3.2 1B - 128K context' },
+  'llama3.2:3b': { maxContext: 131072, recommended: 32768, description: 'Meta Llama 3.2 3B - 128K context' },
+
+  // Llama 3.1 family (128K context)
+  'llama3.1:8b': { maxContext: 131072, recommended: 32768, description: 'Meta Llama 3.1 8B - 128K context' },
+  'llama3.1:70b': { maxContext: 131072, recommended: 32768, description: 'Meta Llama 3.1 70B - 128K context' },
+
+  // Llama 3 family
+  'llama3:8b': { maxContext: 8192, recommended: 8192, description: 'Meta Llama 3 8B' },
+
+  // Mistral family
+  'mistral:7b': { maxContext: 32768, recommended: 16384, description: 'Mistral 7B - 32K context' },
+  'mistral:7b-instruct': { maxContext: 32768, recommended: 16384, description: 'Mistral 7B Instruct - 32K context' },
+  'mistral:7b-instruct-q4_0': { maxContext: 32768, recommended: 16384, description: 'Mistral 7B Instruct Q4 - 32K context' },
+
+  // Ministral family (new Dec 2024+)
+  'ministral:3b': { maxContext: 131072, recommended: 32768, description: 'Mistral Ministral 3B - 128K context' },
+  'ministral:8b': { maxContext: 131072, recommended: 32768, description: 'Mistral Ministral 8B - 128K context' },
+
+  // Phi family (Microsoft)
+  'phi3:mini': { maxContext: 131072, recommended: 16384, description: 'Microsoft Phi-3 Mini - 128K context' },
+  'phi3:medium': { maxContext: 131072, recommended: 16384, description: 'Microsoft Phi-3 Medium - 128K context' },
+  'phi4:mini': { maxContext: 131072, recommended: 32768, description: 'Microsoft Phi-4 Mini - 128K context' },
+
+  // Qwen family
+  'qwen2.5:3b': { maxContext: 32768, recommended: 16384, description: 'Alibaba Qwen 2.5 3B - 32K context' },
+  'qwen2.5:7b': { maxContext: 131072, recommended: 32768, description: 'Alibaba Qwen 2.5 7B - 128K context' },
+
+  // SmolLM family (Hugging Face)
+  'smollm2:1.7b': { maxContext: 8192, recommended: 4096, description: 'HuggingFace SmolLM2 1.7B' },
+
+  // DeepSeek family
+  'deepseek-r1:1.5b': { maxContext: 65536, recommended: 16384, description: 'DeepSeek R1 1.5B - 64K context' },
+  'deepseek-r1:7b': { maxContext: 65536, recommended: 32768, description: 'DeepSeek R1 7B - 64K context' },
+  'deepseek-r1:8b': { maxContext: 65536, recommended: 32768, description: 'DeepSeek R1 8B - 64K context' },
+};
+
+/**
+ * Get context size info for a model. Returns default values if model is unknown.
+ */
+export function getModelContextInfo(modelName: string): { maxContext: number; recommended: number; description: string } {
+  // Try exact match first
+  if (MODEL_CONTEXT_SIZES[modelName]) {
+    return MODEL_CONTEXT_SIZES[modelName];
+  }
+
+  // Try to match by base name (e.g., "llama3.2:3b-instruct-q4_0" -> "llama3.2:3b")
+  const baseName = modelName.split('-')[0]; // Remove quantization suffix
+  if (MODEL_CONTEXT_SIZES[baseName]) {
+    return MODEL_CONTEXT_SIZES[baseName];
+  }
+
+  // Try to match by family (e.g., "mistral:latest" -> check "mistral:7b")
+  const family = modelName.split(':')[0];
+  const familyMatch = Object.entries(MODEL_CONTEXT_SIZES).find(([key]) => key.startsWith(family + ':'));
+  if (familyMatch) {
+    return familyMatch[1];
+  }
+
+  // Default conservative values for unknown models
+  return {
+    maxContext: 4096,
+    recommended: 2048,
+    description: 'Unknown model - using conservative defaults',
+  };
 }
 
 // MARK: - OllamaClient
@@ -403,7 +486,7 @@ export class OllamaClient {
     context: string[],
     modelOverride?: string,
     timeoutOverride?: number,
-    generationOptions?: Partial<typeof GENERATION_PRESETS.academic>,
+    generationOptions?: Partial<typeof GENERATION_PRESETS.academic> & { num_ctx?: number },
     systemPrompt?: string
   ): AsyncGenerator<string> {
     const url = `${this.baseURL}/api/generate`;
@@ -491,7 +574,7 @@ export class OllamaClient {
     projectContext?: string,
     modelOverride?: string,
     timeoutOverride?: number,
-    generationOptions?: Partial<typeof GENERATION_PRESETS.academic>,
+    generationOptions?: Partial<typeof GENERATION_PRESETS.academic> & { num_ctx?: number },
     systemPrompt?: string
   ): AsyncGenerator<string> {
     const url = `${this.baseURL}/api/generate`;

@@ -167,7 +167,7 @@ export class LLMProviderManager {
     options?: {
       model?: string;
       timeout?: number;
-      generationOptions?: Partial<typeof GENERATION_PRESETS.academic>;
+      generationOptions?: Partial<typeof GENERATION_PRESETS.academic> & { num_ctx?: number };
       systemPrompt?: string;
     }
   ): AsyncGenerator<string> {
@@ -213,7 +213,7 @@ export class LLMProviderManager {
     options?: {
       model?: string;
       timeout?: number;
-      generationOptions?: Partial<typeof GENERATION_PRESETS.academic>;
+      generationOptions?: Partial<typeof GENERATION_PRESETS.academic> & { num_ctx?: number };
       systemPrompt?: string;
     }
   ): AsyncGenerator<string> {

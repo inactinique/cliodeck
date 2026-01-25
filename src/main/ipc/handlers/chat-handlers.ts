@@ -56,6 +56,7 @@ export function setupChatHandlers() {
         // Per-query parameters (from RAG settings panel)
         model: validatedData.options?.model,
         timeout: validatedData.options?.timeout,
+        numCtx: validatedData.options?.numCtx,  // Context window size for Ollama
         temperature: validatedData.options?.temperature,
         top_p: validatedData.options?.top_p,
         top_k: validatedData.options?.top_k,

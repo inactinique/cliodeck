@@ -67,6 +67,7 @@ export const ChatSendSchema = z.object({
       provider: z.enum(['ollama', 'embedded', 'auto']).optional(),
       model: z.string().optional(),
       timeout: z.number().min(1000).optional(),
+      numCtx: z.number().min(512).max(262144).optional(), // Context window size in tokens
       temperature: z.number().min(0).max(2).optional(),
       top_p: z.number().min(0).max(1).optional(),
       top_k: z.number().min(1).max(100).optional(),

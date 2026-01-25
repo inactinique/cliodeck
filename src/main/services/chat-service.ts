@@ -27,6 +27,7 @@ interface EnrichedRAGOptions {
   // Per-query parameters
   model?: string;                 // Override chat model
   timeout?: number;               // Timeout in milliseconds
+  numCtx?: number;                // Context window size in tokens (Ollama num_ctx)
   temperature?: number;           // LLM temperature
   top_p?: number;                 // LLM top_p
   top_k?: number;                 // LLM top_k
@@ -335,6 +336,7 @@ class ChatService {
         top_p: options.top_p,
         top_k: options.top_k,
         repeat_penalty: options.repeat_penalty,
+        num_ctx: options.numCtx,  // Context window size for Ollama
       };
 
       // Stream la réponse avec contexte RAG si disponible

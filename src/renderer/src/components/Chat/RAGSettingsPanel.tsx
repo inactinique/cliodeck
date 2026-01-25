@@ -1,9 +1,60 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { ChevronDown, ChevronUp, RotateCcw } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useRAGQueryStore, type LLMProvider } from '../../stores/ragQueryStore';
 import { CollectionMultiSelect } from './CollectionMultiSelect';
 import './RAGSettingsPanel.css';
+
+// Model context sizes (mirrors backend/core/llm/OllamaClient.ts)
+const MODEL_CONTEXT_SIZES: Record<string, { maxContext: number; recommended: number }> = {
+  'gemma2:2b': { maxContext: 8192, recommended: 4096 },
+  'gemma2:9b': { maxContext: 8192, recommended: 8192 },
+  'gemma:2b': { maxContext: 8192, recommended: 4096 },
+  'gemma:7b': { maxContext: 8192, recommended: 8192 },
+  'llama3.2:1b': { maxContext: 131072, recommended: 32768 },
+  'llama3.2:3b': { maxContext: 131072, recommended: 32768 },
+  'llama3.1:8b': { maxContext: 131072, recommended: 32768 },
+  'llama3:8b': { maxContext: 8192, recommended: 8192 },
+  'mistral:7b': { maxContext: 32768, recommended: 16384 },
+  'mistral:7b-instruct': { maxContext: 32768, recommended: 16384 },
+  'mistral:7b-instruct-q4_0': { maxContext: 32768, recommended: 16384 },
+  'ministral:3b': { maxContext: 131072, recommended: 32768 },
+  'ministral:8b': { maxContext: 131072, recommended: 32768 },
+  'phi3:mini': { maxContext: 131072, recommended: 16384 },
+  'phi3:medium': { maxContext: 131072, recommended: 16384 },
+  'phi4:mini': { maxContext: 131072, recommended: 32768 },
+  'qwen2.5:3b': { maxContext: 32768, recommended: 16384 },
+  'qwen2.5:7b': { maxContext: 131072, recommended: 32768 },
+  'smollm2:1.7b': { maxContext: 8192, recommended: 4096 },
+  'deepseek-r1:1.5b': { maxContext: 65536, recommended: 16384 },
+  'deepseek-r1:7b': { maxContext: 65536, recommended: 32768 },
+  'deepseek-r1:8b': { maxContext: 65536, recommended: 32768 },
+};
+
+function getModelContextInfo(modelName: string): { maxContext: number; recommended: number } {
+  if (MODEL_CONTEXT_SIZES[modelName]) {
+    return MODEL_CONTEXT_SIZES[modelName];
+  }
+  // Try base name match
+  const baseName = modelName.split('-')[0];
+  if (MODEL_CONTEXT_SIZES[baseName]) {
+    return MODEL_CONTEXT_SIZES[baseName];
+  }
+  // Try family match
+  const family = modelName.split(':')[0];
+  const familyMatch = Object.entries(MODEL_CONTEXT_SIZES).find(([key]) => key.startsWith(family + ':'));
+  if (familyMatch) {
+    return familyMatch[1];
+  }
+  return { maxContext: 4096, recommended: 2048 };
+}
+
+function formatContextSize(tokens: number): string {
+  if (tokens >= 1024) {
+    return `${Math.round(tokens / 1024)}K`;
+  }
+  return tokens.toString();
+}
 
 export const RAGSettingsPanel: React.FC = () => {
   const { t } = useTranslation('common');
@@ -25,6 +76,11 @@ export const RAGSettingsPanel: React.FC = () => {
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [isEmbeddedModelAvailable, setIsEmbeddedModelAvailable] = useState(false);
   const hasTriedLoading = useRef(false);
+
+  // Get context info for selected model
+  const modelContextInfo = useMemo(() => {
+    return getModelContextInfo(params.model);
+  }, [params.model]);
 
   // Check if embedded model is downloaded
   useEffect(() => {
@@ -281,6 +337,43 @@ export const RAGSettingsPanel: React.FC = () => {
 
           {showAdvanced && (
             <div className="advanced-settings">
+              {/* Context Window Size */}
+              <div className="setting-group">
+                <label htmlFor="context-slider">
+                  Context Window: <strong>{formatContextSize(params.numCtx)}</strong> tokens
+                </label>
+                <input
+                  id="context-slider"
+                  type="range"
+                  min="2048"
+                  max={modelContextInfo.maxContext}
+                  step="1024"
+                  value={params.numCtx}
+                  onChange={(e) => setParams({ numCtx: parseInt(e.target.value) })}
+                />
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: 'var(--text-muted)' }}>
+                  <span>2K</span>
+                  <span>Max: {formatContextSize(modelContextInfo.maxContext)}</span>
+                </div>
+                <small className="setting-hint">
+                  💡 Recommended for {params.model}: <strong>{formatContextSize(modelContextInfo.recommended)}</strong>
+                  <button
+                    onClick={() => setParams({ numCtx: modelContextInfo.recommended })}
+                    style={{
+                      marginLeft: '8px',
+                      padding: '2px 6px',
+                      fontSize: '10px',
+                      background: 'var(--surface-variant)',
+                      border: '1px solid var(--border-color)',
+                      borderRadius: '3px',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Use recommended
+                  </button>
+                </small>
+              </div>
+
               {/* System Prompt Language */}
               <div className="setting-group">
                 <label htmlFor="system-prompt-lang">System Prompt Language</label>
