@@ -48,22 +48,28 @@ export const DocumentStats: React.FC = () => {
   return (
     <div className="document-stats">
       <div className="stat-item">
-        <span className="stat-label">mots: {stats.wordCount.toLocaleString()}</span>
+        <span className="stat-label">mots</span>
+        <span className="stat-value">{stats.wordCount.toLocaleString()}</span>
       </div>
       <div className="stat-item">
-        <span className="stat-label">car.: {stats.charCount.toLocaleString()}</span>
+        <span className="stat-label">car.</span>
+        <span className="stat-value">{stats.charCount.toLocaleString()}</span>
       </div>
       <div className="stat-item">
-        <span className="stat-label">avec esp.: {stats.charWithSpacesCount.toLocaleString()}</span>
+        <span className="stat-label">car. esp.</span>
+        <span className="stat-value">{stats.charWithSpacesCount.toLocaleString()}</span>
       </div>
       <div className="stat-item">
-        <span className="stat-label">par.: {stats.paragraphs}</span>
+        <span className="stat-label">par.</span>
+        <span className="stat-value">{stats.paragraphs}</span>
       </div>
       <div className="stat-item">
-        <span className="stat-label">@: {stats.citations}</span>
+        <span className="stat-label">cit.</span>
+        <span className="stat-value">{stats.citations}</span>
       </div>
       <div className="stat-item">
-        <span className="stat-label">notes: {stats.footnotes}</span>
+        <span className="stat-label">notes</span>
+        <span className="stat-value">{stats.footnotes}</span>
       </div>
     </div>
   );

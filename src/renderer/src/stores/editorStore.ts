@@ -33,6 +33,9 @@ interface EditorState {
   // Editor mode
   editorMode: 'wysiwyg' | 'source';
 
+  // Pending footnote scroll position (to scroll to definition after insertion)
+  pendingFootnoteScroll: number | null;
+
   // Milkdown editor reference
   milkdownEditor: Editor | null;
 
@@ -57,6 +60,10 @@ interface EditorState {
   insertCitation: (citationKey: string) => void;
   insertFormatting: (type: 'bold' | 'italic' | 'link' | 'citation' | 'table' | 'footnote' | 'blockquote') => void;
   insertTextAtCursor: (text: string) => void;
+
+  // Direct footnote insertion - returns definition position for scrolling
+  insertFootnoteAtPosition: (markdownPosition: number) => { definitionPosition: number; footnoteNumber: number } | null;
+  clearPendingFootnoteScroll: () => void;
 }
 
 // MARK: - Default settings
@@ -82,6 +89,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   settings: DEFAULT_SETTINGS,
   showPreview: false,
   editorMode: 'wysiwyg',
+  pendingFootnoteScroll: null,
   milkdownEditor: null,
   monacoEditor: null,
 
@@ -226,55 +234,107 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     const { content } = get();
     const editor = get().milkdownEditor;
 
-    // Special handling for footnotes - insert reference AND definition
+    // Footnotes: get cursor position and insert directly
     if (type === 'footnote') {
-      // Find the highest footnote number in the document
-      const footnoteRefs = content.match(/\[\^(\d+)\]/g) || [];
-      const numbers = footnoteRefs.map(ref => {
-        const match = ref.match(/\[\^(\d+)\]/);
-        return match ? parseInt(match[1], 10) : 0;
-      });
-      const nextNumber = numbers.length > 0 ? Math.max(...numbers) + 1 : 1;
-
-      const reference = `[^${nextNumber}]`;
-      const definition = `\n\n[^${nextNumber}]: `;
-
-      if (editor) {
-        try {
-          editor.action((ctx) => {
-            const view = ctx.get(editorViewCtx);
-            const { state } = view;
-
-            // Insert the reference at cursor position
-            let tr = state.tr.insertText(reference, state.selection.from, state.selection.to);
-            view.dispatch(tr);
-
-            // Get the updated state and insert definition at the end
-            const newState = view.state;
-            const docEnd = newState.doc.content.size;
-            tr = newState.tr.insertText(definition, docEnd);
-
-            // Move cursor to the end (after definition marker) so user can type
-            const newCursorPos = docEnd + definition.length;
-            tr = tr.setSelection(newState.selection.constructor.near(tr.doc.resolve(newCursorPos)));
-
-            view.dispatch(tr);
-            view.focus();
-          });
-          set({ isDirty: true });
-          logger.store('Editor', 'Footnote inserted', { number: nextNumber });
-          return;
-        } catch (error) {
-          logger.error('Editor', 'Failed to insert footnote at cursor');
-          // Fallback below
-        }
+      if (!editor) {
+        logger.error('Editor', 'No editor available for footnote insertion');
+        return;
       }
 
-      // Fallback: append to content
-      set({
-        content: content + reference + definition,
-        isDirty: true,
-      });
+      try {
+        editor.action((ctx) => {
+          const view = ctx.get(editorViewCtx);
+          const { state } = view;
+          const { selection } = state;
+
+          // Get the plain text before cursor position
+          const textBeforeCursor = state.doc.textBetween(0, selection.from, '\n');
+          const plainTextLength = textBeforeCursor.length;
+
+          // Map plain text position to markdown position
+          const markdown = content;
+          let markdownPos = 0;
+          let visibleCount = 0;
+          let i = 0;
+
+          while (i < markdown.length && visibleCount < plainTextLength) {
+            const char = markdown[i];
+            const remaining = markdown.slice(i);
+
+            // Skip headers: # at start of line
+            if ((i === 0 || markdown[i - 1] === '\n') && char === '#') {
+              while (i < markdown.length && markdown[i] === '#') i++;
+              if (markdown[i] === ' ') i++;
+              continue;
+            }
+
+            // Skip bold/italic markers: ** or * or __ or _
+            if ((char === '*' || char === '_') && remaining.length > 1) {
+              if (remaining[1] === char) {
+                i += 2;
+                continue;
+              } else {
+                i++;
+                continue;
+              }
+            }
+
+            // Skip link URLs: [text](url) - skip the url part
+            if (char === ']' && remaining.length > 1 && remaining[1] === '(') {
+              i += 2;
+              while (i < markdown.length && markdown[i] !== ')') i++;
+              if (i < markdown.length) i++;
+              continue;
+            }
+
+            // Skip code blocks: ```...```
+            if (char === '`' && remaining.startsWith('```')) {
+              i += 3;
+              const closeIdx = markdown.indexOf('```', i);
+              if (closeIdx !== -1) {
+                i = closeIdx + 3;
+              }
+              continue;
+            }
+
+            // Skip inline code markers: `
+            if (char === '`') {
+              i++;
+              continue;
+            }
+
+            // Handle newlines: markdown uses \n\n for paragraph breaks
+            // but ProseMirror's textBetween uses single \n
+            // So we count consecutive newlines as a single visible newline
+            if (char === '\n') {
+              visibleCount++;
+              i++;
+              // Skip any additional consecutive newlines
+              while (i < markdown.length && markdown[i] === '\n') {
+                i++;
+              }
+              markdownPos = i;
+              continue;
+            }
+
+            // Regular character - count it
+            visibleCount++;
+            i++;
+            markdownPos = i;
+          }
+
+          logger.store('Editor', 'Footnote insertion', {
+            cursorPos: selection.from,
+            plainTextLength,
+            markdownPos,
+          });
+
+          // Insert footnote at this position
+          get().insertFootnoteAtPosition(markdownPos);
+        });
+      } catch (error) {
+        logger.error('Editor', 'Failed to insert footnote');
+      }
       return;
     }
 
@@ -348,5 +408,66 @@ export const useEditorStore = create<EditorState>((set, get) => ({
         logger.error('Editor', 'Failed to insert text at cursor');
       }
     }
+  },
+
+  // Direct footnote insertion - returns definition position for scrolling
+  insertFootnoteAtPosition: (markdownPosition: number) => {
+    const { content } = get();
+
+    // Calculate the next footnote number
+    const footnoteRefs = content.match(/\[\^(\d+)\]/g) || [];
+    const numbers = footnoteRefs.map(ref => {
+      const match = ref.match(/\[\^(\d+)\]/);
+      return match ? parseInt(match[1], 10) : 0;
+    });
+    const footnoteNumber = numbers.length > 0 ? Math.max(...numbers) + 1 : 1;
+
+    const refText = `[^${footnoteNumber}]`;
+    const defText = `[^${footnoteNumber}]: `;
+
+    // Insert reference at the specified position
+    const beforeRef = content.slice(0, markdownPosition);
+    const afterRef = content.slice(markdownPosition);
+
+    // Check if there are existing footnote definitions at the end
+    // and insert the new definition before them
+    const defRegex = /\n\n(\[\^\d+\]:[\s\S]*)$/;
+    const defMatch = afterRef.match(defRegex);
+
+    let newContent: string;
+    let definitionPosition: number;
+
+    if (defMatch) {
+      // There are existing definitions - insert new def before them
+      const afterRefWithoutDefs = afterRef.slice(0, defMatch.index);
+      const existingDefs = defMatch[1];
+      newContent = beforeRef + refText + afterRefWithoutDefs + '\n\n' + defText + '\n\n' + existingDefs;
+      // Definition position is after the beforeRef + refText + afterRefWithoutDefs + '\n\n'
+      definitionPosition = beforeRef.length + refText.length + (afterRefWithoutDefs?.length || 0) + 2 + defText.length;
+    } else {
+      // No existing definitions - add at the end
+      const trimmedAfter = afterRef.trimEnd();
+      newContent = beforeRef + refText + trimmedAfter + '\n\n' + defText;
+      // Definition position is at the end, after the defText marker
+      definitionPosition = beforeRef.length + refText.length + trimmedAfter.length + 2 + defText.length;
+    }
+
+    logger.store('Editor', 'Footnote inserted at position', {
+      number: footnoteNumber,
+      position: markdownPosition,
+      definitionPosition,
+    });
+
+    set({
+      content: newContent,
+      isDirty: true,
+      pendingFootnoteScroll: definitionPosition,
+    });
+
+    return { definitionPosition, footnoteNumber };
+  },
+
+  clearPendingFootnoteScroll: () => {
+    set({ pendingFootnoteScroll: null });
   },
 }));

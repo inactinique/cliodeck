@@ -2,6 +2,8 @@ import { useEffect, useRef, useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Crepe } from '@milkdown/crepe';
 import { editorViewCtx } from '@milkdown/kit/core';
+import { gfm } from '@milkdown/kit/preset/gfm';
+import { replaceAll } from '@milkdown/utils';
 import { useEditorStore } from '../../stores/editorStore';
 import { useBibliographyStore } from '../../stores/bibliographyStore';
 import { useTheme } from '../../hooks/useTheme';
@@ -86,12 +88,19 @@ const CitationAutocomplete: React.FC<{
 
 export const MilkdownEditor: React.FC = () => {
   const { t } = useTranslation('common');
-  const { content, filePath, setContent, settings } = useEditorStore();
-  const { currentTheme } = useTheme(); // Use global theme instead of editor settings
+  const {
+    content,
+    filePath,
+    setContent,
+    settings,
+    pendingFootnoteScroll,
+    clearPendingFootnoteScroll,
+  } = useEditorStore();
+  const { currentTheme } = useTheme();
   const editorContainerRef = useRef<HTMLDivElement>(null);
   const crepeRef = useRef<Crepe | null>(null);
   const isInternalUpdate = useRef(false);
-  const contentRef = useRef(content); // Store content in ref to avoid re-renders
+  const contentRef = useRef(content);
   const [isEditorReady, setIsEditorReady] = useState(false);
 
   // Citation autocomplete state
@@ -100,7 +109,7 @@ export const MilkdownEditor: React.FC = () => {
   const [citationMenuPosition, setCitationMenuPosition] = useState({ top: 0, left: 0 });
   const citationStartPos = useRef<number | null>(null);
 
-  // Keep contentRef in sync for when we need to create a new editor
+  // Keep contentRef in sync
   useEffect(() => {
     contentRef.current = content;
   }, [content]);
@@ -119,13 +128,12 @@ export const MilkdownEditor: React.FC = () => {
     }
   }, [isEditorReady]);
 
-  // Initialize Crepe editor - recreate only when filePath changes
+  // Initialize Crepe editor
   useEffect(() => {
     if (!editorContainerRef.current) return;
 
     setIsEditorReady(false);
 
-    // Destroy existing editor if any
     if (crepeRef.current) {
       console.log('[MilkdownEditor] Destroying old editor for new file');
       crepeRef.current.destroy();
@@ -134,7 +142,6 @@ export const MilkdownEditor: React.FC = () => {
 
     console.log('[MilkdownEditor] Initializing Crepe editor for file:', filePath);
 
-    // Use contentRef.current to get the latest content without adding it as dependency
     const welcomeText = `# ${t('milkdownEditor.welcome')}\n\n${t('milkdownEditor.startWriting')}`;
     const placeholderText = t('milkdownEditor.placeholder');
     const crepe = new Crepe({
@@ -147,12 +154,14 @@ export const MilkdownEditor: React.FC = () => {
       },
     });
 
+    // Add GFM plugin for footnote support
+    crepe.editor.use(gfm);
+
     crepe.on((listener) => {
       listener.markdownUpdated((_ctx, markdown, prevMarkdown) => {
         if (markdown !== prevMarkdown) {
           isInternalUpdate.current = true;
           setContent(markdown);
-          // Reset after a short delay to allow state to settle
           setTimeout(() => {
             isInternalUpdate.current = false;
           }, 50);
@@ -163,9 +172,7 @@ export const MilkdownEditor: React.FC = () => {
     crepe.create().then(() => {
       console.log('[MilkdownEditor] Crepe editor created successfully');
       crepeRef.current = crepe;
-      // Store the editor for external access
       useEditorStore.setState({ milkdownEditor: crepe.editor });
-      // Mark editor as ready after a short delay to ensure context is fully initialized
       setTimeout(() => {
         setIsEditorReady(true);
         console.log('[MilkdownEditor] Editor is now ready');
@@ -181,7 +188,29 @@ export const MilkdownEditor: React.FC = () => {
       crepeRef.current = null;
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filePath, setContent, t]); // Only recreate when filePath changes, NOT when content changes
+  }, [filePath, setContent, t]);
+
+  // Sync external content changes to the editor
+  const lastSyncedContent = useRef(content);
+  useEffect(() => {
+    const crepe = crepeRef.current;
+    if (!crepe?.editor || !isEditorReady) return;
+
+    if (isInternalUpdate.current) return;
+    if (content === lastSyncedContent.current) return;
+
+    console.log('[MilkdownEditor] Syncing external content change');
+    isInternalUpdate.current = true;
+    try {
+      crepe.editor.action(replaceAll(content));
+      lastSyncedContent.current = content;
+    } catch (error) {
+      console.warn('[MilkdownEditor] Failed to sync content:', error);
+    }
+    setTimeout(() => {
+      isInternalUpdate.current = false;
+    }, 100);
+  }, [content, isEditorReady]);
 
   // Handle IPC text insertion from bibliography panel
   useEffect(() => {
@@ -200,7 +229,7 @@ export const MilkdownEditor: React.FC = () => {
     return cleanup;
   }, [safeEditorAction]);
 
-  // Handle citation autocomplete detection
+  // Handle citation autocomplete detection (only citations, not footnotes)
   useEffect(() => {
     const handleKeyUp = () => {
       if (!isEditorReady) return;
@@ -215,7 +244,7 @@ export const MilkdownEditor: React.FC = () => {
         const start = Math.max(0, pos - 50);
         const textBefore = state.doc.textBetween(start, pos, '\n');
 
-        // Check for "[@" pattern
+        // Check for "[@" pattern (citations only)
         const citationMatch = textBefore.match(/\[@([a-zA-Z0-9_-]*)$/);
 
         if (citationMatch) {
@@ -289,6 +318,84 @@ export const MilkdownEditor: React.FC = () => {
       container.style.setProperty('--editor-font-family', fontFamilyMap[settings.fontFamily] || fontFamilyMap.system);
     }
   }, [settings.fontSize, settings.fontFamily]);
+
+  // Handle scrolling to footnote definition after insertion
+  useEffect(() => {
+    if (pendingFootnoteScroll === null || !isEditorReady) return;
+
+    // Wait for content to sync to the editor
+    const timeout = setTimeout(() => {
+      safeEditorAction((ctx) => {
+        const view = ctx.get(editorViewCtx);
+        const { state } = view;
+
+        try {
+          // Find the footnote definition pattern [^N]: in the document
+          // We need to search through text nodes to find it
+          let targetPos = -1;
+          const footnoteDefRegex = /\[\^\d+\]:\s*$/;
+
+          state.doc.descendants((node, pos) => {
+            if (node.isText && node.text) {
+              const match = node.text.match(footnoteDefRegex);
+              if (match) {
+                // Found the footnote definition, position cursor at end of this text
+                targetPos = pos + node.text.length;
+                return false; // Stop searching
+              }
+            }
+            return true;
+          });
+
+          if (targetPos > 0) {
+            // Position cursor at the end of the footnote definition
+            const $pos = state.doc.resolve(targetPos);
+            const selection = state.selection.constructor.near($pos);
+
+            const tr = state.tr.setSelection(selection);
+            view.dispatch(tr);
+            view.focus();
+
+            // Scroll to make the cursor visible
+            setTimeout(() => {
+              const coords = view.coordsAtPos(targetPos);
+              if (coords && editorContainerRef.current) {
+                const containerRect = editorContainerRef.current.getBoundingClientRect();
+                const scrollTop = coords.top - containerRect.top - 100 + editorContainerRef.current.scrollTop;
+                editorContainerRef.current.scrollTo({
+                  top: Math.max(0, scrollTop),
+                  behavior: 'smooth',
+                });
+              }
+            }, 50);
+
+            console.log('[MilkdownEditor] Cursor positioned at footnote definition, pos:', targetPos);
+          } else {
+            // Fallback: scroll to bottom
+            console.log('[MilkdownEditor] Footnote definition not found, scrolling to bottom');
+            if (editorContainerRef.current) {
+              editorContainerRef.current.scrollTo({
+                top: editorContainerRef.current.scrollHeight,
+                behavior: 'smooth',
+              });
+            }
+          }
+        } catch (error) {
+          console.warn('[MilkdownEditor] Failed to scroll to footnote:', error);
+          if (editorContainerRef.current) {
+            editorContainerRef.current.scrollTo({
+              top: editorContainerRef.current.scrollHeight,
+              behavior: 'smooth',
+            });
+          }
+        }
+      });
+
+      clearPendingFootnoteScroll();
+    }, 300);
+
+    return () => clearTimeout(timeout);
+  }, [pendingFootnoteScroll, isEditorReady, safeEditorAction, clearPendingFootnoteScroll]);
 
   return (
     <div

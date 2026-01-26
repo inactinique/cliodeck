@@ -313,6 +313,35 @@
 }
 
 /* ============================================
+   Footnote Autocomplete Menu
+   ============================================ */
+
+.footnote-autocomplete-menu {
+  min-width: 220px;
+  max-width: 300px;
+}
+
+.footnote-autocomplete-menu .footnote-new .citation-key {
+  color: var(--color-success, #4caf50);
+}
+
+.footnote-autocomplete-menu .footnote-new .citation-info {
+  color: var(--color-success, #4caf50);
+  font-weight: 500;
+}
+
+.footnote-separator {
+  padding: 6px 16px;
+  font-size: 0.75em;
+  color: var(--text-tertiary, #666);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  background-color: var(--bg-secondary, rgba(0, 0, 0, 0.2));
+  border-top: 1px solid var(--border-color, #3d3d3d);
+  border-bottom: 1px solid var(--border-color, #3d3d3d);
+}
+
+/* ============================================
    Custom styles for specific elements
    ============================================ */
 
@@ -708,3 +737,4 @@
 .milkdown-editor-container a[data-footnote-backref]:hover {
   text-decoration: underline;
 }
+
