@@ -118,6 +118,10 @@ export const RAGConfigSection: React.FC<RAGConfigSectionProps> = ({ config, onCh
     onChange({ ...config, semanticWindowSize: value });
   };
 
+  const handleEnableContextCompressionChange = (value: boolean) => {
+    onChange({ ...config, enableContextCompression: value });
+  };
+
   return (
     <CollapsibleSection title="Configuration RAG" defaultExpanded={false}>
       <div className="config-section">
@@ -840,6 +844,38 @@ export const RAGConfigSection: React.FC<RAGConfigSectionProps> = ({ config, onCh
               </div>
             </>
           )}
+
+          {/* Context Compression */}
+          <div className="config-field">
+            <label className="config-label">
+              Compression du contexte
+              <span className="config-help">
+                Réduit le contexte envoyé au LLM pour améliorer les performances
+              </span>
+            </label>
+            <div className="config-input-group">
+              <input
+                type="checkbox"
+                checked={config.enableContextCompression ?? true}
+                onChange={(e) => handleEnableContextCompressionChange(e.target.checked)}
+                className="config-checkbox"
+              />
+              <span>{config.enableContextCompression !== false ? 'Activé' : 'Désactivé'}</span>
+            </div>
+            <div className="config-description">
+              <div style={{
+                padding: '8px 12px',
+                backgroundColor: '#fff3e0',
+                border: '1px solid #ff9800',
+                borderRadius: '4px',
+                marginTop: '8px'
+              }}>
+                <strong>⚠️ Note :</strong> Désactiver la compression envoie plus de contexte au LLM,
+                ce qui peut améliorer la précision des réponses pour les documents avec des structures
+                standardisées (ex: procès-verbaux, archives) mais augmente la latence et le coût.
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </CollapsibleSection>

@@ -3,6 +3,50 @@ import { logger } from '../utils/logger';
 
 // MARK: - Types
 
+// Type pour l'explication du RAG (Explainable AI)
+export interface RAGExplanation {
+  search: {
+    query: string;
+    totalResults: number;
+    searchDurationMs: number;
+    cacheHit: boolean;
+    sourceType: 'primary' | 'secondary' | 'both';
+    documents: Array<{
+      title: string;
+      similarity: number;
+      sourceType: string;
+      chunkCount: number;
+    }>;
+  };
+  compression?: {
+    enabled: boolean;
+    originalChunks: number;
+    finalChunks: number;
+    originalSize: number;
+    finalSize: number;
+    reductionPercent: number;
+    strategy?: string;
+  };
+  graph?: {
+    enabled: boolean;
+    relatedDocsFound: number;
+    documentTitles: string[];
+  };
+  llm: {
+    provider: string;
+    model: string;
+    contextWindow: number;
+    temperature: number;
+    promptSize: number;
+  };
+  timing: {
+    searchMs: number;
+    compressionMs?: number;
+    generationMs: number;
+    totalMs: number;
+  };
+}
+
 export interface ChatMessage {
   id: string;
   role: 'user' | 'assistant';
@@ -11,6 +55,7 @@ export interface ChatMessage {
   timestamp: Date;
   ragUsed?: boolean; // true if RAG context was used for this response
   isError?: boolean; // true if this message is an error response
+  explanation?: RAGExplanation; // RAG explanation for Explainable AI
 }
 
 export interface ChatSource {
@@ -41,7 +86,7 @@ interface ChatState {
 
   // Internal
   addUserMessage: (content: string) => void;
-  addAssistantMessage: (content: string, sources?: ChatSource[], ragUsed?: boolean, isError?: boolean) => void;
+  addAssistantMessage: (content: string, sources?: ChatSource[], ragUsed?: boolean, isError?: boolean, explanation?: RAGExplanation) => void;
 }
 
 // MARK: - Store
@@ -65,7 +110,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
     }));
   },
 
-  addAssistantMessage: (content: string, sources?: ChatSource[], ragUsed?: boolean, isError?: boolean) => {
+  addAssistantMessage: (content: string, sources?: ChatSource[], ragUsed?: boolean, isError?: boolean, explanation?: RAGExplanation) => {
     const assistantMessage: ChatMessage = {
       id: crypto.randomUUID(),
       role: 'assistant',
@@ -74,6 +119,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
       timestamp: new Date(),
       ragUsed,
       isError,
+      explanation,
     };
 
     set((state) => ({
@@ -126,10 +172,10 @@ export const useChatStore = create<ChatState>((set, get) => ({
           responseLength: result.response.length,
           ragUsed: result.ragUsed,
         });
-        addAssistantMessage(result.response, undefined, result.ragUsed);
+        addAssistantMessage(result.response, undefined, result.ragUsed, false, result.explanation);
       } else {
         logger.error('Chat', 'No response or error: ' + (result.error || 'Réponse vide'));
-        addAssistantMessage(`Erreur: ${result.error || 'Réponse vide'}`, undefined, undefined, true);
+        addAssistantMessage(`Erreur: ${result.error || 'Réponse vide'}`, undefined, undefined, true, undefined);
       }
     } catch (error: any) {
       logger.error('Chat', error);

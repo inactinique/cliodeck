@@ -9,6 +9,11 @@ import { PrimarySourcesVectorStore, PrimarySourceDocument, PrimarySourceSearchRe
 import { NERService, createNERService } from '../../../backend/core/ner/NERService.js';
 import type { EntityStatistics, ExtractedEntity } from '../../../backend/types/entity.js';
 
+// Chunking optimization modules
+import { DocumentChunker, CHUNKING_CONFIGS } from '../../../backend/core/chunking/DocumentChunker.js';
+import { ChunkQualityScorer } from '../../../backend/core/chunking/ChunkQualityScorer.js';
+import { ChunkDeduplicator } from '../../../backend/core/chunking/ChunkDeduplicator.js';
+
 // MARK: - Types
 
 export interface TropyProjectInfo {
@@ -44,6 +49,11 @@ class TropyService {
   private currentTPYPath: string | null = null;
   private projectPath: string | null = null;
 
+  // Chunking optimization modules
+  private chunker: DocumentChunker | null = null;
+  private qualityScorer: ChunkQualityScorer | null = null;
+  private deduplicator: ChunkDeduplicator | null = null;
+
   /**
    * Initialise le service Tropy pour un projet
    */
@@ -53,6 +63,12 @@ class TropyService {
     this.tropySync = new TropySync();
     this.watcher = new TropyWatcher();
     this.ocrPipeline = new TropyOCRPipeline();
+
+    // Initialize chunking optimization modules
+    this.chunker = new DocumentChunker(CHUNKING_CONFIGS.cpuOptimized);
+    this.qualityScorer = new ChunkQualityScorer();
+    this.deduplicator = new ChunkDeduplicator();
+    console.log('📐 [TROPY-SERVICE] Chunking optimization modules initialized');
 
     // Vérifier s'il y a un projet Tropy déjà enregistré
     const existingProject = this.vectorStore.getTropyProject();
@@ -81,6 +97,11 @@ class TropyService {
     this.ocrPipeline = null;
     this.currentTPYPath = null;
     this.projectPath = null;
+
+    // Clean up chunking optimization modules
+    this.chunker = null;
+    this.qualityScorer = null;
+    this.deduplicator = null;
   }
 
   /**
@@ -290,14 +311,55 @@ class TropyService {
         fullText += '\n';
         if (source.transcription) fullText += source.transcription;
 
-        // Simple chunking (split by paragraphs or fixed size)
-        const chunks = this.chunkText(fullText, source.id, 1000, 100);
+        // Get raw chunks from DocumentChunker for optimization
+        const rawChunks = this.getRawChunks(fullText, source.id, { title: source.title });
+        const initialChunkCount = rawChunks.length;
 
-        // Générer les embeddings pour chaque chunk
-        for (const chunk of chunks) {
+        // Quality filtering - remove low-quality chunks (works on DocumentChunk type)
+        let optimizedChunks = rawChunks;
+        if (this.qualityScorer && optimizedChunks.length > 0) {
+          const qualityResult = this.qualityScorer.filterByQuality(optimizedChunks, {
+            minEntropy: 0.3,
+            minUniqueWordRatio: 0.4,
+          }, false); // Don't log each filtered chunk
+
+          if (qualityResult.stats.filteredChunks > 0) {
+            console.log(`🎯 [TROPY] Quality filtering for "${source.title}": ${qualityResult.stats.passedChunks}/${qualityResult.stats.totalChunks} passed`);
+          }
+          optimizedChunks = qualityResult.passed;
+        }
+
+        // Deduplication - remove duplicate chunks (works on DocumentChunk type)
+        if (this.deduplicator && optimizedChunks.length > 0) {
+          const dedupResult = this.deduplicator.deduplicate(optimizedChunks, {
+            useContentHash: true,
+            useSimilarity: false, // Fast mode - hash only
+          });
+
+          if (dedupResult.duplicateCount > 0) {
+            console.log(`🔄 [TROPY] Deduplication for "${source.title}": removed ${dedupResult.duplicateCount} duplicates`);
+          }
+          optimizedChunks = dedupResult.uniqueChunks;
+        }
+
+        // Log optimization results
+        if (optimizedChunks.length !== initialChunkCount) {
+          console.log(`📊 [TROPY] Chunks for "${source.title}": ${initialChunkCount} → ${optimizedChunks.length} after optimization`);
+        }
+
+        // Convert to source chunks format and generate embeddings
+        for (const rawChunk of optimizedChunks) {
           try {
-            const embedding = await ollamaClient.generateEmbedding(chunk.content);
-            this.vectorStore!.saveChunk(chunk, embedding);
+            const sourceChunk = {
+              id: rawChunk.id,
+              sourceId: source.id,
+              content: rawChunk.content,
+              chunkIndex: rawChunk.chunkIndex,
+              startPosition: rawChunk.startPosition,
+              endPosition: rawChunk.endPosition,
+            };
+            const embedding = await ollamaClient.generateEmbedding(sourceChunk.content);
+            this.vectorStore!.saveChunk(sourceChunk, embedding);
             chunksCreated++;
           } catch (error) {
             console.warn(`⚠️ [TROPY-SERVICE] Failed to generate embedding for chunk in source ${source.id}:`, error);
@@ -315,60 +377,74 @@ class TropyService {
 
   /**
    * Découpe un texte en chunks pour l'indexation
+   * Utilise DocumentChunker pour un chunking optimisé avec:
+   * - Respect des limites de phrases
+   * - Overlap configurable
+   * - Contexte document ajouté aux chunks
    */
   private chunkText(
     text: string,
     sourceId: string,
-    maxChunkSize: number = 1000,
-    overlap: number = 100
+    sourceMeta?: { title?: string }
   ): Array<{ id: string; sourceId: string; content: string; chunkIndex: number; startPosition: number; endPosition: number }> {
-    const chunks: Array<{ id: string; sourceId: string; content: string; chunkIndex: number; startPosition: number; endPosition: number }> = [];
-
-    // Split by paragraphs first
-    const paragraphs = text.split(/\n\n+/);
-    let currentChunk = '';
-    let chunkIndex = 0;
-    let startPosition = 0;
-
-    for (const paragraph of paragraphs) {
-      const trimmedParagraph = paragraph.trim();
-      if (!trimmedParagraph) continue;
-
-      // If adding this paragraph would exceed max size, save current chunk
-      if (currentChunk && (currentChunk.length + trimmedParagraph.length + 2) > maxChunkSize) {
-        chunks.push({
-          id: `${sourceId}-chunk-${chunkIndex}`,
-          sourceId,
-          content: currentChunk.trim(),
-          chunkIndex,
-          startPosition,
-          endPosition: startPosition + currentChunk.length,
-        });
-
-        // Start new chunk with overlap
-        const words = currentChunk.split(/\s+/);
-        const overlapWords = words.slice(-Math.ceil(overlap / 5)); // Approximate word count for overlap
-        currentChunk = overlapWords.join(' ') + '\n\n' + trimmedParagraph;
-        startPosition = startPosition + currentChunk.length - overlap;
-        chunkIndex++;
-      } else {
-        currentChunk = currentChunk ? currentChunk + '\n\n' + trimmedParagraph : trimmedParagraph;
-      }
-    }
-
-    // Don't forget the last chunk
-    if (currentChunk.trim()) {
-      chunks.push({
-        id: `${sourceId}-chunk-${chunkIndex}`,
+    if (!this.chunker) {
+      console.warn('⚠️ [TROPY-SERVICE] Chunker not initialized, using fallback');
+      // Fallback simple si chunker non initialisé
+      return [{
+        id: `${sourceId}-chunk-0`,
         sourceId,
-        content: currentChunk.trim(),
-        chunkIndex,
-        startPosition,
+        content: text,
+        chunkIndex: 0,
+        startPosition: 0,
         endPosition: text.length,
-      });
+      }];
     }
 
-    return chunks;
+    // Convert text to pages format expected by DocumentChunker
+    const pages = [{ pageNumber: 1, text }];
+
+    // Use DocumentChunker with document metadata for context
+    const documentChunks = this.chunker.createChunks(pages, sourceId, sourceMeta);
+
+    // Map to expected format with sourceId instead of documentId
+    return documentChunks.map(chunk => ({
+      id: chunk.id,
+      sourceId: sourceId,
+      content: chunk.content,
+      chunkIndex: chunk.chunkIndex,
+      startPosition: chunk.startPosition,
+      endPosition: chunk.endPosition,
+    }));
+  }
+
+  /**
+   * Retourne les chunks bruts du DocumentChunker (pour optimisation)
+   * Ces chunks ont le format DocumentChunk avec documentId et pageNumber
+   * Compatible avec ChunkQualityScorer et ChunkDeduplicator
+   */
+  private getRawChunks(
+    text: string,
+    sourceId: string,
+    sourceMeta?: { title?: string }
+  ): Array<{ id: string; documentId: string; content: string; chunkIndex: number; pageNumber: number; startPosition: number; endPosition: number }> {
+    if (!this.chunker) {
+      console.warn('⚠️ [TROPY-SERVICE] Chunker not initialized, using fallback');
+      return [{
+        id: `${sourceId}-chunk-0`,
+        documentId: sourceId,
+        content: text,
+        chunkIndex: 0,
+        pageNumber: 1,
+        startPosition: 0,
+        endPosition: text.length,
+      }];
+    }
+
+    // Convert text to pages format expected by DocumentChunker
+    const pages = [{ pageNumber: 1, text }];
+
+    // Use DocumentChunker with document metadata for context
+    return this.chunker.createChunks(pages, sourceId, sourceMeta);
   }
 
   /**

@@ -65,6 +65,8 @@ export function setupChatHandlers() {
         systemPromptLanguage: validatedData.options?.systemPromptLanguage || ragConfig.systemPromptLanguage || 'fr',
         useCustomSystemPrompt: validatedData.options?.useCustomSystemPrompt || ragConfig.useCustomSystemPrompt || false,
         customSystemPrompt: validatedData.options?.customSystemPrompt || ragConfig.customSystemPrompt,
+        // Context compression
+        enableContextCompression: ragConfig.enableContextCompression !== false, // Default: true
       };
 
       console.log('🔍 [RAG DEBUG] Enriched options:', enrichedOptions);
@@ -75,11 +77,13 @@ export function setupChatHandlers() {
         responseLength: result.response.length,
         ragUsed: result.ragUsed,
         sourcesCount: result.sourcesCount,
+        hasExplanation: !!result.explanation,
       });
       return successResponse({
         response: result.response,
         ragUsed: result.ragUsed,
         sourcesCount: result.sourcesCount,
+        explanation: result.explanation,
       });
     } catch (error: any) {
       console.error('❌ chat:send error:', error);

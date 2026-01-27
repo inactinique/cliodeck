@@ -79,8 +79,8 @@ export class HybridSearch {
     // 2. Sparse retrieval (BM25)
     const sparseResults = this.bm25Index.search(query, candidateSize, documentIds);
 
-    // 3. Fusion (RRF)
-    const fusedResults = this.reciprocalRankFusion(denseResults, sparseResults, k);
+    // 3. Fusion (RRF) with query for exact match boosting
+    const fusedResults = this.reciprocalRankFusion(denseResults, sparseResults, k, query);
 
     const duration = Date.now() - startTime;
     console.log(
@@ -91,7 +91,7 @@ export class HybridSearch {
   }
 
   /**
-   * Reciprocal Rank Fusion (RRF)
+   * Reciprocal Rank Fusion (RRF) with exact match boosting
    *
    * Formula: RRF(d) = Σ (1 / (k + rank_i(d)))
    * where rank_i(d) is the rank of document d in retrieval system i
@@ -99,13 +99,33 @@ export class HybridSearch {
    * RRF is parameter-free and has been shown to outperform other fusion methods
    * in many cases. It's especially good when the retrieval systems have
    * different score scales (like cosine similarity vs BM25 scores).
+   *
+   * Exact match boosting: chunks containing exact query keywords get a 2x boost
+   * to prioritize precise keyword matches (important for proper nouns, technical terms)
    */
   private reciprocalRankFusion(
     denseResults: SearchResult[],
     sparseResults: BM25Result[],
-    k: number
+    k: number,
+    originalQuery?: string
   ): SearchResult[] {
-    const scores = new Map<string, RRFScore>();
+    const scores = new Map<string, RRFScore & { hasExactMatch?: boolean }>();
+
+    // Extract potential keywords (words > 4 chars, likely proper nouns or significant terms)
+    const queryKeywords = originalQuery
+      ? originalQuery
+          .toLowerCase()
+          .replace(/[^\p{L}\p{N}\s]/gu, ' ')
+          .split(/\s+/)
+          .filter(t => t.length > 4)
+      : [];
+
+    // Helper to check if chunk contains exact keyword matches
+    const checkExactMatch = (content: string): boolean => {
+      if (queryKeywords.length === 0) return false;
+      const contentLower = content.toLowerCase();
+      return queryKeywords.some(kw => contentLower.includes(kw));
+    };
 
     // Add dense results
     denseResults.forEach((result, rank) => {
@@ -120,6 +140,7 @@ export class HybridSearch {
           rrfScore: 0,
           denseRank: rank + 1,
           sparseRank: null,
+          hasExactMatch: checkExactMatch(result.chunk.content),
         });
       }
 
@@ -141,6 +162,7 @@ export class HybridSearch {
           rrfScore: 0,
           denseRank: null,
           sparseRank: rank + 1,
+          hasExactMatch: checkExactMatch(result.chunk.content),
         });
       }
 
@@ -149,6 +171,20 @@ export class HybridSearch {
       entry.sparseRank = rank + 1;
       entry.sparseScore = result.score;
     });
+
+    // Apply exact match boost (2x multiplier for chunks containing keywords)
+    const EXACT_MATCH_BOOST = 2.0;
+    let boostedCount = 0;
+    scores.forEach((entry) => {
+      if (entry.hasExactMatch) {
+        entry.rrfScore *= EXACT_MATCH_BOOST;
+        boostedCount++;
+      }
+    });
+
+    if (boostedCount > 0) {
+      console.log(`🎯 Hybrid search: Boosted ${boostedCount} chunks with exact keyword matches`);
+    }
 
     // Sort by RRF score and convert to SearchResult
     const fusedResults = Array.from(scores.values())

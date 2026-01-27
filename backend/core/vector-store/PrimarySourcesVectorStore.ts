@@ -901,7 +901,7 @@ export class PrimarySourcesVectorStore {
     // 3. Fusion (RRF) or just dense if no sparse results
     let results: PrimarySourceSearchResult[];
     if (sparseResults.length > 0) {
-      results = this.reciprocalRankFusion(denseResults, sparseResults, topK);
+      results = this.reciprocalRankFusion(denseResults, sparseResults, topK, query);
     } else {
       results = denseResults.slice(0, topK);
     }
@@ -1016,11 +1016,13 @@ export class PrimarySourcesVectorStore {
 
   /**
    * Reciprocal Rank Fusion to combine dense and sparse results
+   * With exact match boosting for proper nouns and keywords
    */
   private reciprocalRankFusion(
     denseResults: PrimarySourceSearchResult[],
     sparseResults: Array<{ chunk: PrimarySourceChunk; score: number }>,
-    k: number
+    k: number,
+    originalQuery?: string
   ): PrimarySourceSearchResult[] {
     const scores = new Map<string, {
       chunk: PrimarySourceChunk;
@@ -1028,7 +1030,24 @@ export class PrimarySourcesVectorStore {
       denseScore: number;
       sparseScore: number;
       rrfScore: number;
+      hasExactMatch: boolean;
     }>();
+
+    // Extract potential keywords (words > 4 chars, likely proper nouns or significant terms)
+    const queryKeywords = originalQuery
+      ? originalQuery
+          .toLowerCase()
+          .replace(/[^\p{L}\p{N}\s]/gu, ' ')
+          .split(/\s+/)
+          .filter(t => t.length > 4)
+      : [];
+
+    // Helper to check if chunk contains exact keyword matches
+    const checkExactMatch = (content: string): boolean => {
+      if (queryKeywords.length === 0) return false;
+      const contentLower = content.toLowerCase();
+      return queryKeywords.some(kw => contentLower.includes(kw));
+    };
 
     // Add dense results
     denseResults.forEach((result, rank) => {
@@ -1042,6 +1061,7 @@ export class PrimarySourcesVectorStore {
           denseScore: result.similarity,
           sparseScore: 0,
           rrfScore: 0,
+          hasExactMatch: checkExactMatch(result.chunk.content),
         });
       }
 
@@ -1064,6 +1084,7 @@ export class PrimarySourcesVectorStore {
           denseScore: 0,
           sparseScore: result.score,
           rrfScore: 0,
+          hasExactMatch: checkExactMatch(result.chunk.content),
         });
       }
 
@@ -1071,6 +1092,20 @@ export class PrimarySourcesVectorStore {
       entry.rrfScore += rrfScore;
       entry.sparseScore = result.score;
     });
+
+    // Apply exact match boost (2x multiplier for chunks containing keywords)
+    const EXACT_MATCH_BOOST = 2.0;
+    let boostedCount = 0;
+    scores.forEach((entry) => {
+      if (entry.hasExactMatch) {
+        entry.rrfScore *= EXACT_MATCH_BOOST;
+        boostedCount++;
+      }
+    });
+
+    if (boostedCount > 0) {
+      console.log(`🎯 Primary sources: Boosted ${boostedCount} chunks with exact keyword matches`);
+    }
 
     // Sort by RRF score and convert to results
     return Array.from(scores.values())

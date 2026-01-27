@@ -90,6 +90,9 @@ export interface RAGConfig {
   useSemanticChunking?: boolean; // Use embedding-based boundary detection
   semanticSimilarityThreshold?: number; // 0.5-0.9, boundary detection threshold
   semanticWindowSize?: number; // 2-5 sentences per window
+
+  // === Context Compression ===
+  enableContextCompression?: boolean; // Enable context compression before sending to LLM (default: true)
 }
 
 export interface ZoteroConfig {

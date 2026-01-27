@@ -438,12 +438,12 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     let definitionPosition: number;
 
     if (defMatch) {
-      // There are existing definitions - insert new def before them
+      // There are existing definitions - insert new def after them (at the end)
       const afterRefWithoutDefs = afterRef.slice(0, defMatch.index);
-      const existingDefs = defMatch[1];
-      newContent = beforeRef + refText + afterRefWithoutDefs + '\n\n' + defText + '\n\n' + existingDefs;
-      // Definition position is after the beforeRef + refText + afterRefWithoutDefs + '\n\n'
-      definitionPosition = beforeRef.length + refText.length + (afterRefWithoutDefs?.length || 0) + 2 + defText.length;
+      const existingDefs = defMatch[1].trimEnd();
+      newContent = beforeRef + refText + afterRefWithoutDefs + '\n\n' + existingDefs + '\n\n' + defText;
+      // Definition position is at the very end, after the defText marker
+      definitionPosition = newContent.length;
     } else {
       // No existing definitions - add at the end
       const trimmedAfter = afterRef.trimEnd();

@@ -397,6 +397,83 @@ export const MilkdownEditor: React.FC = () => {
     return () => clearTimeout(timeout);
   }, [pendingFootnoteScroll, isEditorReady, safeEditorAction, clearPendingFootnoteScroll]);
 
+  // Handle footnote navigation (click on reference -> scroll to definition, click on definition number -> scroll to reference)
+  useEffect(() => {
+    const container = editorContainerRef.current;
+    if (!container || !isEditorReady) return;
+
+    const handleFootnoteClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+
+      // Check if clicked on footnote reference (sup element)
+      const footnoteRef = target.closest('sup[data-type="footnote_reference"]');
+      if (footnoteRef) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        // Extract footnote number from the element text content
+        const footnoteNum = footnoteRef.textContent?.trim();
+        if (!footnoteNum) return;
+
+        // Find the corresponding footnote definition
+        const footnoteDefinition = container.querySelector(
+          `dl[data-type="footnote_definition"] dt`
+        );
+
+        // Look through all footnote definitions to find the matching one
+        const allDefinitions = container.querySelectorAll('dl[data-type="footnote_definition"]');
+        for (const def of allDefinitions) {
+          const dt = def.querySelector('dt');
+          if (dt && dt.textContent?.trim() === footnoteNum) {
+            // Add ID to the reference for back navigation
+            const refId = `fnref-${footnoteNum}`;
+            footnoteRef.setAttribute('id', refId);
+
+            // Scroll to the definition
+            def.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+            // Flash effect on definition
+            def.classList.add('footnote-highlight');
+            setTimeout(() => def.classList.remove('footnote-highlight'), 1500);
+            return;
+          }
+        }
+
+        console.log('[MilkdownEditor] Footnote definition not found for:', footnoteNum);
+        return;
+      }
+
+      // Check if clicked on footnote definition number (dt element inside dl)
+      const footnoteDefNum = target.closest('dl[data-type="footnote_definition"] > dt');
+      if (footnoteDefNum) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const footnoteNum = footnoteDefNum.textContent?.trim();
+        if (!footnoteNum) return;
+
+        // Find the corresponding footnote reference in the text
+        const allRefs = container.querySelectorAll('sup[data-type="footnote_reference"]');
+        for (const ref of allRefs) {
+          if (ref.textContent?.trim() === footnoteNum) {
+            // Scroll to the reference
+            ref.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+            // Flash effect on reference
+            ref.classList.add('footnote-highlight');
+            setTimeout(() => ref.classList.remove('footnote-highlight'), 1500);
+            return;
+          }
+        }
+
+        console.log('[MilkdownEditor] Footnote reference not found for:', footnoteNum);
+      }
+    };
+
+    container.addEventListener('click', handleFootnoteClick);
+    return () => container.removeEventListener('click', handleFootnoteClick);
+  }, [isEditorReady]);
+
   return (
     <div
       ref={editorContainerRef}

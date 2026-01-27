@@ -37,6 +37,62 @@ interface EnrichedRAGOptions {
   systemPromptLanguage?: 'fr' | 'en';    // Language for default prompt
   useCustomSystemPrompt?: boolean;       // Use custom prompt
   customSystemPrompt?: string;           // Custom system prompt text
+
+  // Context compression
+  enableContextCompression?: boolean;    // Enable context compression (default: true)
+}
+
+// Type pour l'explication du RAG (Explainable AI)
+export interface RAGExplanationContext {
+  // Recherche
+  search: {
+    query: string;
+    totalResults: number;
+    searchDurationMs: number;
+    cacheHit: boolean;
+    sourceType: 'primary' | 'secondary' | 'both';
+    documents: Array<{
+      title: string;
+      similarity: number;
+      sourceType: 'primary' | 'secondary';
+      chunkCount: number;
+    }>;
+    boosting?: {
+      exactMatchCount: number;
+      keywords: string[];
+    };
+  };
+  // Compression
+  compression?: {
+    enabled: boolean;
+    originalChunks: number;
+    finalChunks: number;
+    originalSize: number;
+    finalSize: number;
+    reductionPercent: number;
+    strategy?: string;
+  };
+  // Graphe de connaissances
+  graph?: {
+    enabled: boolean;
+    relatedDocsFound: number;
+    documentTitles: string[];
+  };
+  // Configuration LLM
+  llm: {
+    provider: string;
+    model: string;
+    contextWindow: number;
+    temperature: number;
+    promptSize: number;
+  };
+  // Timing
+  timing: {
+    searchMs: number;
+    compressionMs?: number;
+    generationMs: number;
+    totalMs: number;
+  };
 }
 
 // Fonction utilitaire pour hasher une chaîne (identifier les questions identiques)
@@ -141,9 +197,15 @@ class ChatService {
   async sendMessage(
     message: string,
     options: EnrichedRAGOptions = {}
-  ): Promise<{ response: string; ragUsed: boolean; sourcesCount: number }> {
+  ): Promise<{ response: string; ragUsed: boolean; sourcesCount: number; explanation?: RAGExplanationContext }> {
     const startTime = Date.now();
     const queryHash = hashString(message);
+
+    // Métadonnées pour l'explication (Explainable AI)
+    let explanationContext: RAGExplanationContext | undefined;
+    let searchDurationMs = 0;
+    let compressionDurationMs = 0;
+    let cacheHit = false;
 
     try {
       // Obtenir le LLM Provider Manager (gère Ollama + modèle embarqué)
@@ -207,6 +269,7 @@ class ChatService {
         if (cachedResults) {
           console.log(`💾 Cache HIT for query hash ${queryHash} (saved ${Date.now() - searchStart}ms)`);
           searchResults = cachedResults;
+          cacheHit = true;
         } else {
           console.log(`🔍 Cache MISS for query hash ${queryHash}, performing search...`);
           searchResults = await pdfService.search(message, {
@@ -219,7 +282,7 @@ class ChatService {
           this.ragCache.set(cacheKey, searchResults);
           console.log(`💾 Cached ${searchResults.length} results for query hash ${queryHash}`);
         }
-        const searchDuration = Date.now() - searchStart;
+        searchDurationMs = Date.now() - searchStart;
 
         // Filter out results with null documents (orphaned chunks)
         searchResults = searchResults.filter(r => r.document !== null);
@@ -227,7 +290,7 @@ class ChatService {
         console.log('🔍 [RAG DETAILED DEBUG] Search completed:', {
           queryHash: queryHash,
           resultsCount: searchResults.length,
-          searchDuration: `${searchDuration}ms`,
+          searchDuration: `${searchDurationMs}ms`,
           topSimilarities: searchResults.slice(0, 5).map(r => r.similarity.toFixed(4)),
           chunkIds: searchResults.slice(0, 3).map(r => r.chunk.id),
           documentTitles: searchResults.slice(0, 3).map(r => r.document?.title || 'Unknown'),
@@ -292,9 +355,14 @@ class ChatService {
         }
       }
 
-      // Apply intelligent compression to context chunks
-      if (searchResults.length > 0) {
+      // Apply intelligent compression to context chunks (if enabled)
+      const compressionEnabled = options.enableContextCompression !== false; // Default: true
+      let compressionStats: RAGExplanationContext['compression'] | undefined;
+
+      if (searchResults.length > 0 && compressionEnabled) {
+        const compressionStart = Date.now();
         const preCompressionSize = searchResults.reduce((sum, r) => sum + r.chunk.content.length, 0);
+        const preCompressionChunks = searchResults.length;
         console.log(`🗜️  [COMPRESSION] Pre-compression context size: ${preCompressionSize} chars (${searchResults.length} chunks)`);
 
         // Convert search results to compressor format
@@ -322,6 +390,19 @@ class ChatService {
           similarity: chunk.similarity,
         }));
 
+        compressionDurationMs = Date.now() - compressionStart;
+
+        // Capturer les stats de compression pour l'explication
+        compressionStats = {
+          enabled: true,
+          originalChunks: compressionResult.stats.originalChunks,
+          finalChunks: compressionResult.stats.compressedChunks,
+          originalSize: compressionResult.stats.originalSize,
+          finalSize: compressionResult.stats.compressedSize,
+          reductionPercent: compressionResult.stats.reductionPercent,
+          strategy: compressionResult.stats.strategy,
+        };
+
         console.log(`✅ [COMPRESSION] Final stats:`, {
           strategy: compressionResult.stats.strategy,
           originalChunks: compressionResult.stats.originalChunks,
@@ -330,6 +411,17 @@ class ChatService {
           compressedSize: compressionResult.stats.compressedSize,
           reduction: `${compressionResult.stats.reductionPercent.toFixed(1)}%`,
         });
+      } else if (searchResults.length > 0 && !compressionEnabled) {
+        const contextSize = searchResults.reduce((sum, r) => sum + r.chunk.content.length, 0);
+        compressionStats = {
+          enabled: false,
+          originalChunks: searchResults.length,
+          finalChunks: searchResults.length,
+          originalSize: contextSize,
+          finalSize: contextSize,
+          reductionPercent: 0,
+        };
+        console.log(`⏭️  [COMPRESSION] Skipped (disabled in settings). Context size: ${contextSize} chars (${searchResults.length} chunks)`);
       }
 
       // Récupérer le contexte du projet
@@ -365,8 +457,16 @@ class ChatService {
         });
       }
 
+      // Track generation timing and prompt size for explanation
+      const generationStart = Date.now();
+      let promptSize = 0;
+
       // Stream la réponse avec contexte RAG si disponible
       if (searchResults.length > 0) {
+        // Calculate approximate prompt size (for explanation)
+        const contextSize = searchResults.reduce((sum, r) => sum + r.chunk.content.length, 0);
+        promptSize = message.length + contextSize + systemPrompt.length + (projectContext?.length || 0);
+
         console.log('✅ [RAG DETAILED DEBUG] Generating response WITH context:', {
           queryHash: queryHash,
           contextsUsed: searchResults.length,
@@ -517,10 +617,63 @@ class ChatService {
         }
       }
 
+      // Build explanation context (Explainable AI)
+      const generationDurationMs = Date.now() - generationStart;
+      if (options.context && searchResults.length > 0) {
+        // Group results by document
+        const documentMap = new Map<string, { title: string; similarity: number; sourceType: string; chunkCount: number }>();
+        searchResults.forEach(r => {
+          const docId = r.document?.id || 'unknown';
+          const existing = documentMap.get(docId);
+          if (existing) {
+            existing.chunkCount++;
+            existing.similarity = Math.max(existing.similarity, r.similarity);
+          } else {
+            documentMap.set(docId, {
+              title: r.document?.title || 'Unknown',
+              similarity: r.similarity,
+              sourceType: r.sourceType || 'secondary',
+              chunkCount: 1,
+            });
+          }
+        });
+
+        explanationContext = {
+          search: {
+            query: message,
+            totalResults: searchResults.length,
+            searchDurationMs,
+            cacheHit,
+            sourceType: options.sourceType || 'both',
+            documents: Array.from(documentMap.values()).slice(0, 10) as any,
+          },
+          compression: compressionStats,
+          graph: options.useGraphContext ? {
+            enabled: true,
+            relatedDocsFound: relatedDocuments.length,
+            documentTitles: relatedDocuments.map(d => d.title || 'Unknown'),
+          } : undefined,
+          llm: {
+            provider: llmProviderManager.getActiveProviderName(),
+            model: options.model || 'default',
+            contextWindow: options.numCtx || 4096,
+            temperature: options.temperature || 0.1,
+            promptSize,
+          },
+          timing: {
+            searchMs: searchDurationMs,
+            compressionMs: compressionDurationMs > 0 ? compressionDurationMs : undefined,
+            generationMs: generationDurationMs,
+            totalMs: totalDuration,
+          },
+        };
+      }
+
       return {
         response: fullResponse,
         ragUsed: searchResults.length > 0,
         sourcesCount: searchResults.length,
+        explanation: explanationContext,
       };
     } catch (error: any) {
       console.error('❌ [RAG DETAILED DEBUG] Chat error:', {
