@@ -6,7 +6,7 @@ Multi-platform desktop application (Electron + React + TypeScript) to assist his
 
 **License:** [GPLv3](https://www.gnu.org/licenses/gpl-3.0.html)
 
-🎉 [Download the prerelease (macos and linux)](https://github.com/inactinique/cliodeck/releases/tag/v1.0.0-beta.1)
+🎉 [Download the prerelease (macos and linux)](https://github.com/inactinique/cliodeck/releases/tag/v1.0.0-RC1)
 
 ## Objective
 
