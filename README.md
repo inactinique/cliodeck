@@ -1,212 +1,95 @@
 # ClioDeck - Writing Assistant for Historians
 
-Multi-platform desktop application (Electron + React + TypeScript) to assist historians in writing articles (v1) and books (not implemented yet), with RAG (Retrieval-Augmented Generation) and Zotero (v1) / Tropy (v1 - beta) integrations.
+Desktop application (Electron + React + TypeScript) to assist historians in writing, with RAG (Retrieval-Augmented Generation) and Zotero/Tropy integrations.
 
-**NOTE that *ClioDeck* is a [vibe-coding](https://en.wikipedia.org/wiki/Vibe_coding) experiment aimed at developping a Proof Of Concept. It is provided *as is*, at your own risk**: it has been designed by [Frédéric Clavert](https://inactinique.net) and coded through [claude code](https://claude.com/product/claude-code). I made a small talk on vibe-coding / vibe-writing for historians, [that you can see here](https://inactinique.net/prez/2025-07-03_DH-LLM/2025-07-03_DH-LLM.html#/title-slide) (in French, once open, hit 's' to get my notes). On the ethics of vibe coding, see [here](https://github.com/inactinique/cliodeck/wiki/4.-Ethics).
+> **Note:** ClioDeck is a [vibe-coding](https://en.wikipedia.org/wiki/Vibe_coding) experiment. It is provided *as is*, at your own risk. Designed by [Frédéric Clavert](https://inactinique.net), coded with [Claude Code](https://claude.ai/code). See my [talk on vibe-coding for historians](https://inactinique.net/prez/2025-07-03_DH-LLM/2025-07-03_DH-LLM.html#/title-slide) (French) and [ethics considerations](https://github.com/inactinique/cliodeck/wiki/4.-Ethics).
 
 **License:** [GPLv3](https://www.gnu.org/licenses/gpl-3.0.html)
 
-## Objective
+## Download
 
-Create a writing assistant that allows historians to:
-- Efficiently search their bibliographic data
-- Query their digitized sources (PDFs) via RAG
-- Integrate Zotero for bibliography
-- Integrate Tropy for archival sources (v1 - beta)
-- Edit in markdown (WYSIWYG v1) with contextual AI assistant (not implmented yet)
+**[Download v1.0.0-rc.1 (macOS and Linux)](https://github.com/inactinique/cliodeck/releases/tag/v1.0.0-rc.1)**
 
-## Quick Installation
+- **macOS**: DMG for Intel and Apple Silicon
+- **Linux**: AppImage and .deb packages
 
-*This software is provided **as is** with no guarantee and at your own risks*
+## Key Features
 
-[Download the prerelease (macos and linux)](https://github.com/inactinique/cliodeck/releases/tag/v1.0.0-RC1)
+- **RAG-powered Research Assistant** - Query your PDFs and primary sources using natural language with source citations
+- **Zotero Integration** - Sync bibliography, download PDFs, manage tags and metadata
+- **Tropy Integration** - Import and search primary sources with OCR support
+- **WYSIWYG Markdown Editor** - Write with citation autocomplete (`@`) and footnotes
+- **Corpus Analysis** - Knowledge graph, textometrics, topic modeling, similarity finder
+- **Hybrid Search** - HNSW vectors + BM25 keywords with multilingual query expansion
+- **Local-first** - All data stays on your machine; works offline with embedded LLM
+- **Export** - PDF (via Pandoc/LaTeX) and Word with template support
 
-For complete installation instructions including system dependencies, Ollama configuration, and troubleshooting:
+## Quick Start
 
-- **[macOS Installation Guide](https://github.com/inactinique/cliodeck/wiki/1.2-ClioDeck-Installation-%E2%80%90-macOS)** - Complete installation on macOS (Intel and Apple Silicon)
-- **[Linux Installation Guide](https://github.com/inactinique/cliodeck/wiki/1.1-ClioDeck-Installation-%E2%80%90-Linux)** - Installation on Ubuntu, Debian, Fedora, Arch Linux, etc.
-
-It should be installable one way or another on windows.
-
-## Development information
-
-- [Technical Architecture](https://github.com/inactinique/cliodeck/wiki/2.-Technical-Architecture)
-- [Build and Deployment Guide](https://github.com/inactinique/cliodeck/wiki/2.1-Build-and-Deployment-Guide)
-
-### Quick Installation (Developers)
-
-**Prerequisites:**
-- Node.js 20+ and npm 10+
-- Python 3.11+ (with venv)
-- Ollama with models:
-  - `nomic-embed-text` and `mxbai-embed-large` (required for embeddings)
-  - `gemma2:2b` (recommended for chat)
-
-**Installation:**
-
-```bash
-# Clone the repository
-git clone https://github.com/inactinique/cliodeck.git
-cd cliodeck
-
-# Install npm dependencies
-npm install
-
-# Compile native modules for Electron
-npx electron-rebuild -f
-
-# Build the project
-npm run build
-
-# Launch the application
-npm start
-```
-
-**Installing Ollama and Models:**
+### 1. Install Ollama and models
 
 ```bash
 # macOS
-brew install ollama
-brew services start ollama
+brew install ollama && brew services start ollama
 
 # Linux
 curl -fsSL https://ollama.ai/install.sh | sh
+```
 
-# Download models
+```bash
+# Download required models
 ollama pull nomic-embed-text
 ollama pull gemma2:2b
 ```
 
-## Available Scripts
+### 2. Install ClioDeck
+
+Download from [Releases](https://github.com/inactinique/cliodeck/releases) and run.
+
+For detailed installation instructions, see:
+- [macOS Installation Guide](https://github.com/inactinique/cliodeck/wiki/1.2-ClioDeck-Installation-‐-macOS)
+- [Linux Installation Guide](https://github.com/inactinique/cliodeck/wiki/1.1-ClioDeck-Installation-‐-Linux)
+
+### Build from source (developers)
 
 ```bash
-# Development (compile in watch mode + launch app)
-npm run dev:full
-
-# Development (compile only in watch mode)
-npm run dev
-
-# Production build
+git clone https://github.com/inactinique/cliodeck.git
+cd cliodeck
+npm install
+npx electron-rebuild -f
 npm run build
-
-# Launch application
 npm start
-
-# Build for distribution
-npm run build:linux    # AppImage + .deb
-npm run build:mac      # DMG (x64 + arm64)
-npm run build:win      # NSIS installer
-
-# Tests
-npm test
-npm run test:watch
-npm run test:coverage
-
-# Type checking
-npm run typecheck
-
-# Lint
-npm run lint
-
-# Clean
-npm run clean
 ```
 
-## Main Components
-
-### VectorStore
-
-**File:** `backend/core/vector-store/VectorStore.ts`
-
-SQLite database management for vector embeddings.
-
-**Features:**
-- PDF document storage with metadata
-- Text chunk storage with embeddings (Float32Array → Buffer)
-- Cosine similarity search
-- Statistics (documents, chunks, embeddings)
-- Integrity checks (orphaned chunks)
-- Automatic CASCADE delete
-
-**SQLite Schema:**
-```sql
-CREATE TABLE documents (
-  id TEXT PRIMARY KEY,
-  file_path TEXT NOT NULL,
-  title TEXT NOT NULL,
-  author TEXT,
-  year TEXT,
-  bibtex_key TEXT,
-  page_count INTEGER,
-  created_at TEXT,
-  indexed_at TEXT,
-  last_accessed_at TEXT,
-  metadata TEXT
-);
-
-CREATE TABLE chunks (
-  id TEXT PRIMARY KEY,
-  document_id TEXT NOT NULL,
-  content TEXT NOT NULL,
-  page_number INTEGER,
-  chunk_index INTEGER,
-  start_position INTEGER,
-  end_position INTEGER,
-  embedding BLOB,
-  FOREIGN KEY (document_id) REFERENCES documents(id) ON DELETE CASCADE
-);
-```
-
-**Usage:**
-```typescript
-import { VectorStore } from './backend/core/vector-store/VectorStore';
-
-const vectorStore = new VectorStore();
-
-// Save document
-vectorStore.saveDocument(pdfDoc);
-
-// Save chunk with embedding
-vectorStore.saveChunk(chunk, embedding);
-
-// Semantic search
-const results = vectorStore.search(queryEmbedding, 10);
-
-// Stats
-const stats = vectorStore.getStatistics();
-console.log(stats.documentCount, stats.embeddingCount);
-```
-
-### ConfigManager
-
-**File:** `src/main/services/config-manager.ts`
-
-Configuration management with electron-store.
-
-**Configuration:**
-```typescript
-{
-  llm: {
-    backend: 'ollama',
-    ollamaURL: 'http://localhost:11434',
-    ollamaEmbeddingModel: 'nomic-embed-text',
-    ollamaChatModel: 'gemma2:2b'
-  },
-  rag: {
-    topK: 10,
-    similarityThreshold: 0.2,
-    chunkingConfig: 'cpuOptimized'
-  },
-  editor: {
-    fontSize: 14,
-    theme: 'dark',
-    wordWrap: true
-  },
-  recentProjects: []
-}
-```
-
+See [Build and Deployment Guide](https://github.com/inactinique/cliodeck/wiki/2.1-Build-and-Deployment-Guide) for distribution builds.
 
 ## Documentation
 
-See the [ClioDeck wiki](https://github.com/inactinique/cliodeck/wiki).
+Full documentation is available in the **[ClioDeck Wiki](https://github.com/inactinique/cliodeck/wiki)**:
+
+### User Guides
+- [Installation](https://github.com/inactinique/cliodeck/wiki/1.-ClioDeck-Installation) - Quick start
+- [Keyboard Shortcuts](https://github.com/inactinique/cliodeck/wiki/1.4-Keyboard-Shortcuts) - Complete reference
+- [Zotero Integration](https://github.com/inactinique/cliodeck/wiki/1.5-Zotero-Integration-Guide) - Bibliography sync
+- [Tropy Integration](https://github.com/inactinique/cliodeck/wiki/1.6-Tropy-Integration-Guide) - Primary sources
+- [Embedded LLM](https://github.com/inactinique/cliodeck/wiki/1.7-Embedded-LLM-Guide) - Offline mode
+- [Corpus Analysis](https://github.com/inactinique/cliodeck/wiki/1.8-Corpus-Analysis-Guide) - Knowledge graph & textometrics
+- [Export Options](https://github.com/inactinique/cliodeck/wiki/1.10-Export-Presentations) - PDF & Word
+
+### Technical Documentation
+- [Features Overview](https://github.com/inactinique/cliodeck/wiki/Features) - Complete feature list
+- [Technical Architecture](https://github.com/inactinique/cliodeck/wiki/2.-Technical-Architecture) - RAG system design
+- [Build Guide](https://github.com/inactinique/cliodeck/wiki/2.1-Build-and-Deployment-Guide) - Development setup
+
+## Tech Stack
+
+| Layer | Technologies |
+|-------|--------------|
+| **Frontend** | Electron 28, React 18, TypeScript, Milkdown, Zustand, Vite |
+| **Backend** | Node.js, better-sqlite3, hnswlib-node, pdfjs-dist |
+| **AI/LLM** | Ollama (nomic-embed-text, gemma2:2b), embedded Qwen2.5 |
+| **Analysis** | Python 3.11+, BERTopic (optional) |
+
+## Contributing
+
+Issues and contributions are welcome on [GitHub](https://github.com/inactinique/cliodeck/issues).
