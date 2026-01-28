@@ -6,8 +6,6 @@ Multi-platform desktop application (Electron + React + TypeScript) to assist his
 
 **License:** [GPLv3](https://www.gnu.org/licenses/gpl-3.0.html)
 
-🎉 [Download the prerelease (macos and linux)](https://github.com/inactinique/cliodeck/releases/tag/v1.0.0-RC1)
-
 ## Objective
 
 Create a writing assistant that allows historians to:
@@ -17,77 +15,23 @@ Create a writing assistant that allows historians to:
 - Integrate Tropy for archival sources (v1 - beta)
 - Edit in markdown (WYSIWYG v1) with contextual AI assistant (not implmented yet)
 
+## Quick Installation
 
-## Architecture
+*This software is provided **as is** with no guarantee and at your own risks*
 
-```
-cliodeck/
-├── src/
-│   ├── main/              # Electron Main Process
-│   │   ├── index.ts       # Entry point
-│   │   ├── ipc/
-│   │   │   └── handlers.ts # IPC handlers
-│   │   └── services/
-│   │       └── config-manager.ts # Configuration
-│   ├── preload/
-│   │   └── index.ts       # Secure IPC bridge
-│   └── renderer/          # React Frontend
-│       ├── index.html
-│       └── src/
-│           ├── main.tsx
-│           ├── App.tsx
-│           └── components/
-│
-├── backend/               # Node.js Modules
-│   ├── core/
-│   │   ├── vector-store/
-│   │   │   └── VectorStore.ts
-│   │   ├── chunking/
-│   │   ├── pdf/
-│   │   ├── llm/
-│   │   └── bibliography/
-│   ├── integrations/
-│   │   ├── zotero/
-│   │   └── tropy/
-│   └── types/
-│       ├── config.ts
-│       └── pdf-document.ts
-│
-└── package.json
-```
-
-## Tech Stack
-
-### Frontend
-- **Electron 28** - Multi-platform desktop
-- **React 18** - UI components
-- **TypeScript 5** - Type safety
-- **Milkdown** - WYSIWYG Markdown editor
-- **Zustand** - State management
-- **Vite** - Build tool
-
-### Backend
-- **Node.js 20+** - JavaScript runtime
-- **better-sqlite3** - SQLite database (vector store)
-- **pdfjs-dist** - PDF extraction
-- **electron-store** - Config persistence
-- **Python 3.11+** - Analysis services (topic modeling)
-
-### LLM & AI
-- **Ollama** - Local models (nomic-embed-text, gemma2:2b)
-  - Embedding model: `nomic-embed-text` (768 dimensions) or `mxbai-embed-large`
-  - Chat model: `gemma2:2b` (fast, multilingual) or any chat model that can be used through ollama, depending on your computer
-- embedded (without ollama) qwen-0.5 or 1.5
-- **BERTopic** - Topic modeling and clustering (Python)
-
-## Installation
-
-### Detailed Platform Guides
+[Download the prerelease (macos and linux)](https://github.com/inactinique/cliodeck/releases/tag/v1.0.0-RC1)
 
 For complete installation instructions including system dependencies, Ollama configuration, and troubleshooting:
 
 - **[macOS Installation Guide](https://github.com/inactinique/cliodeck/wiki/1.2-ClioDeck-Installation-%E2%80%90-macOS)** - Complete installation on macOS (Intel and Apple Silicon)
 - **[Linux Installation Guide](https://github.com/inactinique/cliodeck/wiki/1.1-ClioDeck-Installation-%E2%80%90-Linux)** - Installation on Ubuntu, Debian, Fedora, Arch Linux, etc.
+
+It should be installable one way or another on windows.
+
+## Development information
+
+- [Technical Architecture](https://github.com/inactinique/cliodeck/wiki/2.-Technical-Architecture)
+- [Build and Deployment Guide](https://github.com/inactinique/cliodeck/wiki/2.1-Build-and-Deployment-Guide)
 
 ### Quick Installation (Developers)
 
