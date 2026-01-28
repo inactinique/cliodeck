@@ -8,7 +8,7 @@ Desktop application (Electron + React + TypeScript) to assist historians in writ
 
 ## Download
 
-**[Download v1.0.0-rc.1 (macOS and Linux)](https://github.com/inactinique/cliodeck/releases/tag/v1.0.0-rc.1)**
+**[Download v1.0.0-rc.1 (macOS and Linux)](https://github.com/inactinique/cliodeck/releases/tag/v1.0.0-RC1)**
 
 - **macOS**: DMG for Intel and Apple Silicon
 - **Linux**: AppImage and .deb packages
