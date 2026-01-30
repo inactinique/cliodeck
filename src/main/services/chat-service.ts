@@ -655,7 +655,7 @@ class ChatService {
           } : undefined,
           llm: {
             provider: llmProviderManager.getActiveProviderName(),
-            model: options.model || 'default',
+            model: llmProviderManager.getActiveModelName(),
             contextWindow: options.numCtx || 4096,
             temperature: options.temperature || 0.1,
             promptSize,

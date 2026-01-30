@@ -158,6 +158,20 @@ export class LLMProviderManager {
   }
 
   /**
+   * Retourne le nom du modèle actif (sans le nom du provider)
+   */
+  getActiveModelName(): string {
+    switch (this.activeProvider) {
+      case 'ollama':
+        return this.ollamaClient.chatModel;
+      case 'embedded':
+        return this.embeddedClient.getModelId() || DEFAULT_EMBEDDED_MODEL;
+      default:
+        return 'aucun';
+    }
+  }
+
+  /**
    * Génère une réponse avec sources via le provider actif
    */
   async *generateWithSources(
