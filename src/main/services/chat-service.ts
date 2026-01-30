@@ -106,6 +106,26 @@ function hashString(str: string): string {
   return hash.toString(16);
 }
 
+// Fonction utilitaire pour calculer la similarité cosinus entre deux vecteurs
+function cosineSimilarity(a: Float32Array, b: Float32Array): number {
+  if (a.length !== b.length) return 0;
+
+  let dotProduct = 0;
+  let normA = 0;
+  let normB = 0;
+
+  for (let i = 0; i < a.length; i++) {
+    dotProduct += a[i] * b[i];
+    normA += a[i] * a[i];
+    normB += b[i] * b[i];
+  }
+
+  const magnitude = Math.sqrt(normA) * Math.sqrt(normB);
+  if (magnitude === 0) return 0;
+
+  return dotProduct / magnitude;
+}
+
 class ChatService {
   private currentStream: any = null;
   private compressor: ContextCompressor = new ContextCompressor();
@@ -339,17 +359,68 @@ class ChatService {
             // Remplacer chunks par résumés
             searchResults = this.convertChunksToSummaries(searchResults);
             if (relatedDocuments.length > 0) {
-              // Ajouter résumés des documents liés
-              relatedDocuments.forEach(doc => {
-                if (doc.summary) {
-                  searchResults.push({
-                    document: doc,
-                    chunk: { content: doc.summary, pageNumber: 1 },
-                    similarity: 0.7, // Score arbitraire pour documents liés
-                    isRelatedDoc: true
+              // Ajouter résumés des documents liés avec vraie similarité
+              const ollamaClient = pdfService.getOllamaClient();
+              if (ollamaClient) {
+                try {
+                  // Générer l'embedding de la requête
+                  const queryEmbedding = await ollamaClient.generateEmbedding(message);
+                  console.log(`🔗 Computing real similarity for ${relatedDocuments.length} graph-related documents`);
+
+                  for (const doc of relatedDocuments) {
+                    if (doc.summary) {
+                      try {
+                        // Générer l'embedding du résumé et calculer la vraie similarité
+                        const summaryEmbedding = await ollamaClient.generateEmbedding(doc.summary);
+                        const realSimilarity = cosineSimilarity(queryEmbedding, summaryEmbedding);
+                        console.log(`   📄 ${doc.title}: similarity = ${(realSimilarity * 100).toFixed(1)}%`);
+
+                        searchResults.push({
+                          document: doc,
+                          chunk: { content: doc.summary, pageNumber: 1 },
+                          similarity: realSimilarity,
+                          isRelatedDoc: true
+                        });
+                      } catch (embError) {
+                        console.warn(`⚠️ Failed to compute similarity for ${doc.title}:`, embError);
+                        // Fallback: utiliser 0.5 au lieu de 0.7 (indique incertitude)
+                        searchResults.push({
+                          document: doc,
+                          chunk: { content: doc.summary, pageNumber: 1 },
+                          similarity: 0.5,
+                          isRelatedDoc: true
+                        });
+                      }
+                    }
+                  }
+                } catch (queryEmbError) {
+                  console.warn('⚠️ Failed to generate query embedding for graph docs:', queryEmbError);
+                  // Fallback: ajouter sans similarité calculée
+                  relatedDocuments.forEach(doc => {
+                    if (doc.summary) {
+                      searchResults.push({
+                        document: doc,
+                        chunk: { content: doc.summary, pageNumber: 1 },
+                        similarity: 0.5, // Score indiquant incertitude
+                        isRelatedDoc: true
+                      });
+                    }
                   });
                 }
-              });
+              } else {
+                // Pas d'OllamaClient, utiliser le fallback
+                console.warn('⚠️ No OllamaClient available for similarity computation');
+                relatedDocuments.forEach(doc => {
+                  if (doc.summary) {
+                    searchResults.push({
+                      document: doc,
+                      chunk: { content: doc.summary, pageNumber: 1 },
+                      similarity: 0.5, // Score indiquant incertitude
+                      isRelatedDoc: true
+                    });
+                  }
+                });
+              }
             }
           }
         }

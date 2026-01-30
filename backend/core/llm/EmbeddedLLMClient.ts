@@ -171,7 +171,13 @@ export class EmbeddedLLMClient {
       `Tu es un assistant académique spécialisé dans l'analyse de documents de recherche.
 Tu réponds de manière précise et avec des citations à l'appui, en te basant uniquement sur les sources fournies.
 Cite toujours tes sources avec le format (Auteur, Année, p. X).
-Si les sources ne contiennent pas l'information demandée, dis-le clairement.`;
+Si les sources ne contiennent pas l'information demandée, dis-le clairement.
+
+IMPORTANT concernant les scores de pertinence:
+- Chaque source est accompagnée d'un score de pertinence (0-100%).
+- Priorise les sources avec une pertinence élevée (>50%) dans ta réponse.
+- Sois prudent avec les sources de faible pertinence (<30%) - elles peuvent être moins fiables pour la question posée.
+- Les sources sont triées par pertinence décroissante.`;
 
     let contextSection = '';
 
@@ -180,15 +186,20 @@ Si les sources ne contiennent pas l'information demandée, dis-le clairement.`;
       contextSection += `\n\nContexte du projet:\n${projectContext}`;
     }
 
-    // Ajouter les sources documentaires
+    // Ajouter les sources documentaires triées par pertinence
     if (sources.length > 0) {
-      contextSection += '\n\nSources documentaires:';
-      sources.forEach((source, idx) => {
+      contextSection += '\n\nSources documentaires (triées par pertinence décroissante):';
+
+      // Trier les sources par pertinence décroissante
+      const sortedSources = [...sources].sort((a, b) => b.similarity - a.similarity);
+
+      sortedSources.forEach((source, idx) => {
         const doc = source.document;
         const ref = doc.author
           ? `${doc.author}${doc.year ? ` (${doc.year})` : ''}`
           : doc.title;
-        contextSection += `\n\n[Source ${idx + 1}: ${ref}, p. ${source.chunk.pageNumber}]\n${source.chunk.content}`;
+        const relevancePercent = Math.round(source.similarity * 100);
+        contextSection += `\n\n[Source ${idx + 1} - Pertinence: ${relevancePercent}% - ${ref}, p. ${source.chunk.pageNumber}]\n${source.chunk.content}`;
       });
     }
 
