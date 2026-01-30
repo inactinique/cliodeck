@@ -680,10 +680,20 @@ export const useBibliographyStore = create<BibliographyState>((set, get) => ({
         throw new Error('Attachment not found in citation');
       }
 
-      // Get Zotero config
+      // Get Zotero credentials from global config (userId, apiKey only)
       const zoteroConfig = await window.electron.config.get('zotero');
       if (!zoteroConfig || !zoteroConfig.userId || !zoteroConfig.apiKey) {
         throw new Error('Zotero not configured. Please configure Zotero in Settings.');
+      }
+
+      // Get groupId from project config (not global config)
+      let groupId: string | undefined;
+      try {
+        const projectConfig = await window.electron.project.getConfig(`${projectPath}/project.json`);
+        groupId = projectConfig?.zotero?.groupId || undefined;
+        console.log(`📁 Using project groupId for download: ${groupId || '(personal library)'}`);
+      } catch (configError) {
+        console.warn('⚠️ Could not load project config for groupId:', configError);
       }
 
       console.log(`📥 Downloading PDF from Zotero: ${attachment.filename}`);
@@ -692,7 +702,7 @@ export const useBibliographyStore = create<BibliographyState>((set, get) => ({
       const downloadResult = await window.electron.zotero.downloadPDF({
         userId: zoteroConfig.userId,
         apiKey: zoteroConfig.apiKey,
-        groupId: zoteroConfig.groupId || undefined,
+        groupId,
         attachmentKey: attachment.key,
         filename: attachment.filename,
         targetDirectory: projectPath,
@@ -778,10 +788,20 @@ export const useBibliographyStore = create<BibliographyState>((set, get) => ({
     try {
       const { citations } = get();
 
-      // Get Zotero config
+      // Get Zotero credentials from global config (userId, apiKey only)
       const zoteroConfig = await window.electron.config.get('zotero');
       if (!zoteroConfig || !zoteroConfig.userId || !zoteroConfig.apiKey) {
         throw new Error('Zotero not configured. Please configure Zotero in Settings.');
+      }
+
+      // Get groupId from project config (not global config)
+      let groupId: string | undefined;
+      try {
+        const projectConfig = await window.electron.project.getConfig(`${projectPath}/project.json`);
+        groupId = projectConfig?.zotero?.groupId || undefined;
+        console.log(`📁 Using project groupId for batch download: ${groupId || '(personal library)'}`);
+      } catch (configError) {
+        console.warn('⚠️ Could not load project config for groupId:', configError);
       }
 
       // Find citations with Zotero PDFs but no local file
@@ -834,7 +854,7 @@ export const useBibliographyStore = create<BibliographyState>((set, get) => ({
           const downloadResult = await window.electron.zotero.downloadPDF({
             userId: zoteroConfig.userId,
             apiKey: zoteroConfig.apiKey,
-            groupId: zoteroConfig.groupId || undefined,
+            groupId,
             attachmentKey: firstAttachment.key,
             filename: firstAttachment.filename,
             targetDirectory: projectPath,

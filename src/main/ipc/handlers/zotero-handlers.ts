@@ -123,7 +123,12 @@ export function setupZoteroHandlers() {
     filename: string;
     targetDirectory: string;
   }) => {
-    console.log('📞 IPC Call: zotero:download-pdf', { attachmentKey: options.attachmentKey });
+    console.log('📞 IPC Call: zotero:download-pdf', {
+      attachmentKey: options.attachmentKey,
+      userId: options.userId,
+      groupId: options.groupId,
+      hasGroupId: !!options.groupId
+    });
     try {
       const result = await zoteroService.downloadPDF(options);
       console.log('📤 IPC Response: zotero:download-pdf', {

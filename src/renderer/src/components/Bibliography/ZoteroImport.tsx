@@ -39,26 +39,27 @@ export const ZoteroImport: React.FC = () => {
 
   const loadZoteroConfig = async () => {
     try {
-      // Load global Zotero config (userId, apiKey only - groupId is per-project)
+      // Load global Zotero config (userId and apiKey only - groupId is per-project)
       const globalConfig = await window.electron.config.get('zotero');
       if (globalConfig) {
         setUserId(globalConfig.userId || '');
         setApiKey(globalConfig.apiKey || '');
       }
 
-      // Load project-specific Zotero config (groupId, collectionKey)
+      // Load project-specific Zotero config (groupId and collectionKey)
       if (currentProject?.path) {
         const projectFilePath = `${currentProject.path}/project.json`;
         const projectConfig = await window.electron.project.getConfig(projectFilePath);
+        // groupId comes from project config only
         if (projectConfig?.zotero?.groupId) {
           setGroupId(projectConfig.zotero.groupId);
-          console.log('📁 Using project-specific groupId:', projectConfig.zotero.groupId);
+          console.log('📁 Using project groupId:', projectConfig.zotero.groupId);
         } else {
           setGroupId(''); // No groupId = personal library
         }
         if (projectConfig?.zotero?.collectionKey) {
           setSelectedCollection(projectConfig.zotero.collectionKey);
-          console.log('📁 Using project-specific collectionKey:', projectConfig.zotero.collectionKey);
+          console.log('📁 Using project collectionKey:', projectConfig.zotero.collectionKey);
         } else {
           setSelectedCollection('');
         }

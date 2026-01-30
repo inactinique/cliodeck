@@ -207,6 +207,8 @@ export class ZoteroAPI {
    */
   async getItem(itemKey: string): Promise<ZoteroItem> {
     const url = `${this.getLibraryPrefix()}/items/${itemKey}`;
+    console.log(`🔍 getItem URL: ${url}`);
+    console.log(`   Config: userId=${this.config.userId}, groupId=${this.config.groupId || 'none'}`);
     const response = await this.makeRequest(url);
     return response as ZoteroItem;
   }
@@ -368,9 +370,16 @@ export class ZoteroAPI {
     const children = await this.getItemChildren(itemKey);
 
     // Filter only PDF attachments and cast to ZoteroAttachment
-    return children.filter((child) => {
+    const attachments = children.filter((child) => {
       return child.data.itemType === 'attachment';
     }) as ZoteroAttachment[];
+
+    // Log attachment info for debugging
+    for (const att of attachments) {
+      console.log(`📎 Attachment: key=${att.key}, linkMode=${att.data.linkMode}, filename=${att.data.filename}`);
+    }
+
+    return attachments;
   }
 
   /**
@@ -391,7 +400,21 @@ export class ZoteroAPI {
     itemKey: string,
     savePath: string
   ): Promise<{ filename: string; size: number }> {
+    // First, get attachment info to check linkMode
+    const attachmentInfo = await this.getItem(itemKey);
+    const linkMode = (attachmentInfo.data as any).linkMode;
+    console.log(`📎 Attachment ${itemKey} linkMode: ${linkMode}`);
+
+    // Only imported_file and imported_url can be downloaded via API
+    if (linkMode === 'linked_file') {
+      throw new Error(`Cannot download linked_file attachment via API. File is only available locally at: ${(attachmentInfo.data as any).path}`);
+    }
+    if (linkMode === 'linked_url') {
+      throw new Error(`Cannot download linked_url attachment via API. URL: ${(attachmentInfo.data as any).url}`);
+    }
+
     const url = `${this.getLibraryPrefix()}/items/${itemKey}/file`;
+    console.log(`📥 Downloading from: ${url}`);
 
     const response = await fetch(url, {
       headers: {
@@ -400,6 +423,9 @@ export class ZoteroAPI {
     });
 
     if (!response.ok) {
+      console.error(`❌ Download failed: ${response.status} ${response.statusText}`);
+      console.error(`   URL: ${url}`);
+      console.error(`   Attachment linkMode: ${linkMode}`);
       throw new Error(`Zotero API error: ${response.status} ${response.statusText}`);
     }
 
