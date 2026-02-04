@@ -49,6 +49,42 @@ export class ProjectManager {
     return this.currentProject;
   }
 
+  /**
+   * Reads project metadata without setting it as the current project.
+   * Used for displaying recent projects list without affecting the active project.
+   */
+  async getProjectMetadata(projectPath: string) {
+    try {
+      const content = await readFile(projectPath, 'utf-8');
+      const project: Project = JSON.parse(content);
+      const projectDir = path.dirname(projectPath);
+
+      // Load bibliography if configured (resolve relative path to absolute)
+      if (project.bibliographySource?.filePath) {
+        const bibPath = path.join(projectDir, project.bibliographySource.filePath);
+        if (existsSync(bibPath)) {
+          project.bibliography = bibPath;
+        }
+      }
+
+      // Resolve cslPath to absolute for display
+      if (project.cslPath && !path.isAbsolute(project.cslPath)) {
+        const absoluteCslPath = path.join(projectDir, project.cslPath);
+        if (existsSync(absoluteCslPath)) {
+          project.cslPath = absoluteCslPath;
+        }
+      }
+
+      // Set path dynamically
+      project.path = projectDir;
+
+      return { success: true, project };
+    } catch (error: any) {
+      console.error('❌ Failed to get project metadata:', error);
+      return { success: false, error: error.message };
+    }
+  }
+
   async createProject(data: { name: string; type?: string; path: string; content?: string }) {
     const projectType = data.type || 'article';
 
@@ -60,19 +96,21 @@ export class ProjectManager {
       await mkdir(projectPath, { recursive: true });
     }
 
+    // Issue #13: path is computed dynamically, not stored in project.json
     const project: Project = {
       id: crypto.randomUUID(),
       name: data.name,
       type: projectType,
-      path: projectPath,
+      path: projectPath, // Keep in memory for renderer
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       lastOpenedAt: new Date().toISOString(),
     };
 
-    // Create project.json
+    // Create project.json (without path field - it's computed from file location)
     const projectFile = path.join(projectPath, 'project.json');
-    await writeFile(projectFile, JSON.stringify(project, null, 2));
+    const { path: _excludedPath, ...projectForSave } = project;
+    await writeFile(projectFile, JSON.stringify(projectForSave, null, 2));
 
     // Create markdown file
     const mdFile = path.join(projectPath, 'document.md');
@@ -202,8 +240,10 @@ N'oubliez pas de mentionner les perspectives futures.
 
       // Save update (including migration if needed)
       // IMPORTANT: Save before resolving paths to absolute
+      // Issue #13: Exclude path field from saved file (it's computed from file location)
       if (needsSave) {
-        await writeFile(projectPath, JSON.stringify(project, null, 2));
+        const { path: _excludedPath, ...projectForSave } = project;
+        await writeFile(projectPath, JSON.stringify(projectForSave, null, 2));
       }
 
       // Resolve cslPath to absolute for runtime use (after saving)
@@ -218,6 +258,10 @@ N'oubliez pas de mentionner les perspectives futures.
       }
 
       configManager.addRecentProject(projectPath);
+
+      // Issue #13: Always set path dynamically from projectDir (not from file)
+      // This ensures paths are always correct regardless of synchronization
+      project.path = projectDir;
 
       // Store current project
       this.currentProject = project;
@@ -249,8 +293,9 @@ N'oubliez pas de mentionner les perspectives futures.
         project.bibliography = data.bibliography;
       }
 
-      // Sauvegarder le projet
-      await writeFile(data.path, JSON.stringify(project, null, 2));
+      // Sauvegarder le projet (Issue #13: exclure le champ path)
+      const { path: _excludedPath, ...projectForSave } = project;
+      await writeFile(data.path, JSON.stringify(projectForSave, null, 2));
 
       // Sauvegarder le markdown
       const mdFile = path.join(path.dirname(data.path), 'document.md');
@@ -313,7 +358,9 @@ N'oubliez pas de mentionner les perspectives futures.
 
       project.updatedAt = new Date().toISOString();
 
-      await writeFile(data.projectPath, JSON.stringify(project, null, 2));
+      // Issue #13: Exclude path field from saved file
+      const { path: _excludedPath, ...projectForSave } = project;
+      await writeFile(data.projectPath, JSON.stringify(projectForSave, null, 2));
 
       console.log('✅ Bibliography source configured:', data.type);
       return { success: true };
@@ -361,11 +408,14 @@ N'oubliez pas de mentionner les perspectives futures.
         updatedAt: new Date().toISOString(),
       };
 
-      await writeFile(projectPath, JSON.stringify(updatedProject, null, 2));
+      // Issue #13: Exclude path field from saved file (it's computed from file location)
+      const { path: _excludedPath, ...projectForSave } = updatedProject;
+      await writeFile(projectPath, JSON.stringify(projectForSave, null, 2));
       console.log('✅ Project config updated:', projectPath);
 
-      // Update current project if it's the same
+      // Update current project if it's the same (keep path in memory)
       if (this.currentProjectPath && projectPath.startsWith(this.currentProjectPath)) {
+        updatedProject.path = this.currentProjectPath;
         this.currentProject = updatedProject;
       }
 
@@ -429,7 +479,9 @@ N'oubliez pas de mentionner les perspectives futures.
       project.cslPath = relativeCslPath;
       project.updatedAt = new Date().toISOString();
 
-      await writeFile(data.projectPath, JSON.stringify(project, null, 2));
+      // Issue #13: Exclude path field from saved file
+      const { path: _excludedPath, ...projectForSave } = project;
+      await writeFile(data.projectPath, JSON.stringify(projectForSave, null, 2));
 
       console.log('✅ CSL path configured:', relativeCslPath);
       // Return the absolute path for the UI

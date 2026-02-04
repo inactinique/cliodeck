@@ -61,6 +61,8 @@ export const ChatSendSchema = z.object({
       additionalGraphDocs: z.number().min(0).max(10).optional(),
       // Collection filtering (filter RAG by Zotero collections)
       collectionKeys: z.array(z.string()).optional(),
+      // Issue #16: Document filtering (filter RAG by specific document IDs)
+      documentIds: z.array(z.string()).optional(),
       // Source type selection (primary = Tropy archives, secondary = PDFs, both = all)
       sourceType: z.enum(['secondary', 'primary', 'both']).optional(),
       // Provider selection

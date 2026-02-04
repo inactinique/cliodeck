@@ -155,12 +155,13 @@ export const useChatStore = create<ChatState>((set, get) => ({
       });
 
       // Call IPC to send chat message with context enabled and RAG parameters
-      // Map selectedCollectionKeys to collectionKeys for IPC
-      const { selectedCollectionKeys, ...otherRagParams } = ragParams;
+      // Map selectedCollectionKeys and selectedDocumentIds to IPC format
+      const { selectedCollectionKeys, selectedDocumentIds, ...otherRagParams } = ragParams;
       const ipcOptions = {
         context: true,
         ...otherRagParams,
         collectionKeys: selectedCollectionKeys?.length > 0 ? selectedCollectionKeys : undefined,
+        documentIds: selectedDocumentIds?.length > 0 ? selectedDocumentIds : undefined, // Issue #16
       };
       logger.ipc('chat.send', { query, ipcOptions });
       const result = await window.electron.chat.send(query, ipcOptions);

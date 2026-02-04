@@ -131,7 +131,11 @@
     "autoSaveHelp": "Automatically saves the document after a period of inactivity",
     "autoSaveDelay": "Auto-save delay",
     "autoSaveDelayHelp": "Time in seconds before auto-saving after the last edit",
-    "autoSaveDelaySeconds": "{{seconds}} seconds"
+    "autoSaveDelaySeconds": "{{seconds}} seconds",
+    "defaultEditorMode": "Default editor",
+    "defaultEditorModeHelp": "Choose the editor displayed when opening a document",
+    "modeWysiwyg": "Visual (Milkdown)",
+    "modeSource": "Source (Monaco)"
   },
   "ui": {
     "title": "Appearance",

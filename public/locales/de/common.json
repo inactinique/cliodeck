@@ -131,7 +131,11 @@
     "autoSaveHelp": "Speichert das Dokument automatisch nach einer Inaktivitätsperiode",
     "autoSaveDelay": "Verzögerung beim automatischen Speichern",
     "autoSaveDelayHelp": "Zeit in Sekunden vor dem automatischen Speichern nach der letzten Bearbeitung",
-    "autoSaveDelaySeconds": "{{seconds}} Sekunden"
+    "autoSaveDelaySeconds": "{{seconds}} Sekunden",
+    "defaultEditorMode": "Standard-Editor",
+    "defaultEditorModeHelp": "Wählen Sie den Editor, der beim Öffnen eines Dokuments angezeigt wird",
+    "modeWysiwyg": "Visuell (Milkdown)",
+    "modeSource": "Quellcode (Monaco)"
   },
   "ui": {
     "title": "Benutzeroberfläche",

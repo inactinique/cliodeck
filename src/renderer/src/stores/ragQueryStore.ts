@@ -24,6 +24,9 @@ export interface RAGQueryParams {
   // Collection filtering (Zotero collections)
   selectedCollectionKeys: string[]; // Empty = all collections (no filter)
 
+  // Document filtering (Issue #16: filter by specific documents)
+  selectedDocumentIds: string[]; // Empty = all documents (no filter)
+
   // Advanced parameters
   temperature: number;
   top_p: number;
@@ -50,6 +53,14 @@ export interface AvailableCollection {
   level?: number; // For hierarchical display indentation
 }
 
+// Issue #16: Available document for filtering
+export interface AvailableDocument {
+  id: string;
+  title: string;
+  author?: string;
+  year?: string;
+}
+
 interface RAGQueryState {
   // Query parameters (persisted)
   params: RAGQueryParams;
@@ -62,6 +73,10 @@ interface RAGQueryState {
   availableCollections: AvailableCollection[];
   isLoadingCollections: boolean;
 
+  // Issue #16: Available documents (not persisted, loaded from VectorStore)
+  availableDocuments: AvailableDocument[];
+  isLoadingDocuments: boolean;
+
   // UI state (not persisted)
   isSettingsPanelOpen: boolean;
 
@@ -71,6 +86,8 @@ interface RAGQueryState {
   loadAvailableModels: () => Promise<void>;
   loadAvailableCollections: () => Promise<void>;
   setSelectedCollections: (keys: string[]) => void;
+  loadAvailableDocuments: () => Promise<void>; // Issue #16
+  setSelectedDocuments: (ids: string[]) => void; // Issue #16
   toggleSettingsPanel: () => void;
 }
 
@@ -89,6 +106,9 @@ const DEFAULT_PARAMS: RAGQueryParams = {
 
   // Collection filtering (empty = no filter, search all)
   selectedCollectionKeys: [],
+
+  // Document filtering (Issue #16: empty = no filter, search all)
+  selectedDocumentIds: [],
 
   // Academic preset (from OllamaClient)
   temperature: 0.1,
@@ -136,6 +156,8 @@ export const useRAGQueryStore = create<RAGQueryState>()(
       isLoadingModels: false,
       availableCollections: [],
       isLoadingCollections: false,
+      availableDocuments: [], // Issue #16
+      isLoadingDocuments: false, // Issue #16
       isSettingsPanelOpen: false,
 
       // Actions
@@ -161,6 +183,7 @@ export const useRAGQueryStore = create<RAGQueryState>()(
               numCtx: ragConfig.numCtx || DEFAULT_PARAMS.numCtx,
               sourceType: DEFAULT_PARAMS.sourceType,
               selectedCollectionKeys: DEFAULT_PARAMS.selectedCollectionKeys,
+              selectedDocumentIds: DEFAULT_PARAMS.selectedDocumentIds, // Issue #16
               temperature: DEFAULT_PARAMS.temperature,
               top_p: DEFAULT_PARAMS.top_p,
               top_k: DEFAULT_PARAMS.top_k,
@@ -253,6 +276,60 @@ export const useRAGQueryStore = create<RAGQueryState>()(
       setSelectedCollections: (keys: string[]) => {
         set((state) => ({
           params: { ...state.params, selectedCollectionKeys: keys },
+        }));
+      },
+
+      // Issue #16: Load available documents from VectorStore
+      loadAvailableDocuments: async () => {
+        set({ isLoadingDocuments: true });
+
+        try {
+          console.log('🔄 Loading available documents...');
+          const result = await window.electron.pdf.getAll();
+
+          if (result.success && result.documents) {
+            // Map to AvailableDocument format
+            const documents: AvailableDocument[] = result.documents.map((doc: any) => ({
+              id: doc.id,
+              title: doc.title || 'Untitled',
+              author: doc.author,
+              year: doc.year,
+            }));
+
+            // Sort by author, then title
+            documents.sort((a, b) => {
+              const authorA = a.author || '';
+              const authorB = b.author || '';
+              if (authorA !== authorB) return authorA.localeCompare(authorB);
+              return a.title.localeCompare(b.title);
+            });
+
+            set({
+              availableDocuments: documents,
+              isLoadingDocuments: false,
+            });
+
+            console.log(`✅ Loaded ${documents.length} documents`);
+          } else {
+            console.warn('⚠️  No documents found:', result.error);
+            set({
+              availableDocuments: [],
+              isLoadingDocuments: false,
+            });
+          }
+        } catch (error) {
+          console.warn('⚠️  Could not load documents:', error);
+          set({
+            availableDocuments: [],
+            isLoadingDocuments: false,
+          });
+        }
+      },
+
+      // Issue #16: Set selected documents for filtering
+      setSelectedDocuments: (ids: string[]) => {
+        set((state) => ({
+          params: { ...state.params, selectedDocumentIds: ids },
         }));
       },
 

@@ -16,6 +16,7 @@ export interface EditorSettings {
   fontFamily: string;
   autoSave: boolean;
   autoSaveDelay: number; // in milliseconds
+  defaultEditorMode: 'wysiwyg' | 'source'; // Issue #12: éditeur par défaut
 }
 
 interface EditorState {
@@ -54,6 +55,8 @@ interface EditorState {
   togglePreview: () => void;
   toggleStats: () => void;
   toggleEditorMode: () => void;
+  setEditorMode: (mode: 'wysiwyg' | 'source') => void;
+  initializeEditorMode: () => void; // Issue #12: initialise le mode depuis settings
   setMonacoEditor: (editor: editor.IStandaloneCodeEditor | null) => void;
 
   insertText: (text: string) => void;
@@ -78,6 +81,7 @@ const DEFAULT_SETTINGS: EditorSettings = {
   fontFamily: 'system',
   autoSave: true,
   autoSaveDelay: 3000, // 3 seconds
+  defaultEditorMode: 'wysiwyg', // Issue #12: WYSIWYG par défaut
 };
 
 // MARK: - Store
@@ -198,6 +202,18 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       logger.store('Editor', 'toggleEditorMode', { from: state.editorMode, to: newMode });
       return { editorMode: newMode };
     });
+  },
+
+  setEditorMode: (mode: 'wysiwyg' | 'source') => {
+    logger.store('Editor', 'setEditorMode', { mode });
+    set({ editorMode: mode });
+  },
+
+  initializeEditorMode: () => {
+    const { settings } = get();
+    const mode = settings.defaultEditorMode || 'wysiwyg';
+    logger.store('Editor', 'initializeEditorMode', { mode });
+    set({ editorMode: mode });
   },
 
   setMonacoEditor: (editor: editor.IStandaloneCodeEditor | null) => {

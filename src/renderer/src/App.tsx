@@ -7,6 +7,7 @@ import { ErrorFallback } from './components/ErrorFallback';
 import { useMenuShortcuts } from './hooks/useMenuShortcuts';
 import { useLanguageStore } from './stores/languageStore';
 import { useProjectStore } from './stores/projectStore';
+import { useEditorStore } from './stores/editorStore';
 import { useTheme } from './hooks/useTheme';
 
 function App() {
@@ -19,9 +20,31 @@ function App() {
   // Initialiser la langue
   const initializeLanguage = useLanguageStore((state) => state.initializeLanguage);
   const loadProject = useProjectStore((state) => state.loadProject);
+  const updateEditorSettings = useEditorStore((state) => state.updateSettings);
+  const initializeEditorMode = useEditorStore((state) => state.initializeEditorMode);
 
   useEffect(() => {
     initializeLanguage();
+
+    // Issue #12: Charger les settings éditeur et initialiser le mode par défaut
+    const initEditorSettings = async () => {
+      try {
+        const editorConfig = await window.electron.config.get('editor');
+        if (editorConfig) {
+          updateEditorSettings({
+            fontSize: editorConfig.fontSize,
+            wordWrap: editorConfig.wordWrap,
+            showMinimap: editorConfig.showMinimap,
+            fontFamily: editorConfig.fontFamily,
+            defaultEditorMode: editorConfig.defaultEditorMode || 'wysiwyg',
+          });
+          initializeEditorMode();
+        }
+      } catch (error) {
+        console.error('Failed to load editor settings:', error);
+      }
+    };
+    initEditorSettings();
 
     // Note: Chargement automatique désactivé car peut causer des erreurs au démarrage
     // L'utilisateur doit ouvrir manuellement le projet via File > Open Project
@@ -43,7 +66,7 @@ function App() {
 
     loadLastProject();
     */
-  }, [initializeLanguage, loadProject]);
+  }, [initializeLanguage, loadProject, updateEditorSettings, initializeEditorMode]);
 
   return (
     <ErrorBoundary

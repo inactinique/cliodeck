@@ -59,11 +59,12 @@ export function setupProjectHandlers() {
   });
 
   // Get project metadata without initializing services (for recent projects list)
+  // IMPORTANT: Use getProjectMetadata() to avoid changing currentProject/currentProjectPath
   ipcMain.handle('project:get-metadata', async (_event, path: string) => {
     console.log('📞 IPC Call: project:get-metadata', { path });
     try {
-      // Use loadProject but don't init services - just read metadata
-      const result = await projectManager.loadProject(path);
+      // Use getProjectMetadata to read without affecting current project state
+      const result = await projectManager.getProjectMetadata(path);
       console.log('📤 IPC Response: project:get-metadata', result.success ? 'success' : 'failed');
       return result;
     } catch (error: any) {

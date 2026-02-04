@@ -942,10 +942,12 @@ ${projectContext}
     // Trier les sources par pertinence décroissante
     const sortedSources = [...sources].sort((a, b) => b.similarity - a.similarity);
 
+    // Issue #15: Ne plus afficher les scores de similarité au LLM
+    // Les scores peuvent être trompeurs (multilingue, modèles d'embedding différents)
+    // Le LLM doit évaluer la pertinence par lui-même basé sur le contenu
     sortedSources.forEach((source, index) => {
       const doc = source.document;
       const chunk = source.chunk;
-      const relevancePercent = Math.round(source.similarity * 100);
 
       // Construire la référence bibliographique
       let reference = '';
@@ -959,34 +961,32 @@ ${projectContext}
         reference += ` (${doc.year})`;
       }
 
-      prompt += `\n[Source ${index + 1} - Pertinence: ${relevancePercent}% - ${reference}, p. ${chunk.pageNumber}]\n${chunk.content}\n`;
+      prompt += `\n[Source ${index + 1} - ${reference}, p. ${chunk.pageNumber}]\n${chunk.content}\n`;
     });
 
     prompt += `\nQuestion de l'utilisateur : ${userQuery}
 
 IMPORTANT : Réponds de manière précise et académique en te basant sur les extraits fournis.
-- Privilégie les sources avec un score de pertinence élevé (>50%) pour construire ta réponse
-- Les sources avec une pertinence faible (<30%) peuvent être moins fiables pour cette question
 - Cite TOUJOURS les sources de manière explicite quand tu utilises une information
+- Évalue toi-même la pertinence de chaque extrait par rapport à la question
 
 Pour chaque citation, utilise le format complet avec l'auteur (ou titre si pas d'auteur), l'année ET la page. Exemples :
 - "Selon Smith (2020, p. 45), la question centrale est..."
 - "Cette approche est confirmée par les recherches récentes (Johnson, 2019, p. 12)"
 - "Comme le note l'auteur (Database Meets AI, 2021, p. 8)..."
 
-Liste des sources disponibles (par pertinence décroissante) :`;
+Liste des sources disponibles :`;
 
-    // Ajouter une liste claire des sources à la fin (triées par pertinence)
+    // Ajouter une liste claire des sources à la fin (sans scores)
     sortedSources.forEach((source, index) => {
       const doc = source.document;
-      const relevancePercent = Math.round(source.similarity * 100);
       let ref = '';
       if (doc.author) {
         ref = `${doc.author}${doc.year ? ` (${doc.year})` : ''}`;
       } else {
         ref = `${doc.title}${doc.year ? ` (${doc.year})` : ''}`;
       }
-      prompt += `\n  - Source ${index + 1} (${relevancePercent}%): ${ref}`;
+      prompt += `\n  - Source ${index + 1}: ${ref}`;
     });
 
     prompt += `\n\nSi les extraits ne contiennent pas l'information nécessaire pour répondre à la question, dis-le clairement.`;

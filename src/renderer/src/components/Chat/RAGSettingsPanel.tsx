@@ -3,6 +3,7 @@ import { ChevronDown, ChevronUp, ChevronRight, RotateCcw, Settings, RefreshCw, A
 import { useTranslation } from 'react-i18next';
 import { useRAGQueryStore, type LLMProvider } from '../../stores/ragQueryStore';
 import { CollectionMultiSelect } from './CollectionMultiSelect';
+import { DocumentMultiSelect } from './DocumentMultiSelect';
 import './RAGSettingsPanel.css';
 
 // Model context sizes (mirrors backend/core/llm/OllamaClient.ts)
@@ -64,6 +65,8 @@ export const RAGSettingsPanel: React.FC = () => {
     isLoadingModels,
     availableCollections,
     isLoadingCollections,
+    availableDocuments,
+    isLoadingDocuments,
     isSettingsPanelOpen,
     setParams,
     resetToDefaults,
@@ -71,6 +74,8 @@ export const RAGSettingsPanel: React.FC = () => {
     loadAvailableModels,
     loadAvailableCollections,
     setSelectedCollections,
+    loadAvailableDocuments,
+    setSelectedDocuments,
   } = useRAGQueryStore();
 
   const [showAdvanced, setShowAdvanced] = useState(false);
@@ -132,10 +137,21 @@ export const RAGSettingsPanel: React.FC = () => {
     loadAvailableCollections();
   };
 
+  const handleRefreshDocuments = () => {
+    loadAvailableDocuments();
+  };
+
   // Load collections when panel opens (if not already loaded)
   useEffect(() => {
     if (isSettingsPanelOpen && availableCollections.length === 0 && !isLoadingCollections) {
       loadAvailableCollections();
+    }
+  }, [isSettingsPanelOpen]);
+
+  // Issue #16: Load documents when panel opens (if not already loaded)
+  useEffect(() => {
+    if (isSettingsPanelOpen && availableDocuments.length === 0 && !isLoadingDocuments) {
+      loadAvailableDocuments();
     }
   }, [isSettingsPanelOpen]);
 
@@ -298,6 +314,49 @@ export const RAGSettingsPanel: React.FC = () => {
               {params.selectedCollectionKeys.length === 0
                 ? 'Search will include all documents'
                 : `Search limited to ${params.selectedCollectionKeys.length} collection(s)`}
+            </small>
+          </div>
+          )}
+
+          {/* Issue #16: Document Filter (only for secondary sources) */}
+          {(params.sourceType === 'secondary' || params.sourceType === 'both') && (
+          <div className="setting-group">
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <label htmlFor="document-filter">
+                Filter by Document
+                {isLoadingDocuments && <span className="loading-indicator"> (loading...)</span>}
+              </label>
+              <button
+                onClick={handleRefreshDocuments}
+                disabled={isLoadingDocuments}
+                title="Refresh documents"
+                style={{
+                  padding: '4px 6px',
+                  fontSize: '11px',
+                  background: 'var(--surface-variant)',
+                  border: '1px solid var(--border-color)',
+                  borderRadius: '3px',
+                  cursor: isLoadingDocuments ? 'not-allowed' : 'pointer',
+                  opacity: isLoadingDocuments ? 0.5 : 1,
+                  display: 'flex',
+                  alignItems: 'center',
+                  color: 'var(--text-secondary)',
+                }}
+              >
+                <RefreshCw size={12} />
+              </button>
+            </div>
+            <DocumentMultiSelect
+              documents={availableDocuments}
+              selectedIds={params.selectedDocumentIds}
+              onChange={setSelectedDocuments}
+              placeholder="All documents (no filter)"
+              disabled={isLoadingDocuments}
+            />
+            <small className="setting-hint">
+              {params.selectedDocumentIds.length === 0
+                ? 'Search will include all indexed documents'
+                : `Search limited to ${params.selectedDocumentIds.length} document(s)`}
             </small>
           </div>
           )}

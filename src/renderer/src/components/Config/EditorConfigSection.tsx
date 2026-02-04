@@ -7,6 +7,7 @@ export interface EditorConfig {
   wordWrap: boolean;
   showMinimap: boolean;
   fontFamily: string;
+  defaultEditorMode: 'wysiwyg' | 'source';
 }
 
 interface EditorConfigSectionProps {
@@ -114,6 +115,24 @@ export const EditorConfigSection: React.FC<EditorConfigSectionProps> = ({ config
                 Les polices système sont toujours disponibles. Les autres nécessitent d'être installées sur votre système.
               </small>
             </div>
+          </div>
+
+          {/* Default Editor Mode */}
+          <div className="config-field">
+            <label className="config-label">
+              {t('editor.defaultEditorMode')}
+              <span className="config-help">
+                {t('editor.defaultEditorModeHelp')}
+              </span>
+            </label>
+            <select
+              value={config.defaultEditorMode || 'wysiwyg'}
+              onChange={(e) => handleFieldChange('defaultEditorMode', e.target.value as 'wysiwyg' | 'source')}
+              className="config-select"
+            >
+              <option value="wysiwyg">{t('editor.modeWysiwyg')}</option>
+              <option value="source">{t('editor.modeSource')}</option>
+            </select>
           </div>
         </div>
       </div>

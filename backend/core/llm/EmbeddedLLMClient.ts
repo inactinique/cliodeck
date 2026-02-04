@@ -187,8 +187,9 @@ IMPORTANT concernant les scores de pertinence:
     }
 
     // Ajouter les sources documentaires triées par pertinence
+    // Issue #15: Ne plus afficher les scores de similarité au LLM
     if (sources.length > 0) {
-      contextSection += '\n\nSources documentaires (triées par pertinence décroissante):';
+      contextSection += '\n\nSources documentaires:';
 
       // Trier les sources par pertinence décroissante
       const sortedSources = [...sources].sort((a, b) => b.similarity - a.similarity);
@@ -198,8 +199,7 @@ IMPORTANT concernant les scores de pertinence:
         const ref = doc.author
           ? `${doc.author}${doc.year ? ` (${doc.year})` : ''}`
           : doc.title;
-        const relevancePercent = Math.round(source.similarity * 100);
-        contextSection += `\n\n[Source ${idx + 1} - Pertinence: ${relevancePercent}% - ${ref}, p. ${source.chunk.pageNumber}]\n${source.chunk.content}`;
+        contextSection += `\n\n[Source ${idx + 1} - ${ref}, p. ${source.chunk.pageNumber}]\n${source.chunk.content}`;
       });
     }
 

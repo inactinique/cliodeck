@@ -51,6 +51,8 @@ export function setupChatHandlers() {
         sourceType: validatedData.options?.sourceType || 'both',
         // Collection filtering (from RAG settings panel)
         collectionKeys: validatedData.options?.collectionKeys,
+        // Issue #16: Document filtering (from RAG settings panel)
+        documentIds: validatedData.options?.documentIds,
         // Provider selection (from RAG settings panel)
         provider: validatedData.options?.provider || llmConfig.generationProvider || 'auto',
         // Per-query parameters (from RAG settings panel)
