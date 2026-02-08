@@ -706,7 +706,10 @@
     "license": "License",
     "description": "This app was designed by",
     "developedWith": "and developed thanks to Claude Code. It is a vibe coding experiment and is delivered \"as is\", use it at your own risks.",
-    "githubRepo": "GitHub Repository"
+    "githubRepo": "GitHub Repository",
+    "openSourceCredits": "Open source software used",
+    "libraries": "libraries",
+    "creditsIntro": "ClioDeck is made possible by the following open source projects:"
   },
   "journal": {
     "title": "Research Journal",

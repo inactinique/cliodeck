@@ -632,7 +632,10 @@
     "license": "Lizenz",
     "description": "Diese App wurde entwickelt von",
     "developedWith": "und dank Claude Code entwickelt. Es ist ein Vibe-Coding-Experiment und wird \"so wie es ist\" geliefert, verwenden Sie es auf eigenes Risiko.",
-    "githubRepo": "GitHub-Repository"
+    "githubRepo": "GitHub-Repository",
+    "openSourceCredits": "Verwendete Open-Source-Software",
+    "libraries": "Bibliotheken",
+    "creditsIntro": "ClioDeck wird durch die folgenden Open-Source-Projekte ermöglicht:"
   },
   "journal": {
     "title": "Forschungstagebuch",
