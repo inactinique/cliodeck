@@ -510,17 +510,18 @@ class ChatService {
       // Build system prompt based on configuration (Phase 2.3 + Modes)
       let systemPrompt: string;
       const systemPromptLanguage = options.systemPromptLanguage || 'fr';
+      const useCustomPrompt = options.useCustomSystemPrompt || false;
+      const customPrompt = options.customSystemPrompt;
       if (options.noSystemPrompt) {
         // Free mode: no system prompt
         systemPrompt = '';
       } else {
-        const useCustomPrompt = options.useCustomSystemPrompt || false;
-        const customPrompt = options.customSystemPrompt;
         systemPrompt = getSystemPrompt(systemPromptLanguage, useCustomPrompt, customPrompt);
       }
 
       console.log('🤖 [SYSTEM PROMPT] Configuration:', {
         language: systemPromptLanguage,
+        noSystemPrompt: options.noSystemPrompt || false,
         useCustom: useCustomPrompt,
         hasCustom: !!customPrompt,
         promptPreview: systemPrompt.substring(0, 100) + '...',
