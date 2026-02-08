@@ -43,6 +43,10 @@ interface EnrichedRAGOptions {
 
   // Context compression
   enableContextCompression?: boolean;    // Enable context compression (default: true)
+
+  // Mode tracking
+  modeId?: string;                      // Active mode ID for history logging
+  noSystemPrompt?: boolean;             // Free mode: skip system prompt entirely
 }
 
 // Type pour l'explication du RAG (Explainable AI)
@@ -503,11 +507,17 @@ class ChatService {
       // Récupérer le contexte du projet
       const projectContext = pdfService.getProjectContext();
 
-      // Build system prompt based on configuration (Phase 2.3)
+      // Build system prompt based on configuration (Phase 2.3 + Modes)
+      let systemPrompt: string;
       const systemPromptLanguage = options.systemPromptLanguage || 'fr';
-      const useCustomPrompt = options.useCustomSystemPrompt || false;
-      const customPrompt = options.customSystemPrompt;
-      const systemPrompt = getSystemPrompt(systemPromptLanguage, useCustomPrompt, customPrompt);
+      if (options.noSystemPrompt) {
+        // Free mode: no system prompt
+        systemPrompt = '';
+      } else {
+        const useCustomPrompt = options.useCustomSystemPrompt || false;
+        const customPrompt = options.customSystemPrompt;
+        systemPrompt = getSystemPrompt(systemPromptLanguage, useCustomPrompt, customPrompt);
+      }
 
       console.log('🤖 [SYSTEM PROMPT] Configuration:', {
         language: systemPromptLanguage,
@@ -631,6 +641,7 @@ class ChatService {
           repeat_penalty: options.repeat_penalty,
           useGraphContext: options.useGraphContext || false,
           includeSummaries: options.includeSummaries || false,
+          modeId: options.modeId || 'default-assistant',
         };
 
         // Log user message with query params

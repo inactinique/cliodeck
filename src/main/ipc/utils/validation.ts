@@ -78,6 +78,11 @@ export const ChatSendSchema = z.object({
       systemPromptLanguage: z.enum(['fr', 'en']).optional(),
       useCustomSystemPrompt: z.boolean().optional(),
       customSystemPrompt: z.string().optional(),
+      // Context compression override (from mode)
+      enableContextCompression: z.boolean().optional(),
+      // Mode tracking
+      modeId: z.string().optional(),
+      noSystemPrompt: z.boolean().optional(),
     })
     .optional(),
 });

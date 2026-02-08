@@ -56,6 +56,7 @@ export interface ChatMessage {
   ragUsed?: boolean; // true if RAG context was used for this response
   isError?: boolean; // true if this message is an error response
   explanation?: RAGExplanation; // RAG explanation for Explainable AI
+  modeId?: string; // Mode active when this message was sent/received
 }
 
 export interface ChatSource {
@@ -98,11 +99,20 @@ export const useChatStore = create<ChatState>((set, get) => ({
   selectedDocumentIds: [],
 
   addUserMessage: (content: string) => {
+    // Import modeStore lazily to get active mode ID
+    let modeId: string | undefined;
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      const { useModeStore } = require('./modeStore');
+      modeId = useModeStore.getState().activeModeId;
+    } catch { /* modeStore not yet available */ }
+
     const userMessage: ChatMessage = {
       id: crypto.randomUUID(),
       role: 'user',
       content,
       timestamp: new Date(),
+      modeId,
     };
 
     set((state) => ({
@@ -111,6 +121,12 @@ export const useChatStore = create<ChatState>((set, get) => ({
   },
 
   addAssistantMessage: (content: string, sources?: ChatSource[], ragUsed?: boolean, isError?: boolean, explanation?: RAGExplanation) => {
+    let modeId: string | undefined;
+    try {
+      const { useModeStore } = require('./modeStore');
+      modeId = useModeStore.getState().activeModeId;
+    } catch { /* modeStore not yet available */ }
+
     const assistantMessage: ChatMessage = {
       id: crypto.randomUUID(),
       role: 'assistant',
@@ -120,6 +136,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
       ragUsed,
       isError,
       explanation,
+      modeId,
     };
 
     set((state) => ({
@@ -154,15 +171,44 @@ export const useChatStore = create<ChatState>((set, get) => ({
         set({ currentStreamingMessage: streamedContent });
       });
 
+      // Get active mode for system prompt override
+      const { useModeStore } = await import('./modeStore');
+      const activeMode = useModeStore.getState().activeMode;
+      const activeModeId = useModeStore.getState().activeModeId;
+
       // Call IPC to send chat message with context enabled and RAG parameters
       // Map selectedCollectionKeys and selectedDocumentIds to IPC format
       const { selectedCollectionKeys, selectedDocumentIds, ...otherRagParams } = ragParams;
-      const ipcOptions = {
+      const ipcOptions: Record<string, any> = {
         context: true,
         ...otherRagParams,
         collectionKeys: selectedCollectionKeys?.length > 0 ? selectedCollectionKeys : undefined,
         documentIds: selectedDocumentIds?.length > 0 ? selectedDocumentIds : undefined, // Issue #16
+        modeId: activeModeId,
       };
+
+      // Apply mode system prompt overrides
+      if (activeMode && activeModeId === 'free-mode') {
+        // Free mode: no system prompt at all
+        ipcOptions.noSystemPrompt = true;
+      } else if (activeMode && activeModeId !== 'default-assistant') {
+        // Non-default mode: inject mode's system prompt
+        const lang = ragParams.systemPromptLanguage || 'fr';
+        const modePrompt = activeMode.systemPrompt[lang];
+        if (modePrompt) {
+          ipcOptions.useCustomSystemPrompt = true;
+          ipcOptions.customSystemPrompt = modePrompt;
+        }
+      }
+      // default-assistant: uses the existing SystemPrompts.ts defaults (no override needed)
+
+      // Apply mode RAG overrides that aren't in ragQueryStore params
+      if (activeMode) {
+        const rag = activeMode.ragOverrides;
+        if (rag.useGraphContext !== undefined) ipcOptions.useGraphContext = rag.useGraphContext;
+        if (rag.enableContextCompression !== undefined) ipcOptions.enableContextCompression = rag.enableContextCompression;
+      }
+
       logger.ipc('chat.send', { query, ipcOptions });
       const result = await window.electron.chat.send(query, ipcOptions);
       logger.ipc('chat.send response', result);

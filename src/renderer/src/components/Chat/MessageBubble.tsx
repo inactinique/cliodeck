@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { marked } from 'marked';
 import { ChatMessage, RAGExplanation } from '../../stores/chatStore';
+import { useModeStore } from '../../stores/modeStore';
 import { SourceCard } from './SourceCard';
 import './MessageBubble.css';
 
@@ -11,9 +12,18 @@ interface MessageBubbleProps {
 }
 
 export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isStreaming = false }) => {
-  const { t } = useTranslation('common');
+  const { t, i18n } = useTranslation('common');
+  const lang = (i18n.language?.substring(0, 2) as 'fr' | 'en') || 'fr';
   const isUser = message.role === 'user';
   const [showExplanation, setShowExplanation] = useState(false);
+  const { modes } = useModeStore();
+
+  // Find mode name for badge display
+  const modeName = useMemo(() => {
+    if (!message.modeId || message.modeId === 'default-assistant') return null;
+    const mode = modes.find((m) => m.metadata.id === message.modeId);
+    return mode?.metadata.name[lang] || message.modeId;
+  }, [message.modeId, modes, lang]);
 
   // Parse markdown for assistant messages
   const htmlContent = useMemo(() => {
@@ -44,6 +54,9 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isStreami
         <span className="message-role">{isUser ? t('chat.you') : t('chat.assistant')}</span>
         <span className="message-time">{formatTime(message.timestamp)}</span>
         {isStreaming && <span className="streaming-indicator">●</span>}
+        {!isUser && modeName && (
+          <span className="message-mode-badge">{modeName}</span>
+        )}
       </div>
 
       <div className="message-content">

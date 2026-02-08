@@ -6,6 +6,7 @@ import { useBibliographyStore } from '../../stores/bibliographyStore';
 import { MessageList } from './MessageList';
 import { MessageInput } from './MessageInput';
 import { RAGSettingsPanel } from './RAGSettingsPanel';
+import { ModeSelector } from './ModeSelector';
 import { HelperTooltip } from '../Methodology/HelperTooltip';
 import './ChatInterface.css';
 import { logger } from '../../utils/logger';
@@ -97,6 +98,7 @@ export const ChatInterface: React.FC = () => {
             onLearnMore={handleLearnMore}
           />
         </div>
+        <ModeSelector />
         <button
           className="toolbar-btn"
           onClick={handleClear}

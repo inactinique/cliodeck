@@ -72,12 +72,18 @@ export function setupEditorHandlers() {
     }
   );
 
-  ipcMain.handle('editor:insert-text', async (event, text: string) => {
-    console.log('📞 IPC Call: editor:insert-text', { textLength: text.length });
+  ipcMain.handle('editor:insert-text', async (event, text: string, metadata?: { modeId?: string; model?: string }) => {
+    console.log('📞 IPC Call: editor:insert-text', { textLength: text.length, metadata });
+    // Wrap text with cliodeck-gen provenance tags if mode metadata is provided
+    let wrappedText = text;
+    if (metadata?.modeId) {
+      const date = new Date().toISOString();
+      wrappedText = `<!-- cliodeck-gen mode="${metadata.modeId}" model="${metadata.model || 'unknown'}" date="${date}" -->\n${text}\n<!-- /cliodeck-gen -->`;
+    }
     // Send to renderer for insertion into editor
     const window = BrowserWindow.fromWebContents(event.sender);
     if (window) {
-      window.webContents.send('editor:insert-text-command', text);
+      window.webContents.send('editor:insert-text-command', wrappedText);
       console.log('📤 IPC Response: editor:insert-text - command sent');
     }
     return successResponse();

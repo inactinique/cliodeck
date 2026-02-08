@@ -44,7 +44,7 @@ export function setupChatHandlers() {
         context: validatedData.options?.context,
         topK: validatedData.options?.topK || ragConfig.topK,
         includeSummaries: ragConfig.includeSummaries || false,
-        useGraphContext: ragConfig.useGraphContext || false,
+        useGraphContext: validatedData.options?.useGraphContext ?? ragConfig.useGraphContext ?? false,
         additionalGraphDocs: ragConfig.additionalGraphDocs || 3,
         window,
         // Source type selection (primary = Tropy archives, secondary = PDFs, both = all)
@@ -68,7 +68,10 @@ export function setupChatHandlers() {
         useCustomSystemPrompt: validatedData.options?.useCustomSystemPrompt || ragConfig.useCustomSystemPrompt || false,
         customSystemPrompt: validatedData.options?.customSystemPrompt || ragConfig.customSystemPrompt,
         // Context compression
-        enableContextCompression: ragConfig.enableContextCompression !== false, // Default: true
+        enableContextCompression: validatedData.options?.enableContextCompression ?? (ragConfig.enableContextCompression !== false),
+        // Mode tracking
+        modeId: validatedData.options?.modeId,
+        noSystemPrompt: validatedData.options?.noSystemPrompt,
       };
 
       console.log('🔍 [RAG DEBUG] Enriched options:', enrichedOptions);

@@ -16,6 +16,7 @@ import { setupZoteroHandlers } from './handlers/zotero-handlers.js';
 import { setupExportHandlers } from './handlers/export-handlers.js';
 import { setupCorpusHandlers } from './handlers/corpus-handlers.js';
 import { setupHistoryHandlers } from './handlers/history-handlers.js';
+import { setupModeHandlers } from './handlers/mode-handlers.js';
 import { setupTopicModelingHandlers } from './handlers/topic-modeling-handlers.js';
 import { setupEmbeddedLLMHandlers } from './handlers/embedded-llm-handlers.js';
 import { setupSimilarityHandlers } from './handlers/similarity-handlers.js';
@@ -56,6 +57,7 @@ export function setupIPCHandlers() {
   setupExportHandlers();
   setupCorpusHandlers();
   setupHistoryHandlers();
+  setupModeHandlers();
   setupTopicModelingHandlers();
   setupEmbeddedLLMHandlers();
   setupSimilarityHandlers();

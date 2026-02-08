@@ -5,6 +5,7 @@ import { ipcMain } from 'electron';
 import { configManager } from '../../services/config-manager.js';
 import { projectManager } from '../../services/project-manager.js';
 import { historyService } from '../../services/history-service.js';
+import { modeService } from '../../services/mode-service.js';
 import { pdfService } from '../../services/pdf-service.js';
 import { tropyService } from '../../services/tropy-service.js';
 import { successResponse, errorResponse } from '../utils/error-handler.js';
@@ -37,6 +38,7 @@ export function setupProjectHandlers() {
         if (projectPath) {
           console.log('🔧 Initializing services for new project:', projectPath);
           await historyService.init(projectPath);
+          modeService.init(projectPath);
 
           // Initialize PDF service with rebuild progress callback
           await pdfService.init(projectPath, (progress) => {
@@ -84,6 +86,7 @@ export function setupProjectHandlers() {
         if (projectPath) {
           console.log('🔧 Initializing services for project:', projectPath);
           await historyService.init(projectPath);
+          modeService.init(projectPath);
 
           // Initialize PDF service with rebuild progress callback
           await pdfService.init(projectPath, (progress) => {
@@ -108,6 +111,9 @@ export function setupProjectHandlers() {
   ipcMain.handle('project:close', async () => {
     console.log('📞 IPC Call: project:close');
     try {
+      // Close Mode Service (reset active mode)
+      modeService.close();
+
       // Close History Service (ends session and closes DB)
       historyService.close();
 

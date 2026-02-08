@@ -75,6 +75,7 @@ export interface ChatMessage {
   content: string;
   sources?: any[];
   timestamp: Date;
+  modeId?: string;
 }
 
 export interface HistoryStatistics {
@@ -288,8 +289,32 @@ export class HistoryManager {
       console.log('📝 History database schema version set to 1');
     }
 
-    // Future migrations would go here
-    // if (currentVersion < 2) { ... }
+    // Migration v2: Add mode_id to chat_messages and ai_operations
+    if (currentVersion < 2) {
+      try {
+        // Check if column already exists before adding
+        const chatColumns = this.db.pragma('table_info(chat_messages)') as any[];
+        if (!chatColumns.some((c: any) => c.name === 'mode_id')) {
+          this.db.exec('ALTER TABLE chat_messages ADD COLUMN mode_id TEXT');
+          console.log('📝 Migration v2: Added mode_id to chat_messages');
+        }
+
+        const aiColumns = this.db.pragma('table_info(ai_operations)') as any[];
+        if (!aiColumns.some((c: any) => c.name === 'mode_id')) {
+          this.db.exec('ALTER TABLE ai_operations ADD COLUMN mode_id TEXT');
+          console.log('📝 Migration v2: Added mode_id to ai_operations');
+        }
+
+        this.db.exec('CREATE INDEX IF NOT EXISTS idx_chat_mode ON chat_messages(mode_id)');
+
+        this.db
+          .prepare('INSERT OR REPLACE INTO history_metadata (key, value) VALUES (?, ?)')
+          .run('schema_version', '2');
+        console.log('📝 History database migrated to schema version 2');
+      } catch (error) {
+        console.error('❌ Migration v2 error:', error);
+      }
+    }
   }
 
   // ==========================================================================
@@ -505,15 +530,16 @@ export class HistoryManager {
   // Chat Messages
   // ==========================================================================
 
-  logChatMessage(message: Omit<ChatMessage, 'id' | 'sessionId' | 'timestamp'>): string {
+  logChatMessage(message: Omit<ChatMessage, 'id' | 'sessionId' | 'timestamp'> & { modeId?: string; queryParams?: any }): string {
     if (!this.currentSessionId) return '';
 
     const msgId = randomUUID();
     const now = new Date().toISOString();
+    const modeId = message.modeId || message.queryParams?.modeId || null;
 
     const stmt = this.db.prepare(`
-      INSERT INTO chat_messages (id, session_id, role, content, sources_json, timestamp)
-      VALUES (?, ?, ?, ?, ?, ?)
+      INSERT INTO chat_messages (id, session_id, role, content, sources_json, timestamp, mode_id)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
     `);
 
     stmt.run(
@@ -522,7 +548,8 @@ export class HistoryManager {
       message.role,
       message.content,
       message.sources ? JSON.stringify(message.sources) : null,
-      now
+      now,
+      modeId
     );
 
     return msgId;
@@ -592,6 +619,7 @@ export class HistoryManager {
       content: row.content,
       sources: row.sources_json ? JSON.parse(row.sources_json) : undefined,
       timestamp: new Date(row.timestamp),
+      modeId: row.mode_id || undefined,
     }));
   }
 
@@ -686,6 +714,7 @@ export class HistoryManager {
       content: row.content,
       sources: row.sources_json ? JSON.parse(row.sources_json) : undefined,
       timestamp: new Date(row.timestamp),
+      modeId: row.mode_id || undefined,
     }));
   }
 

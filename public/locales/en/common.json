@@ -902,5 +902,38 @@
     "openPrompt": "Click the folder icon to open a Tropy project (.tropy or .tpy)",
     "noSources": "No Sources",
     "syncPrompt": "Click sync to import sources from Tropy"
+  },
+  "modes": {
+    "selector": {
+      "changeMode": "Change mode"
+    },
+    "category": {
+      "all": "All",
+      "general": "General",
+      "research": "Research",
+      "writing": "Writing",
+      "review": "Review",
+      "analysis": "Analysis",
+      "methodology": "Method."
+    },
+    "source": {
+      "builtin": "Built-in",
+      "global": "Global",
+      "project": "Project"
+    },
+    "manager": {
+      "title": "Modes",
+      "loading": "Loading modes...",
+      "duplicate": "Duplicate",
+      "import": "Import mode",
+      "export": "Export",
+      "delete": "Delete",
+      "confirmDelete": "Click to confirm deletion",
+      "noCustom": "No custom modes"
+    },
+    "warning": {
+      "modelTooSmall": "Current model may be too small for this mode",
+      "contextTooSmall": "Context window may be insufficient"
+    }
   }
 }

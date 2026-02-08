@@ -113,7 +113,8 @@ const api = {
     loadFile: (filePath: string) => ipcRenderer.invoke('editor:load-file', filePath),
     saveFile: (filePath: string, content: string) =>
       ipcRenderer.invoke('editor:save-file', filePath, content),
-    insertText: (text: string) => ipcRenderer.invoke('editor:insert-text', text),
+    insertText: (text: string, metadata?: { modeId?: string; model?: string }) =>
+      ipcRenderer.invoke('editor:insert-text', text, metadata),
     onInsertText: (callback: (text: string) => void) => {
       const listener = (_event: any, text: string) => callback(text);
       ipcRenderer.on('editor:insert-text-command', listener);
@@ -367,6 +368,22 @@ const api = {
     getAllEvents: () => ipcRenderer.invoke('history:get-all-events'),
     getAllAIOperations: () => ipcRenderer.invoke('history:get-all-ai-operations'),
     getAllChatMessages: () => ipcRenderer.invoke('history:get-all-chat-messages'),
+  },
+
+  // Modes
+  mode: {
+    getAll: () => ipcRenderer.invoke('mode:get-all'),
+    get: (modeId: string) => ipcRenderer.invoke('mode:get', modeId),
+    getActive: () => ipcRenderer.invoke('mode:get-active'),
+    setActive: (modeId: string) => ipcRenderer.invoke('mode:set-active', modeId),
+    save: (mode: any, target: 'global' | 'project') =>
+      ipcRenderer.invoke('mode:save', mode, target),
+    delete: (modeId: string, source: 'global' | 'project') =>
+      ipcRenderer.invoke('mode:delete', modeId, source),
+    import: (filePath: string, target: 'global' | 'project') =>
+      ipcRenderer.invoke('mode:import', filePath, target),
+    export: (modeId: string, outputPath: string) =>
+      ipcRenderer.invoke('mode:export', modeId, outputPath),
   },
 
   // IPC Renderer for menu shortcuts

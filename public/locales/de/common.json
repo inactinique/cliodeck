@@ -828,5 +828,38 @@
     "openPrompt": "Klicken Sie auf das Ordnersymbol, um ein Tropy-Projekt (.tropy oder .tpy) zu öffnen",
     "noSources": "Keine Quellen",
     "syncPrompt": "Klicken Sie auf Synchronisieren, um Quellen aus Tropy zu importieren"
+  },
+  "modes": {
+    "selector": {
+      "changeMode": "Modus wechseln"
+    },
+    "category": {
+      "all": "Alle",
+      "general": "Allgemein",
+      "research": "Forschung",
+      "writing": "Schreiben",
+      "review": "Überprüfung",
+      "analysis": "Analyse",
+      "methodology": "Methodik"
+    },
+    "source": {
+      "builtin": "Integriert",
+      "global": "Global",
+      "project": "Projekt"
+    },
+    "manager": {
+      "title": "Modi",
+      "loading": "Modi werden geladen...",
+      "duplicate": "Duplizieren",
+      "import": "Modus importieren",
+      "export": "Exportieren",
+      "delete": "Löschen",
+      "confirmDelete": "Zum Bestätigen klicken",
+      "noCustom": "Keine benutzerdefinierten Modi"
+    },
+    "warning": {
+      "modelTooSmall": "Das aktuelle Modell ist möglicherweise zu klein für diesen Modus",
+      "contextTooSmall": "Das Kontextfenster könnte unzureichend sein"
+    }
   }
 }
